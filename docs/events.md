@@ -1,21 +1,48 @@
 # Event and campaign architecture
 
-Part of #10. All events use the existing Next.js deployment and root site shell.
+All events use the existing Next.js deployment and root site shell (Issue #10).
 No new Worker, backend, dependency, analytics vendor or deployment is introduced.
 
-## First migration: blocked
+## First migration: Daydream Adventure 2027
 
-`/events/daydream-adventure-2027/` is **not published**. Issue #10 supplies its
-name and intended slug, but explicitly requires the latest source/assets from
-the user. Neither the repository nor issue comments contain those materials.
-Missing: current landing-page source, approved copy and section ordering,
-confirmed dates/timezone/venue/format, registration URL and CTA wording,
-original hero/artwork/speaker images and OG artwork (including dimensions/alt
-text), and final SEO copy/indexing decision. Preserve the existing visual and
-content only once these sources arrive; do not substitute invented content.
-The production registry remains empty, so `/events/` has truthful empty groups
-and the unregistered campaign URL returns 404. Fixture campaigns exist only
-under `scripts/fixtures/` for tests.
+`/events/daydream-adventure-2027/` is registered as an active, static campaign.
+Approved content, ten-section order, image descriptions and paper/film visual
+composition come from the supplied root `白日夢冒險王 Landing Page v3.html`.
+The date is **2026-10-18 20:00 UTC+8**, despite the 2027 campaign name. The
+source gives an approximate duration of 90–120 minutes, not an exact end time.
+Registration uses the supplied `https://forms.gle/isPDKepgK9BsPpg86` URL.
+The source's default button mode is retained; no mock form or iframe is shipped.
+Hero, agenda, event-info, closing and mobile-sticky CTAs lead to the in-page
+`#register` section using native anchors and existing smooth-scroll/sticky offsets.
+Only the registration-card CTA opens the approved Google Form in a new tab.
+The campaign anchor helper retains status enforcement and analytics attributes;
+the mobile near-registration/closing visibility behavior is unchanged.
+
+`daydream-copy.ts` holds the approved narrative and image metadata;
+`daydream-adventure-2027.ts` holds event lifecycle, registration, contact and SEO
+config. `DaydreamCampaign` composes these with shared speaker cards, FAQ and
+status-aware CTAs. The mobile sticky CTA is the only campaign client component.
+The shared shell remains the only site header/footer; the campaign disclaimer
+is preserved in closing content. Archived rendering removes links and QR code
+for registration while retaining content and the shared latest-events banner.
+
+Twelve recovered production assets live under `public/events/daydream-adventure-2027/`.
+All intrinsic dimensions and approved alt text are preserved. Ten small JPEG/PNG
+files and Alex's portrait retain exact recovered bytes; Arsha's portrait is WebP
+at its original 1066×1600 dimensions (207,426 → 105,892 bytes). No image is upscaled
+or recompressed at runtime. Hero alone uses priority/high fetch priority; all
+eleven remaining images lazy-load. Unused extracted logos, icons, bundle runtime,
+base64 manifest and fonts are excluded. The root HTML and extraction folder are
+local migration inputs, excluded from the PR and production public directory.
+
+No approved description/OG-specific artwork or indexing directive was supplied.
+Metadata uses the approved title and speaker-section introduction, and the real
+hero photo for OG without inventing artwork. The campaign conservatively uses
+`seo.index=false`; it appears on `/events/` but is excluded from the sitemap.
+Staging remains noindex. A later approved indexing decision can change the config.
+For production discovery of indexable events, confirm
+`EVENT_DEPLOYMENT_ENV=production` at build time; deployment changes remain outside
+this campaign PR.
 
 ## Add an approved campaign
 
@@ -83,5 +110,10 @@ It never submits forms or contacts registration services.
 Browser QA is still required at 1440, 768 and 375px (also 320px for long text):
 shared sticky strip/header/footer, horizontal overflow, keyboard focus-visible,
 FAQ disclosures, archive/next-event links, CTA destinations without submission,
-image layout shift/LCP and console/hydration errors. The first real campaign
-needs its own content and visual comparison after source/assets are supplied.
+image layout shift/LCP and console/hydration errors. Compare the real campaign
+against v3, including film crops, speaker offsets and all ten sections. No browser
+was available in the migration session; these checks must be completed in review.
+`npx tsx scripts/check-daydream.ts` additionally checks real registry registration,
+approved date/CTA, all narrative copy, section order, image attributes/loading,
+FAQ/speakers, metadata, in-page campaign/mobile CTA destinations, the sole
+new-tab Google Form link, and archived removal of registration links/QR.
