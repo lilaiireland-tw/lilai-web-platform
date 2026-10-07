@@ -7,11 +7,13 @@ import { once } from "node:events";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { active, archived, draft, registrations } from "./fixtures/events";
-import { createEventRegistry } from "../src/lib/events/event-registry";
-import { buildEventMetadata, buildEventsIndexMetadata } from "../src/lib/events/event-metadata";
 import { getEventPolicy } from "../src/lib/events/event-policy";
 
 async function main() {
+  // Registered custom campaigns import CSS too; install the markup-only stub before registry imports.
+  createRequire(import.meta.url).extensions[".css"] = module => { module.exports = {}; };
+  const { createEventRegistry } = await import("../src/lib/events/event-registry");
+  const { buildEventMetadata, buildEventsIndexMetadata } = await import("../src/lib/events/event-metadata");
   const production = { production: true, includeDrafts: true };
   const preview = { production: false, includeDrafts: true };
   const registry = createEventRegistry(registrations, production);
