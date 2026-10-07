@@ -107,14 +107,18 @@ They also receive `X-Robots-Tag: noindex, nofollow` from `next.config.ts`.
 
 For Issue #3's phase-one Cloudflare ownership, environment isolation, indexing,
 smoke checks and rollback gates, see [Cloudflare routing plan](docs/cloudflare-routing-plan.md).
-Cloudflare is the current deployment direction. Production traffic
-must remain unchanged until a separately approved cutover. No Cloudflare runtime
-or routes are provisioned by this repository yet.
+The staging-only Workers/OpenNext configuration and opt-in `develop` workflow are
+documented in [Staging provisioning](docs/cloudflare-staging.md). Live deployment
+is blocked on nonproduction origins, CI credentials and Access setup. No live
+Worker, DNS record or production route has been created by this change.
+Credential-free Linux verification runs independently of the deployment opt-in.
 
 Set `SITE_DEPLOYMENT_ENV=preview` or `staging` at build time for review environments.
 Only `production` enables site indexing; unset values remain noindex. Canonical
 URLs always use `https://lilaiireland.com`, regardless of the serving hostname.
-External rewritten responses still require staging-edge noindex verification.
+The build rejects mismatched site/event production markers. The staging Worker
+adds noindex to assets, rewrites, redirects and errors; live verification remains
+required before publication.
 
 The homepage, `/events`, and `/events/*` pages and assets share one Web Platform
 deployment: PR -> develop -> staging -> main -> Cloudflare production, subject to
