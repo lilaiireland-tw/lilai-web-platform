@@ -4,7 +4,9 @@ import { Footer } from "@/components/layout/Footer";
 import { TopStrip } from "@/components/layout/TopStrip";
 import styles from "@/components/layout/layout.module.css";
 import { HOME_DESCRIPTION, HOME_TITLE, SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
+import "@/styles/tokens.css";
 import "./globals.css";
+import "@/styles/primitives.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

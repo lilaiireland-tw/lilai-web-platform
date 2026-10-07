@@ -24,10 +24,13 @@ public permalinks. Contact links come from the signup reference repo.
 Header, Footer, Brand and Navigation are Server Components. Only MobileNavigation
 enhances the native `<details>` disclosure (Escape, outside click, focus leaving,
 link selection and desktop resize). It is not a modal or a focus trap.
-Shell styles and self-hosted Noto font faces are scoped in `layout.module.css`;
-the production reference's font subsets and SIL license live in `public/fonts`.
+Shell structure styles are scoped in `layout.module.css`; canonical brand tokens
+and self-hosted Noto font faces live in `src/styles/tokens.css`.
+The production reference's font subsets and SIL license live in `public/fonts`.
 When extending shell copy, verify that those subsets contain the new characters.
-This is not the shared design system planned for Issue #2.
+New pages should use the opt-in `ds-*` primitives and Button component.
+See [Design system foundation](docs/design-system.md) for examples, accessibility
+and legacy compatibility. `/design-system/` is a noindex visual review page.
 
 After dependency installation, run `npx tsx scripts/check-shared-layout.ts` for
 isolated homepage, WordPress page/post fallback, 404, rewrite and asset checks.

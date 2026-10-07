@@ -1,0 +1,111 @@
+/* Canonical brand values. Reference: language-school-signup-page a7d0fbd. */
+@font-face {
+  font-family: "Noto Sans TC";
+  src: url("/fonts/NotoSansTC-Regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Noto Sans TC";
+  src: url("/fonts/NotoSansTC-Bold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Noto Serif TC";
+  src: url("/fonts/NotoSerifTC-Bold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  --color-background: #faf8ef;
+  --color-surface: #fffff6;
+  --color-primary: #005230;
+  --color-primary-dark: #0b3927;
+  --color-primary-light: #eaf4ec;
+  --color-accent: #d59500;
+  --color-accent-bright: #ffbe12;
+  --color-accent-soft: #fff2c8;
+  --color-text-main: #1a1a1a;
+  --color-text-muted: #5f675f;
+  --color-border: #cfe0d3;
+  --color-danger: #a33b32;
+  --color-white: #fff;
+  --color-focus: var(--color-accent);
+  --color-section-soft: #f1f3ec;
+  --color-header: rgb(250 248 239 / 94%);
+  --color-footer: #10291f;
+  --color-text-inverse-muted: rgb(255 255 255 / 80%);
+  --color-border-inverse: rgb(255 255 255 / 18%);
+
+  --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --font-serif: "Noto Serif TC", "Songti TC", "Source Han Serif TC", serif;
+  --font-body: var(--font-sans);
+  --font-heading: var(--font-serif);
+  --font-weight-regular: 400;
+  --font-weight-bold: 700;
+  --text-caption: 0.75rem;
+  --text-small: 0.875rem;
+  --text-body: 1rem;
+  --text-body-large: 1.125rem;
+  --text-heading-1: clamp(2rem, 4vw, 3.4375rem);
+  --text-heading-2: clamp(1.75rem, 3.3vw, 3.0625rem);
+  --text-heading-3: clamp(1.375rem, 2.5vw, 1.9375rem);
+  --line-height-body: 1.75;
+  --line-height-heading: 1.25;
+  --line-height-control: 1.15;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --radius-small: 4px;
+  --radius-medium: 8px;
+  --radius-large: 16px;
+  --radius-pill: 999px;
+  --shadow-elevated: 0 22px 60px rgb(0 44 24 / 11%);
+  --shadow-floating: var(--shadow-elevated);
+  --shadow-cta: 0 9px 24px rgb(39 93 71 / 18%);
+  --shadow-cta-hover: 0 16px 30px rgb(0 44 24 / 14%);
+  --shadow-featured: 12px 12px 0 var(--color-primary-light);
+  --container-width: 1160px;
+  --container-width-narrow: 940px;
+  --container-gutter: 40px;
+  --section-padding: var(--space-9);
+
+  /* Compatibility only: new code must use canonical tokens above. */
+  --ink: var(--color-text-main);
+  --muted: var(--color-text-muted);
+  --green: var(--color-primary);
+  --sage: var(--color-primary-light);
+  --linen: var(--color-background);
+  --card: var(--color-surface);
+  --line: var(--color-border);
+  --yellow: var(--color-accent-bright);
+  --shadow: var(--shadow-elevated);
+  --serif: var(--font-serif);
+  --sans: var(--font-sans);
+  /* Homepage-only compatibility colors; not new brand choices. */
+  --green-2: #0f6d45;
+  --brand: #008c4f;
+  --sage-2: #dcefe5;
+}
+
+@media (max-width: 1100px) {
+  :root { --section-padding: 78px; }
+}
+@media (max-width: 760px) {
+  :root {
+    --container-gutter: 28px;
+    --section-padding: var(--space-8);
+  }
+}
