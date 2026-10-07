@@ -30,6 +30,7 @@ const origin = createServer((request, response) => {
 });
 
 async function main() {
+  const deploymentEnv = process.env.CHECK_DEPLOYMENT_ENV === "production" ? "production" : "staging";
   origin.listen(0, "127.0.0.1");
   await once(origin, "listening");
   const address = origin.address();
@@ -49,6 +50,8 @@ async function main() {
   ], {
     env: {
       ...process.env,
+      SITE_DEPLOYMENT_ENV: deploymentEnv,
+      NEXT_PUBLIC_SITE_URL: "https://invalid-staging.example",
       WORDPRESS_ORIGIN: fixtureUrl,
       WORDPRESS_API_BASE: `${fixtureUrl}/wp-json/wp/v2`,
       WOOCOMMERCE_STORE_API_BASE: `${fixtureUrl}/wp-json/wc/store/v1`
@@ -88,6 +91,12 @@ async function main() {
     assert.equal(home.status, 200);
     const homeHtml = await home.text();
     checkShell(homeHtml);
+    const smoke = spawn(process.execPath, ["node_modules/tsx/dist/cli.mjs", "scripts/check-deployment-smoke.ts"], {
+      env: { ...process.env, CHECK_BASE_URL: baseUrl, CHECK_DEPLOYMENT_ENV: deploymentEnv },
+      stdio: "inherit"
+    });
+    const [smokeCode] = await once(smoke, "exit");
+    assert.equal(smokeCode, 0, `${deploymentEnv} smoke check against the isolated app`);
     const source = readFileSync("src/content/home.html", "utf8");
     const sourceMain = source.match(/<main[\s\S]*?<\/main>/)?.[0];
     assert(sourceMain);

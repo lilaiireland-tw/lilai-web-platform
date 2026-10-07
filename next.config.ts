@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { isProductionDeployment } from "./src/lib/deployment";
 
 const WP_ORIGIN = process.env.WORDPRESS_ORIGIN || "https://cms.lilaiireland.com";
 
@@ -45,6 +46,10 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      ...(!isProductionDeployment() ? [{
+        source: "/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }]
+      }] : []),
       {
         source: "/cart/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }]

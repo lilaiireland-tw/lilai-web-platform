@@ -103,6 +103,17 @@ They also receive `X-Robots-Tag: noindex, nofollow` from `next.config.ts`.
 
 ## Deployment
 
+For Issue #3's phase-one Cloudflare ownership, environment isolation, indexing,
+smoke checks and rollback gates, see [Cloudflare routing plan](docs/cloudflare-routing-plan.md).
+That plan supersedes the whole-site DNS cutover steps below. Production traffic
+must remain unchanged until a separately approved cutover. No Cloudflare runtime
+or routes are provisioned by this repository yet.
+
+Set `SITE_DEPLOYMENT_ENV=preview` or `staging` at build time for review environments.
+Only `production` enables site indexing; unset values remain noindex. Canonical
+URLs always use `https://lilaiireland.com`, regardless of the serving hostname.
+External rewritten responses still require staging-edge noindex verification.
+
 1. Push this project to GitHub.
 2. Import the repo into Vercel.
 3. Set environment variables in Vercel.
