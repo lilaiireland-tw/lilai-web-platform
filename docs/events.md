@@ -12,6 +12,11 @@ The date is **2026-10-18 20:00 UTC+8**, despite the 2027 campaign name. The
 source gives an approximate duration of 90–120 minutes, not an exact end time.
 Registration uses the supplied `https://forms.gle/isPDKepgK9BsPpg86` URL.
 The source's default button mode is retained; no mock form or iframe is shipped.
+Hero, agenda, event-info, closing and mobile-sticky CTAs lead to the in-page
+`#register` section using native anchors and existing smooth-scroll/sticky offsets.
+Only the registration-card CTA opens the approved Google Form in a new tab.
+The campaign anchor helper retains status enforcement and analytics attributes;
+the mobile near-registration/closing visibility behavior is unchanged.
 
 `daydream-copy.ts` holds the approved narrative and image metadata;
 `daydream-adventure-2027.ts` holds event lifecycle, registration, contact and SEO
@@ -110,4 +115,5 @@ against v3, including film crops, speaker offsets and all ten sections. No brows
 was available in the migration session; these checks must be completed in review.
 `npx tsx scripts/check-daydream.ts` additionally checks real registry registration,
 approved date/CTA, all narrative copy, section order, image attributes/loading,
-FAQ/speakers, metadata and archived removal of registration links/QR.
+FAQ/speakers, metadata, in-page campaign/mobile CTA destinations, the sole
+new-tab Google Form link, and archived removal of registration links/QR.

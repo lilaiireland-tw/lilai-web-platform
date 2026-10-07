@@ -7,6 +7,7 @@ import { EventCta } from "../EventCta";
 import { EventFaq } from "../EventFaq";
 import { SpeakerCard } from "../SpeakerCard";
 import { DaydreamStickyCta } from "./DaydreamStickyCta";
+import { DaydreamRegistrationCta } from "./DaydreamRegistrationCta";
 import styles from "./daydream.module.css";
 
 function Photo({ image, hero = false }: { image: EventImage; hero?: boolean }) {
@@ -28,7 +29,7 @@ function Section({ id, title, eyebrow, children, tone = "" }: {
 }
 
 export function DaydreamCampaign({ event }: { event: EventContent }) {
-  const cta = (location: string) => <EventCta event={event} location={location} label={event.registrationLabel} />;
+  const cta = (location: string) => <DaydreamRegistrationCta event={event} location={location} label={event.registrationLabel} />;
   return <div className={styles.campaign}>
     <Section id="hero">
       <div className={styles.stack}>

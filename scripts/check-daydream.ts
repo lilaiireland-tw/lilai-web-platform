@@ -11,6 +11,7 @@ async function main() {
   const { eventRegistry } = await import("../src/lib/events/event-registry");
   const { buildEventMetadata } = await import("../src/lib/events/event-metadata");
   const { EventPage } = await import("../src/components/events/EventPage");
+  const { DaydreamRegistrationCta } = await import("../src/components/events/daydream/DaydreamRegistrationCta");
   const registration = eventRegistry.resolve(daydreamEvent.slug);
   assert(registration?.Content);
   assert.equal(daydreamEvent.startAt, "2026-10-18T20:00:00+08:00");
@@ -32,8 +33,27 @@ async function main() {
   }
   assert.equal((html.match(/<details\b/g) || []).length, 9);
   for (const name of ["Alex", "Bella", "Arsha"]) assert(html.includes(`<h3 class="ds-heading-3">${name}</h3>`));
-  assert(html.includes('target="_blank" rel="noopener noreferrer"'));
-  assert(html.includes(`href="${daydreamEvent.registrationUrl}"`));
+  const anchors = html.match(/<a\b[^>]*>/g) || [];
+  for (const location of ["hero", "agenda", "event", "closing"]) {
+    const links = anchors.filter(anchor => anchor.includes(`data-cta-location="${location}"`));
+    assert.equal(links.length, 1, `One campaign CTA expected at ${location}`);
+    assert(links[0].includes('href="#register"'), `${location} must lead to the registration section`);
+    assert(!links[0].includes("target="), `${location} must stay in the campaign tab`);
+  }
+  const formLinks = anchors.filter(anchor => anchor.includes(`href="${daydreamEvent.registrationUrl}"`));
+  assert.equal(formLinks.length, 1, "Only the registration card should link to Google Form");
+  assert(formLinks[0].includes('data-cta-location="register"'));
+  assert(formLinks[0].includes('target="_blank"') && formLinks[0].includes('rel="noopener noreferrer"'));
+  const mobileCta = renderToStaticMarkup(createElement(DaydreamRegistrationCta, {
+    event: daydreamEvent, location: "mobile-sticky", label: "免費報名 10/18 分享會",
+  }));
+  assert(mobileCta.includes('href="#register"') && mobileCta.includes('data-cta-location="mobile-sticky"'));
+  assert(!mobileCta.includes("target=") && !mobileCta.includes(daydreamEvent.registrationUrl));
+  for (const status of ["archived", "draft"] as const) {
+    assert.equal(renderToStaticMarkup(createElement(DaydreamRegistrationCta, {
+      event: { ...daydreamEvent, status }, location: "mobile-sticky", label: daydreamEvent.registrationLabel,
+    })), "", `${status} must suppress in-page registration CTAs`);
+  }
   assert(!html.includes("data:image") && !html.includes("__bundler"));
   // Every approved textual field must survive custom composition, including all FAQ answers and agenda tags.
   const checkCopy = (value: unknown, key = "") => {
@@ -57,7 +77,8 @@ async function main() {
   const archived = renderToStaticMarkup(createElement(EventPage, { registration: { ...registration, event: { ...daydreamEvent, status: "archived" } } }));
   assert(archived.includes("活動已結束"));
   assert(!archived.includes(daydreamEvent.registrationUrl) && !archived.includes("qr-register.png"));
+  assert(!archived.includes('href="#register"') && !archived.includes("data-cta-location="));
   assert(archived.includes('href="/events/"'));
-  console.log("PASS real campaign registry, source dates/CTA, canonical/noindex/OG, ten-section order, speakers, FAQ, image dimensions/loading and archived registration removal");
+  console.log("PASS real campaign registry, source dates, in-page campaign/mobile CTA flow, registration-card-only new-tab form link, canonical/noindex/OG, ten-section order, speakers, FAQ, image dimensions/loading and archived registration removal");
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

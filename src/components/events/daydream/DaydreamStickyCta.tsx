@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { EventContent } from "@/lib/events/event-types";
-import { EventCta } from "../EventCta";
+import { DaydreamRegistrationCta } from "./DaydreamRegistrationCta";
 import styles from "./daydream.module.css";
 
 export function DaydreamStickyCta({ event }: { event: EventContent }) {
@@ -21,5 +21,5 @@ export function DaydreamStickyCta({ event }: { event: EventContent }) {
     return () => { window.removeEventListener("scroll", update); window.removeEventListener("resize", update); };
   }, []);
   if (!visible || event.status !== "active") return null;
-  return <div className={styles.sticky}><EventCta event={event} location="mobile-sticky" label="免費報名 10/18 分享會" /></div>;
+  return <div className={styles.sticky}><DaydreamRegistrationCta event={event} location="mobile-sticky" label="免費報名 10/18 分享會" /></div>;
 }
