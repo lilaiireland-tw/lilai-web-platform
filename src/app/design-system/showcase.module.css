@@ -1,3 +1,5 @@
+.showcase h1, .showcase h2, .showcase h3 { margin-bottom: var(--space-4); }
+.showcase h2 { margin-top: var(--space-6); }
 .stack { display: grid; gap: var(--space-4); }
 .row { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }

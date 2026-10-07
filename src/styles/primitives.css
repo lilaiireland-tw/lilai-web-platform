@@ -9,6 +9,9 @@
 .ds-section--tint { background: var(--color-primary-light); }
 .ds-body { font: var(--font-weight-regular) var(--text-body)/var(--line-height-body) var(--font-body); }
 .ds-heading-1, .ds-heading-2, .ds-heading-3 {
+  /* Isolate every visual heading size from legacy h1 and UA spacing. */
+  margin: 0;
+  max-width: none;
   color: var(--color-primary-dark);
   font-family: var(--font-heading);
   font-weight: var(--font-weight-bold);

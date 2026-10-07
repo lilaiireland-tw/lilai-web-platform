@@ -3,6 +3,22 @@
 Base: develop `745ad7e4f018569581fd9cb4d767407e2ea1cc0c` (merged PR #9).
 Brand reference: signup `a7d0fbd4d74f3b0be923a1ac85c774a3328ecf88`.
 
+## PR #12 review correction
+
+All three heading classes now reset margin to 0 and max-width to none, so even
+ds-heading-2/3 on an h1 cannot inherit homepage width constraints. Consumers own
+spacing; the showcase applies its own token-based heading margins. Homepage
+globals and HTML remain unchanged by this correction.
+
+Re-ran TypeScript, design-system checks (including a heading reset source guard),
+shared-layout fixtures, production build and diff checks: all passed. Direct
+ESLint on the two changed TS/TSX files: 0 errors, 0 warnings. The source guard
+checks declarations, not browser computed styles. The manual font/overflow QA
+below remains outstanding. Dependencies are unchanged; npm ci was not repeated
+for this CSS/test/documentation correction.
+
+## Foundation checks
+
 - `npm ci`: passed, lockfile unchanged. Existing audit findings: 14 (2 moderate,
   11 high, 1 critical); no dependency upgrades or audit fixes.
 - `npx tsc --noEmit --incremental false`: passed before and after build.

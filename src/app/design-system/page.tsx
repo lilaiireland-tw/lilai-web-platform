@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default function DesignSystemPage() {
-  return <main className="ds-body">
+  return <main className={`ds-body ${styles.showcase}`}>
     <section className="ds-section">
       <div className="ds-container">
         <p className="ds-eyebrow">Lilai Ireland · UI foundation</p>

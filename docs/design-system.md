@@ -54,7 +54,10 @@ legacy weights remain browser matched/synthesized; new code uses 400/700.
 | ds-eyebrow | text-caption / 12px | Sans bold, .09em tracking |
 
 Sizes use rem/clamp and respect browser text sizing. Button line height is 1.15.
-Use semantic h1/h2/h3 independently of the chosen visual class. Existing
+Use semantic h1/h2/h3 independently of the chosen visual class. All three heading
+classes reset `margin: 0` and `max-width: none`, including when a smaller visual
+class is applied to h1. Consumers set spacing/width through their layout or
+page CSS; no homepage or browser-default heading margins are inherited. Existing
 homepage heading sizes remain untouched; its Sans stack now prioritizes Noto
 instead of Inter, and uses the same local faces as the shell.
 
