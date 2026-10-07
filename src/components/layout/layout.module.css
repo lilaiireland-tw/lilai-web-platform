@@ -20,10 +20,10 @@
 }
 
 .container { width: min(1160px, calc(100% - 40px)); margin-inline: auto; }
-.topStrip { min-height: 28px; display: grid; place-items: center; padding: 4px 16px; background: var(--ink); color: #fff; font-family: "Lilai Shell Sans", "Noto Sans TC", "Microsoft JhengHei", sans-serif; font-size: 13px; font-weight: 700; text-align: center; }
+.topStrip { position: sticky; top: 0; z-index: 60; height: 28px; display: grid; place-items: center; padding: 4px 16px; background: var(--ink); color: #fff; font-family: "Lilai Shell Sans", "Noto Sans TC", "Microsoft JhengHei", sans-serif; font-size: 13px; font-weight: 700; text-align: center; }
 .topStrip a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .header, .footer { font-family: "Lilai Shell Sans", "Noto Sans TC", "Microsoft JhengHei", sans-serif; line-height: 1.75; }
-.header { position: sticky; top: 0; z-index: 50; background: rgba(250, 248, 239, .94); border-bottom: 1px solid var(--line); backdrop-filter: blur(14px); }
+.header { position: sticky; top: 28px; z-index: 50; background: rgba(250, 248, 239, .94); border-bottom: 1px solid var(--line); backdrop-filter: blur(14px); }
 .headerInner { min-height: 126px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .brand { display: inline-flex; align-items: center; flex-shrink: 0; gap: 11px; color: #0b3927; }
 .brand > span { display: flex; flex-direction: column; line-height: 1.05; }
@@ -83,7 +83,8 @@
 
 @media (max-width: 760px) {
   .container { width: calc(100% - 28px); }
-  .topStrip { min-height: 26px; font-size: 11px; }
+  .topStrip { height: 26px; font-size: 11px; }
+  .header { top: 26px; }
   .headerInner { min-height: 96px; gap: 8px; }
   .brand { gap: 6px; }
   .logo { width: 80px; height: 80px; }
