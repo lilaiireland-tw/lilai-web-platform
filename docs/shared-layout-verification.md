@@ -6,7 +6,7 @@
 - `npx.cmd tsc --noEmit --incremental false`: passed. No type-check script currently exists.
 - `npm run build`: passed with Next.js 16.2.10.
 - `npm.cmd run lint`: fails with `Invalid project directory provided .../lint`. Develop already uses `next lint`, which the installed Next.js does not provide. No lint config exists. Direct ESLint API checks using `eslint-config-next/core-web-vitals` and `eslint-config-next/typescript` passed for changed TS/TSX files with 0 errors and 0 warnings.
-- `npx.cmd tsx scripts/check-shared-layout.ts`: passed. Checks exactly one shell and main on home/page/post responses; unchanged homepage main HTML; navigation fragments; nested WordPress fallback; missing content/product 404; all six protected rewrites; retained noindex declarations; local logo/fonts. Next.js can return 404 as an error document whose shell is in Flight data; the test checks that payload without claiming browser hydration was verified.
+- `npx.cmd tsx scripts/check-shared-layout.ts`: passed. Checks exactly one shell and main on home/page/post responses; unchanged homepage main HTML; top strip before Header; WordPress-aligned navigation links; nested WordPress fallback; missing content/product 404; all six protected rewrites; retained noindex declarations; local logo/fonts. Next.js can return 404 as an error document whose shell is in Flight data; the test checks that payload without claiming browser hydration was verified.
 - `CHECK_BASE_URL=http://127.0.0.1:43171 npm run check:urls` (PowerShell environment syntax): passed, but all non-home URLs only returned 308 slash redirects. This script does not establish that redirect destinations contain content.
 - `git diff --check`: passed.
 - Font cmap inspection: all Chinese navigation and brand characters are present in the three copied font subsets.
@@ -24,8 +24,8 @@
 
 Computer-use inventory returned no browsers; Chrome and the in-app browser were unavailable. No screenshots or browser console results are claimed. Reviewer should verify:
 
-- Desktop header, sticky/blur appearance, logo and footer.
-- Mobile menu at 320/375/768/1100px; open/close, Enter/Space, Escape focus return, outside click, link selection, leaving focus and resizing to desktop.
+- Top strip is the first visible site element, followed by the desktop header; verify sticky/blur appearance, logo and footer.
+- Desktop About dropdown and mobile menu at 320/375/768/1100px; verify submenu links, open/close, Enter/Space, Escape focus return, outside click, link selection, leaving focus and resizing to desktop.
 - Skip link and visible focus states; navigation from home and a WordPress page.
 - No horizontal overflow, hydration errors, console errors or noticeable layout shift.
 - Final live CMS fallback content and 404 hydration; protected WordPress/WooCommerce destinations on the intended preview environment.
