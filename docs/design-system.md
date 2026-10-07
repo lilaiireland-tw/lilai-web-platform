@@ -146,12 +146,32 @@ Keep featured cards inside a container to allow room for their offset shadow.
 </section>
 ```
 
-Container width: 1160px; narrow: 940px; total gutter: 40px desktop/tablet,
-28px mobile (20px/14px per side). Section variants: default, soft, tint.
-Vertical padding: 96px desktop, 78px tablet, 64px mobile, following signup's
-scale while aligning its tablet transition with the accepted shell breakpoint.
-Existing homepage spacing remains page-specific. Shell containers use the same
-canonical width/gutter tokens, keeping their existing calculated widths.
+| Class | Canonical token | Maximum content width | Usage |
+| --- | --- | --- | --- |
+| ds-container ds-container--wide | --container-width-wide | 1600px | Header, footer, campaign grids and outer boundary |
+| ds-container | --container-width-default | 1160px | General sections, cards and page composition |
+| ds-container ds-container--narrow | --container-width-narrow | 940px | Articles, FAQ and reading content |
+
+`--container-width` remains a compatibility alias for the default tier. New code
+uses the explicit tier tokens. `--container-gutter` is **per side**, using
+`clamp(20px, 4vw, 64px)` (20px mobile, about 31px at 768px, 51px at 1280px,
+58px at 1440px and 64px on large desktops). Standalone containers subtract two
+gutters and center themselves. Full-bleed `ds-section` backgrounds retain their
+viewport width; `--container-inset-wide` places their content at the same outer
+boundary as the shell. Direct child containers choose their tier without adding
+gutters a second time. Use the section + direct-child pattern shown above;
+do not nest gutter-bearing containers inside one another.
+
+Section variants: default, soft, tint. Vertical padding: 96px desktop, 78px
+tablet, 64px mobile. Homepage vertical spacing, HTML and interactions remain
+page-specific; its section horizontal insets now share the wide shell boundary.
+Events index and generic event sections use that same outer inset with default
+or narrow content. Daydream retains default hero/story/agenda composition and a
+narrow FAQ; film strip and speakers opt into wide. Reading copy within wider
+compositions stays capped at the narrow tier. WordPress fallback and 404 share
+wide outer insets and narrow reading content. Homepage video/final CTA use the
+default tier and story copy uses narrow. Component-specific heading/copy/image
+constraints and existing grid breakpoints are not global containers.
 
 ## Responsive
 

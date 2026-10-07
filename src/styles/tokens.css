@@ -77,9 +77,12 @@
   --shadow-cta: 0 9px 24px rgb(39 93 71 / 18%);
   --shadow-cta-hover: 0 16px 30px rgb(0 44 24 / 14%);
   --shadow-featured: 12px 12px 0 var(--color-primary-light);
-  --container-width: 1160px;
+  --container-width-wide: 1600px;
+  --container-width-default: 1160px;
+  --container-width: var(--container-width-default); /* Compatibility alias. */
   --container-width-narrow: 940px;
-  --container-gutter: 40px;
+  --container-gutter: clamp(20px, 4vw, 64px);
+  --container-inset-wide: max(var(--container-gutter), calc((100% - var(--container-width-wide)) / 2));
   --section-padding: var(--space-9);
 
   /* Compatibility only: new code must use canonical tokens above. */
@@ -105,7 +108,6 @@
 }
 @media (max-width: 760px) {
   :root {
-    --container-gutter: 28px;
     --section-padding: var(--space-8);
   }
 }

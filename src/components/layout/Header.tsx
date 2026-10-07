@@ -7,7 +7,7 @@ import styles from "./layout.module.css";
 export function Header() {
   return (
     <header className={styles.header}>
-      <div className={`${styles.container} ${styles.headerInner}`}>
+      <div className={`ds-container ds-container--wide ${styles.headerInner}`}>
         <Brand />
         <Navigation links={primaryNavigation} label="主要導覽" className={styles.desktopNavigation} />
         <div className={styles.headerActions}>

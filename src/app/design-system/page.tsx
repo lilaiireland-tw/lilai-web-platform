@@ -10,6 +10,12 @@ export const metadata: Metadata = {
 
 export default function DesignSystemPage() {
   return <main className={`ds-body ${styles.showcase}`}>
+    <section className="ds-section ds-section--tint" aria-label="Container hierarchy">
+      <div className="ds-container ds-container--wide">
+        <h2 className="ds-heading-2">Wide shell / 1600px</h2>
+        <p>Shared outer boundary with responsive gutters. Sections below demonstrate default (1160px) and narrow (940px) reading widths.</p>
+      </div>
+    </section>
     <section className="ds-section">
       <div className="ds-container">
         <p className="ds-eyebrow">Lilai Ireland · UI foundation</p>
