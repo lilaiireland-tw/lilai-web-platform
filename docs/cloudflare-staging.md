@@ -150,11 +150,20 @@ checks. `npm run lint` remains invalid because it invokes removed `next lint`.
 
 ## Develop deployment path and exact blockers
 
-`.github/workflows/staging.yml` targets only `develop`, serializes deployments,
-and uses the GitHub `staging` environment. Push/manual runs remain skipped unless
-repository variable `CLOUDFLARE_STAGING_ENABLED` equals `true`. `main` and feature
-branches cannot deploy through this workflow. The deploy command also requires
-`GITHUB_REF=refs/heads/develop`, the discovered account ID and an API token.
+`.github/workflows/staging.yml` separates verification from publication:
+
+1. The credential-free `verify` job runs on pull requests targeting `develop`,
+   pushes to `develop`, and manual dispatches. On GitHub-hosted Ubuntu it installs
+   the lockfile, generates/checks types, runs policy/layout/design guards, then
+   builds, dry-runs and exercises the packaged Worker against loopback fixtures.
+   It does not use the `staging` environment, Cloudflare token, live origins or a
+   remote Cloudflare resource. It runs while the publication opt-in is false.
+2. The serialized `deploy` job requires `verify` to pass. It can run only for
+   `refs/heads/develop` when repository variable `CLOUDFLARE_STAGING_ENABLED`
+   equals `true`; only this job uses the GitHub `staging` environment,
+   nonproduction origins and API token. `main`, feature branches and pull-request
+   refs cannot deploy. The deploy script independently checks the develop ref,
+   discovered account ID and token before building or uploading.
 
 Before enabling it, the operator must supply/configure:
 
@@ -167,12 +176,16 @@ Before enabling it, the operator must supply/configure:
    secret with Workers Scripts edit permission for deployment. No DNS edit or
    Workers Routes edit permission is needed. Keep token values out of this repo
    and chat; the existing personal OAuth login is not a CI token.
-3. GitHub `staging` environment branch restrictions/review protection and
+3. Run the credential-free `verify` job on this PR and resolve or explicitly
+   accept the documented cache/missing-route diagnostics. This supplies the
+   required Linux evidence without enabling deployment or configuring secrets.
+4. GitHub `staging` environment branch restrictions/review protection and
    Cloudflare Access protecting the provider hostname. Review environments are
    public without Access; noindex is not authentication. Access was not provisioned
    or verified in this change. Configure it before enabling publication.
-4. Complete Linux runtime verification, including the cache/missing-route
-   diagnostics above. Enable the repository opt-in only after these gates, then run from `develop`.
+5. After Linux verification, environment/Access/token setup and manual review,
+   enable the repository opt-in. A subsequent `develop` push or manual dispatch
+   runs `verify` again; only after it passes can `deploy` publish staging.
    Record the issued URL, Worker/version ID, Git SHA and operator in the release
    record. Run authenticated read-only smoke checks on the actual URL, including
    the underlying provider URL. Never attach to `lilaiireland.com` in this step.
@@ -183,8 +196,8 @@ DNS/routes/traffic and signup ownership remain unchanged.
 
 ## Remaining QA
 
-- Execute the workflow on Linux after merge and configuration; local packaging
-  alone does not establish CI or remote runtime success.
+- Require the PR's credential-free Ubuntu `verify` job to pass. Its local
+  packaging does not establish remote runtime success.
 - Resolve or explicitly accept the documented read-only-cache diagnostics and
   investigate missing-route `NoFallbackError` before enabling publication.
 - Verify live noindex on HTML, RSC, assets, origin rewrites, redirects, errors,

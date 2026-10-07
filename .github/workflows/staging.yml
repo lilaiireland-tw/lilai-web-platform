@@ -1,6 +1,8 @@
 name: Cloudflare staging
 
 on:
+  pull_request:
+    branches: [develop]
   push:
     branches: [develop]
   workflow_dispatch:
@@ -8,24 +10,13 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: cloudflare-staging
-  cancel-in-progress: false
-
 jobs:
-  deploy:
-    # Opt-in stays off until origins, token, Access and runtime QA are ready.
-    if: github.ref == 'refs/heads/develop' && vars.CLOUDFLARE_STAGING_ENABLED == 'true'
+  verify:
     runs-on: ubuntu-latest
-    environment: staging
     env:
       SITE_DEPLOYMENT_ENV: staging
       EVENT_DEPLOYMENT_ENV: preview
       EVENTS_INCLUDE_DRAFTS: 'false'
-      WORDPRESS_ORIGIN: ${{ vars.STAGING_WORDPRESS_ORIGIN }}
-      WORDPRESS_API_BASE: ${{ vars.STAGING_WORDPRESS_API_BASE }}
-      WOOCOMMERCE_STORE_API_BASE: ${{ vars.STAGING_WOOCOMMERCE_STORE_API_BASE }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
       NEXT_TELEMETRY_DISABLED: '1'
       WRANGLER_SEND_METRICS: 'false'
     steps:
@@ -43,6 +34,33 @@ jobs:
       - run: npx tsx scripts/check-shared-layout.ts
       - run: npx tsx scripts/check-design-system.ts
       - run: npx tsx scripts/check-cloudflare-staging.ts
+
+  deploy:
+    # Publication stays off until origins, token, Access and runtime QA are ready.
+    needs: verify
+    if: github.ref == 'refs/heads/develop' && vars.CLOUDFLARE_STAGING_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    concurrency:
+      group: cloudflare-staging
+      cancel-in-progress: false
+    env:
+      SITE_DEPLOYMENT_ENV: staging
+      EVENT_DEPLOYMENT_ENV: preview
+      EVENTS_INCLUDE_DRAFTS: 'false'
+      WORDPRESS_ORIGIN: ${{ vars.STAGING_WORDPRESS_ORIGIN }}
+      WORDPRESS_API_BASE: ${{ vars.STAGING_WORDPRESS_API_BASE }}
+      WOOCOMMERCE_STORE_API_BASE: ${{ vars.STAGING_WOOCOMMERCE_STORE_API_BASE }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      NEXT_TELEMETRY_DISABLED: '1'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
       - run: npm run cf:deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

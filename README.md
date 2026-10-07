@@ -111,6 +111,7 @@ The staging-only Workers/OpenNext configuration and opt-in `develop` workflow ar
 documented in [Staging provisioning](docs/cloudflare-staging.md). Live deployment
 is blocked on nonproduction origins, CI credentials and Access setup. No live
 Worker, DNS record or production route has been created by this change.
+Credential-free Linux verification runs independently of the deployment opt-in.
 
 Set `SITE_DEPLOYMENT_ENV=preview` or `staging` at build time for review environments.
 Only `production` enables site indexing; unset values remain noindex. Canonical
