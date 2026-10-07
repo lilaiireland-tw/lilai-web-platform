@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { isProductionDeployment } from "@/lib/deployment";
 import { STATIC_SITEMAP_URLS } from "@/data/urlMap";
 import { absoluteUrl } from "@/lib/site";
 import { getAllPageSlugs, getAllPostSlugs } from "@/lib/wordpress";
@@ -7,6 +8,7 @@ import { eventAbsoluteUrl } from "@/lib/events/event-metadata";
 import { getEventPolicy } from "@/lib/events/event-policy";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  if (!isProductionDeployment()) return [];
   const staticUrls = STATIC_SITEMAP_URLS.map(path => ({
     url: absoluteUrl(path),
     lastModified: new Date(),

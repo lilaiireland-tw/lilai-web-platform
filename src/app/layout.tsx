@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { isProductionDeployment } from "@/lib/deployment";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { TopStrip } from "@/components/layout/TopStrip";
@@ -9,6 +10,7 @@ import "./globals.css";
 import "@/styles/primitives.css";
 
 export const metadata: Metadata = {
+  ...(!isProductionDeployment() ? { robots: { index: false, follow: false } } : {}),
   metadataBase: new URL(SITE_URL),
   title: {
     default: HOME_TITLE,
