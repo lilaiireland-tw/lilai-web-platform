@@ -11,14 +11,15 @@ Next.js + TypeScript + App Router frontend for `lilaiireland.com`.
 
 ### Shared site shell
 
-`src/app/layout.tsx` mounts the shared Header, skip link, content wrapper and Footer.
+`src/app/layout.tsx` mounts the shared top strip, Header, skip link, content wrapper and Footer.
 Each page keeps its own semantic `<main>`; do not add another header/footer in page content.
 The homepage's sections and business copy remain in `src/content/home.html`.
 
-`src/config/navigation.ts` owns shell links and the primary CTA. Homepage fragments
-use `/#...` so they work from other routes. Unmigrated assessment/signup services
-retain confirmed production URLs. Contact links come from the signup reference repo.
-Change the config when a service is migrated, rather than changing page permalinks.
+`src/config/navigation.ts` owns shell links and the primary CTA. The main Header
+mirrors the current WordPress information architecture: free assessment, language-school
+signup, the About submenu, and the study-abroad information hub. Links use same-origin
+public URLs so Cloudflare can route each path to its current owner without changing
+public permalinks. Contact links come from the signup reference repo.
 
 Header, Footer, Brand and Navigation are Server Components. Only MobileNavigation
 enhances the native `<details>` disclosure (Escape, outside click, focus leaving,
