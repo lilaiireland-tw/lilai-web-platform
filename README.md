@@ -9,6 +9,33 @@ Next.js + TypeScript + App Router frontend for `lilaiireland.com`.
 - WooCommerce cart, checkout, and account pages are rewritten to WordPress in phase 1.
 - Existing SEO URLs should stay unchanged through the fallback slug route.
 
+### Shared site shell
+
+`src/app/layout.tsx` mounts the shared Header, skip link, content wrapper and Footer.
+Each page keeps its own semantic `<main>`; do not add another header/footer in page content.
+The homepage's sections and business copy remain in `src/content/home.html`.
+
+`src/config/navigation.ts` owns shell links and the primary CTA. Homepage fragments
+use `/#...` so they work from other routes. Unmigrated assessment/signup services
+retain confirmed production URLs. Contact links come from the signup reference repo.
+Change the config when a service is migrated, rather than changing page permalinks.
+
+Header, Footer, Brand and Navigation are Server Components. Only MobileNavigation
+enhances the native `<details>` disclosure (Escape, outside click, focus leaving,
+link selection and desktop resize). It is not a modal or a focus trap.
+Shell styles and self-hosted Noto font faces are scoped in `layout.module.css`;
+the production reference's font subsets and SIL license live in `public/fonts`.
+When extending shell copy, verify that those subsets contain the new characters.
+This is not the shared design system planned for Issue #2.
+
+After dependency installation, run `npx tsx scripts/check-shared-layout.ts` for
+isolated homepage, WordPress page/post fallback, 404, rewrite and asset checks.
+It starts a temporary local Next.js dev server and fixture CMS, without production
+requests. It does not test browser interaction, hydration, console or responsive
+overflow. The existing external proxy drops configured `X-Robots-Tag` headers in
+fixture responses on develop too; this check verifies declarations separately.
+See [Issue #1 verification notes](docs/shared-layout-verification.md) for limitations.
+
 ## Local Setup
 
 ```bash
