@@ -3,8 +3,11 @@ import { spawn } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { once } from "node:events";
-import { primaryNavigation, primaryCta, serviceNavigation } from "../src/config/navigation";
+import { primaryNavigation, serviceNavigation, type NavigationLink } from "../src/config/navigation";
 import nextConfig from "../next.config";
+
+const flattenLinks = (links: readonly NavigationLink[]): NavigationLink[] =>
+  links.flatMap(link => [link, ...(link.children ? flattenLinks(link.children) : [])]);
 
 // Isolated, read-only fixtures: never contact WordPress or submit service forms.
 const requests: string[] = [];
@@ -66,7 +69,9 @@ async function main() {
     assert(html.includes('aria-controls="mobile-navigation"'));
     assert(html.includes('aria-label="主要導覽"'));
     assert(html.includes('aria-label="手機主要導覽"'));
-    for (const link of [...primaryNavigation, ...serviceNavigation, primaryCta]) {
+    assert(html.includes('data-site-top-strip="true"'));
+    assert(html.indexOf('data-site-top-strip="true"') < html.indexOf("<header"));
+    for (const link of [...flattenLinks(primaryNavigation), ...serviceNavigation]) {
       assert(html.includes(`href="${link.href}"`), link.href);
     }
   };
@@ -87,10 +92,7 @@ async function main() {
     const sourceMain = source.match(/<main[\s\S]*?<\/main>/)?.[0];
     assert(sourceMain);
     assert(homeHtml.includes(sourceMain.replaceAll("./assets/", "/assets/").replaceAll('href="#work"', 'href="#life"')));
-    for (const link of primaryNavigation) {
-      assert(homeHtml.includes(`id="${link.href.split("#")[1]}"`), link.href);
-    }
-    console.log("PASS homepage: unchanged main content, one shell, all navigation fragments");
+    console.log("PASS homepage: unchanged main content, top strip before header, WordPress-aligned navigation");
 
     for (const path of ["/shared-layout-page/", "/nested/shared-layout-page/", "/shared-layout-post/"]) {
       const result = await get(path);
