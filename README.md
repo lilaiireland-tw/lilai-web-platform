@@ -73,12 +73,14 @@ npm run check:urls
 
 For a deployed preview:
 
-```bash
-$env:CHECK_BASE_URL="https://your-preview.vercel.app"
+```powershell
+$env:CHECK_BASE_URL = '<actual provisioned preview or staging URL>'
 npm run check:urls
 ```
 
-Every important public URL should return `2xx` or `3xx` before DNS is pointed to Vercel.
+This checks `2xx`/`3xx` responses only. Before any approved production cutover,
+also complete the ownership, status/redirect, indexing and asset smoke matrix in
+the [Cloudflare routing plan](docs/cloudflare-routing-plan.md).
 
 ## WordPress Routing
 
@@ -105,7 +107,7 @@ They also receive `X-Robots-Tag: noindex, nofollow` from `next.config.ts`.
 
 For Issue #3's phase-one Cloudflare ownership, environment isolation, indexing,
 smoke checks and rollback gates, see [Cloudflare routing plan](docs/cloudflare-routing-plan.md).
-That plan supersedes the whole-site DNS cutover steps below. Production traffic
+Cloudflare is the current deployment direction. Production traffic
 must remain unchanged until a separately approved cutover. No Cloudflare runtime
 or routes are provisioned by this repository yet.
 
@@ -114,8 +116,11 @@ Only `production` enables site indexing; unset values remain noindex. Canonical
 URLs always use `https://lilaiireland.com`, regardless of the serving hostname.
 External rewritten responses still require staging-edge noindex verification.
 
-1. Push this project to GitHub.
-2. Import the repo into Vercel.
-3. Set environment variables in Vercel.
-4. Test homepage, WordPress fallback URLs, `/wp-json`, `/wp-content`, cart, checkout, and my-account on Preview.
-5. Only switch DNS after URL preservation and checkout tests pass.
+The homepage, `/events`, and `/events/*` pages and assets share one Web Platform
+deployment: PR -> develop -> staging -> main -> Cloudflare production, subject to
+the routing plan's release gates and separate cutover approval.
+
+### Historical deployment note (deprecated)
+
+The former Vercel import and whole-site DNS cutover checklist is retired. It is
+not an active deployment procedure; use the Cloudflare routing plan above.

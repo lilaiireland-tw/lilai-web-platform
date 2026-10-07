@@ -41,6 +41,7 @@ the CMS hostname. Only an explicit migrated-path allowlist may reach Next.js.
 | Public pattern (including bare path, trailing slash, query) | Before cutover | After approved phase-one cutover |
 | --- | --- | --- |
 | `/` | Existing homepage owner; verify zone snapshot | New web platform |
+| `/events`, `/events/*` (pages and same-prefix static assets) | Verify live owner and inventory legacy URLs; no traffic change in this PR | `lilai-web-platform`, using the same deployment as the homepage |
 | `/language-school-signup`, `/language-school-signup/*` | Current signup app | Current signup app; preserve route/script IDs and API/asset paths |
 | `/readiness`, `/readiness/*` | Existing WordPress embedded form | WordPress until readiness migration approval, then new web platform |
 | `/_next/*`, homepage-owned `/assets/*`, `/fonts/*` | Existing owner | New web platform only after asset namespace conflict audit |
@@ -51,8 +52,19 @@ the CMS hostname. Only an explicit migrated-path allowlist may reach Next.js.
 | `/wp-content/*`, `/wp-includes/*`, other WordPress PHP/system paths | WordPress | WordPress |
 | `/robots.txt`, `/sitemap.xml`, `/sitemap_index.xml`, WordPress child sitemaps | WordPress | WordPress until separate SEO ownership reconciliation |
 | `/api/revalidate`, `/design-system/*`, other platform-only review/internal routes | No new production exposure | No new production exposure in phase one |
-| `/events/*`, all other paths not explicitly migrated | Existing owner / WordPress | Existing owner / WordPress |
-| Unknown URLs | Existing WordPress status/redirect behavior | Same WordPress behavior, including real 404s |
+| All other paths not explicitly migrated | Existing owner / WordPress | Existing owner / WordPress |
+| Unknown URLs outside migrated prefixes | Existing WordPress status/redirect behavior | Same WordPress behavior, including real 404s |
+
+Issue #10's [event architecture](events.md) owns `/events/`,
+`/events/daydream-adventure-2027/`, and future `/events/<campaign-slug>/` pages.
+The whole `/events/` prefix includes campaign images and other static assets from
+`public/events/<slug>/`; do not allow only individual HTML routes. All events use
+the same `lilai-web-platform` deployment and PR -> develop -> staging -> main ->
+Cloudflare production flow, with no per-campaign Worker, DNS or pipeline.
+Unknown event slugs and missing event assets remain platform-owned 404s, not
+WordPress fallback. Before cutover, inventory any legacy WordPress `/events` or
+`/events/*` URLs and resolve each content, redirect and asset collision explicitly;
+unresolved collisions block cutover, not ownership of the entire event prefix.
 
 The Next.js catch-all renders CMS content on a standalone app preview; that does
 not grant it production route ownership. Keep public permalinks, slash redirects,
@@ -67,9 +79,13 @@ strings too, so an exact root pattern alone misses `/?utm_source=...`. Paths are
 case sensitive. A no-script route can negate a broader route. See
 [Cloudflare route rules](https://developers.cloudflare.com/workers/configuration/routing/routes/).
 
-For a future root cutover, a routing Worker may need `lilaiireland.com/*` to catch
-root queries. Such a route is **not to be installed now**. Its handler must parse
-the pathname and forward only `/` and audited platform asset paths to the platform;
+For a future root and events cutover, a routing Worker may need
+`lilaiireland.com/*` to catch root queries. Such a route is **not to be installed
+now**. Its handler must parse
+the pathname and allow `/`, exact `/events`, every pathname starting with
+`/events/` (including static assets), and audited shared platform asset paths;
+query strings must not change ownership. Do not match `/events-other` as an event.
+Forward these allowed requests to the same `lilai-web-platform` deployment;
 all other requests pass through to the original WordPress origin. Existing signup
 routes must remain more specific and mapped to the current signup Worker. Verify
 both the bare signup path and descendants; `/language-school-signup/*` alone does
@@ -90,7 +106,12 @@ Before any route edit:
    and its intended winner. Reject unexpected overlaps rather than relying on
    creation order. Check Custom Domains separately from Worker routes.
 3. Evaluate `/`, `/?utm_source=smoke`, signup bare/slash/child/query, readiness
-   bare/slash/query, a real post, admin/login, REST, media, Woo and unknown paths.
+   bare/slash/query, `/events`, `/events/`, the Daydream page and same-prefix assets
+   with/without query strings, unknown event slugs/missing assets, and a negative
+   prefix-boundary probe such as `/events-other`. Inventory legacy WordPress event
+   URLs and compare them with the platform registry and `public/events/` assets;
+   document and approve each collision's handling before cutover. Include a real
+   post, admin/login, REST, media, Woo and unknown paths outside migrated prefixes.
    On an isolated staging router, record actual Worker/origin logs proving each
    winner. A 200 response alone does not prove route ownership.
 4. Diff the complete proposed table against the saved table. Obtain independent
@@ -137,6 +158,12 @@ Build policy changes require rebuilding: do not promote a staging artifact to
 production by changing only runtime variables. Do not promote a production
 artifact to a publicly accessible preview.
 
+Provisioning follow-up: add a build/CI mismatch guard requiring the site and event
+production markers to agree before staging or production deployment. Staging uses
+`SITE_DEPLOYMENT_ENV=staging` and `EVENT_DEPLOYMENT_ENV=preview`; production requires
+both markers to be `production`. This plan retains the separate policies and does
+not implement the guard or deployment workflow.
+
 The app now emits noindex headers and inherited root metadata, disallows crawling
 in robots, and produces an empty sitemap outside production. Child metadata may
 override inherited metadata, so the global header is the additional enforcement.
@@ -173,6 +200,11 @@ inventory, not invented fixture paths:
 | Check | Required evidence |
 | --- | --- |
 | Root with/without query | 200, platform owner, public canonical, shell/assets load |
+| `/events`, `/events/`, `/events/daydream-adventure-2027/`, with/without query | Platform owner through any slash redirect; index/campaign render, public canonical, correct environment and event index/noindex policy |
+| Real `/events/daydream-adventure-2027/*` assets, with/without query | Same platform deployment; 200, expected image Content-Type/bytes and cache policy; include `/events/daydream-adventure-2027/arsha.webp` and the full asset inventory |
+| Unknown event slug / missing event asset | Platform owner and real 404; no WordPress fallback |
+| Inventoried legacy WordPress event URLs | Approved per-URL content/redirect/status outcomes; all collisions resolved before cutover |
+| Prefix boundary outside `/events/` (for example `/events-other`) | Existing owner/status; event allowlist must not intercept it |
 | Signup bare/slash/child/query and dependencies | Existing signup owner/status; assets render; no form submission |
 | Readiness before migration | Existing WordPress embed and behavior |
 | Real post/page/category/tag URLs | WordPress owner and same statuses/canonical/redirects |
@@ -180,12 +212,13 @@ inventory, not invented fixture paths:
 | `/wp-json/` and real `/wp-content/uploads/` media | Same owner, content type/status; no writes |
 | Woo shop/cart/checkout/account | Same unauthenticated behavior and cookie/cache rules; no checkout or cart changes |
 | Robots and existing sitemap index/children | WordPress owner, public hosts only, same index/noindex policy |
-| Unknown path | Existing 404/status behavior; never homepage substitution |
+| Unknown path outside migrated prefixes | Existing WordPress 404/status behavior; never homepage substitution |
 
 Record status, Location, Content-Type, X-Robots-Tag, canonical, owner logs, errors
 and latency for every case. Browser QA still required at 375px and 1440px: overflow,
 sticky shell, focus-visible/navigation, asset requests, console/hydration errors,
-and signup/readiness rendering without submissions. The existing `check:urls`
+and event index/Daydream images and CTA destinations plus signup/readiness rendering
+without submissions. The existing `check:urls`
 accepts any 2xx/3xx, so it is not sufficient cutover evidence.
 
 ## Rollback procedure (future cutover only)
@@ -193,8 +226,8 @@ accepts any 2xx/3xx, so it is not sufficient cutover evidence.
 1. Before release, save the complete route/origin/rule snapshot above and known-good
    router/platform version IDs, timestamp, Git SHA, and operator. Demonstrate the
    old WordPress homepage remains reachable through the original origin path.
-2. Trigger rollback for wrong signup/system owner, unexpected 4xx/5xx, origin loops,
-   broken assets/forms, CMS URL leaks, or incorrect canonical/indexing signals.
+2. Trigger rollback for wrong event/signup/system owner, unexpected 4xx/5xx,
+   origin loops, broken assets/forms, CMS URL leaks, or incorrect canonical/indexing signals.
    Freeze deployments; record symptoms and the current route/version table.
 3. For a router code regression, restore the known-good router version. To undo
    path migration, restore the saved route/script assignments and original origin
@@ -205,16 +238,19 @@ accepts any 2xx/3xx, so it is not sufficient cutover evidence.
    restore external route/configuration/resource changes; see
    [Cloudflare rollback limits](https://developers.cloudflare.com/workers/versions-and-deployments/rollbacks/).
    No data migrations are part of this issue.
-5. Purge only affected public homepage/asset cache entries when necessary; never
+5. Purge only affected public homepage/event/asset cache entries when necessary; never
    purge/replay transactional requests. Repeat the read-only matrix and confirm
-   homepage returns to its saved owner while signup, posts, admin, REST/media and
-   Woo remain intact. Record results and stop further releases pending review.
+   homepage and event pages/assets return to their saved owners while signup,
+   posts, admin, REST/media and Woo remain intact. Record results and stop further
+   releases pending review.
 
 ## Outstanding release gates
 
 - Approved staging URL and account/zone/Worker identifiers.
 - Live route/rule/DNS export, signup dependency inventory and verified CMS origin.
+- Legacy WordPress event URL/asset inventory and approved collision resolutions.
 - Provisioned isolated staging runtime and nonproduction integration credentials.
+- Build/CI guard against mismatched site/event production markers during provisioning.
 - Edge-wide noindex verification, route-winner evidence and full smoke/browser QA.
 - Separately reviewed implementation of the router/adapter and explicit production
   cutover authorization. Readiness migration has its own acceptance gate.
