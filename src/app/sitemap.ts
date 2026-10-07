@@ -2,6 +2,9 @@ import type { MetadataRoute } from "next";
 import { STATIC_SITEMAP_URLS } from "@/data/urlMap";
 import { absoluteUrl } from "@/lib/site";
 import { getAllPageSlugs, getAllPostSlugs } from "@/lib/wordpress";
+import { eventRegistry, eventPath } from "@/lib/events/event-registry";
+import { eventAbsoluteUrl } from "@/lib/events/event-metadata";
+import { getEventPolicy } from "@/lib/events/event-policy";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticUrls = STATIC_SITEMAP_URLS.map(path => ({
@@ -10,6 +13,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: path === "/" ? "weekly" as const : "monthly" as const,
     priority: path === "/" ? 1 : 0.7
   }));
+
+  const eventUrls = getEventPolicy().production ? [
+    { url: eventAbsoluteUrl("/events/") },
+    ...eventRegistry.indexable().map(event => ({ url: eventAbsoluteUrl(eventPath(event.slug)) }))
+  ] : [];
 
   try {
     const [posts, pages] = await Promise.all([getAllPostSlugs(), getAllPageSlugs()]);
@@ -22,8 +30,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.8
       }));
 
-    return [...staticUrls, ...wpUrls];
+    return [...staticUrls, ...wpUrls, ...eventUrls];
   } catch {
-    return staticUrls;
+    return [...staticUrls, ...eventUrls];
   }
 }
