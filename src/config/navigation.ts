@@ -1,30 +1,52 @@
 export interface NavigationLink {
   readonly label: string;
   readonly href: string;
+  readonly children?: readonly NavigationLink[];
 }
 
-// Keep unmigrated services on their confirmed production URLs.
-// Homepage fragments also work when the shell renders on a WordPress route.
-export const primaryNavigation = [
-  { label: "關於哩來", href: "/#about" },
-  { label: "留學遊學", href: "/#routes" },
-  { label: "生活指南", href: "/#life" },
-  { label: "學長姐故事", href: "/#stories" }
-] as const satisfies readonly NavigationLink[];
-
+// Keep the public shell aligned with the current WordPress navigation while
+// route ownership is split between Next.js and WordPress. Use same-origin
+// public URLs so Cloudflare can route each path to its current owner.
 export const primaryCta = {
   label: "免費出發評估",
-  href: "https://lilaiireland.com/consult/"
+  href: "/consult/"
 } as const satisfies NavigationLink;
 
 export const schoolSignupLink = {
-  label: "語言學校報名",
-  href: "https://lilaiireland.com/language-school-signup/"
+  label: "我要報名語校",
+  href: "/language-school-signup/"
 } as const satisfies NavigationLink;
+
+export const aboutNavigation = [
+  { label: "哩來品牌故事", href: "/about/" },
+  { label: "規劃出發流程", href: "/ireland-study-planning/" },
+  { label: "出發方案選擇", href: "/ireland-study-consultation/" }
+] as const satisfies readonly NavigationLink[];
+
+export const informationHubLink = {
+  label: "哩來遊學情報站",
+  href: "/category/ireland-study-abroad-info/"
+} as const satisfies NavigationLink;
+
+export const primaryNavigation = [
+  primaryCta,
+  schoolSignupLink,
+  {
+    label: "關於哩來",
+    href: "/about/",
+    children: aboutNavigation
+  },
+  informationHubLink
+] as const satisfies readonly NavigationLink[];
 
 export const serviceNavigation = [
   primaryCta,
   schoolSignupLink
+] as const satisfies readonly NavigationLink[];
+
+export const footerNavigation = [
+  ...aboutNavigation,
+  informationHubLink
 ] as const satisfies readonly NavigationLink[];
 
 // Confirmed in language-school-signup-page/app/lib/brand-links.ts and LandingFooter.
