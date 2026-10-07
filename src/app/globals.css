@@ -41,16 +41,6 @@ button {
   font: inherit;
 }
 
-.top-strip {
-  height: 28px;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  background: var(--ink);
-  font-size: 13px;
-  font-weight: 700;
-}
-
 .btn {
   position: relative;
   isolation: isolate;
@@ -1416,11 +1406,6 @@ h1 {
 
 @media (max-width: 720px) {
   html { scroll-padding-top: 110px; }
-  .top-strip {
-    height: 26px;
-    font-size: 11px;
-  }
-
   section {
     padding: 70px 24px;
   }
