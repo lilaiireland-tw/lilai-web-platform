@@ -1,4 +1,8 @@
 import type { Metadata } from "next";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { TopStrip } from "@/components/layout/TopStrip";
+import styles from "@/components/layout/layout.module.css";
 import { HOME_DESCRIPTION, HOME_TITLE, SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
 import "./globals.css";
 
@@ -37,7 +41,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-Hant">
-      <body>{children}</body>
+      <body>
+        <a className={styles.skipLink} href="#site-content">跳至主要內容</a>
+        <TopStrip />
+        <Header />
+        <div id="site-content" tabIndex={-1} className={styles.content}>{children}</div>
+        <Footer />
+      </body>
     </html>
   );
 }
