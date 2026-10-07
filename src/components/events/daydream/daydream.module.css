@@ -2,7 +2,7 @@
 .section { scroll-margin-top: 160px; }
 .stack { display: grid; gap: var(--space-5); min-width: 0; }
 .campaign p, .campaign figure { margin: 0; }
-.copy { white-space: pre-line; }
+.copy { max-width: var(--container-width-narrow); white-space: pre-line; }
 .heroTitle { font-size: clamp(2.7rem, 10.5vw, 9.5rem); letter-spacing: .04em; }
 .subtitle { padding-left: var(--space-5); border-left: 2px solid var(--color-primary); }
 .twoColumns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: var(--space-7); align-items: start; }
@@ -19,6 +19,7 @@
 .storyGrid .photo { aspect-ratio: 4 / 5; object-fit: cover; }
 .storyBridge { align-self: center; text-align: center; display: grid; gap: var(--space-5); }
 .quote { font-family: var(--font-serif); font-size: var(--text-heading-2); text-align: center; padding-block: var(--space-7); }
+.campaign .quote { margin-inline: auto; }
 .questions { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6); }
 .questions li { border-top: 1px solid var(--color-border); padding-top: var(--space-5); }
 .questions p { font-family: var(--font-serif); font-size: var(--text-body-large); }

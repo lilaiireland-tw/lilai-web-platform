@@ -16,11 +16,11 @@ function Photo({ image, hero = false }: { image: EventImage; hero?: boolean }) {
     className={styles.photo} />;
 }
 
-function Section({ id, title, eyebrow, children, tone = "" }: {
-  id: string; title?: string; eyebrow?: string; children: ReactNode; tone?: string;
+function Section({ id, title, eyebrow, children, tone = "", wide = false }: {
+  id: string; title?: string; eyebrow?: string; children: ReactNode; tone?: string; wide?: boolean;
 }) {
   return <section id={id} className={`ds-section ${styles.section} ${tone}`} aria-labelledby={title ? `${id}-title` : undefined}>
-    <div className={`ds-container ${styles.stack}`}>
+    <div className={`ds-container ${wide ? "ds-container--wide" : ""} ${styles.stack}`}>
       {eyebrow && <p className="ds-eyebrow">{eyebrow}</p>}
       {title && <h2 id={`${id}-title`} className={`ds-heading-2 ${styles.copy}`}>{title}</h2>}
       {children}
@@ -78,13 +78,13 @@ export function DaydreamCampaign({ event }: { event: EventContent }) {
       <div className={styles.actions}>{cta("agenda")}<span>約 90–120 分鐘 · 線上直播</span></div>
     </Section>
 
-    <Section id="frames" eyebrow={copy.frames.eyebrow} tone={styles.inverse}>
+    <Section id="frames" wide eyebrow={copy.frames.eyebrow} tone={styles.inverse}>
       <span className="ds-small">CONTACT SHEET · 300+ DAYS</span>
       <div className={styles.filmStrip}>{copy.frames.photos.map((image, i) => <figure key={image.src}><Photo image={image} /><figcaption>{['DUBLIN', 'WORK', 'PEOPLE', 'TRAVEL', '300+ DAYS'][i]}</figcaption></figure>)}</div>
       <p className={`${styles.quote} ${styles.copy}`}>{copy.frames.paragraphs[0]}</p>
     </Section>
 
-    <Section id="speakers" title={copy.speakers.title} eyebrow={copy.speakers.eyebrow}>
+    <Section id="speakers" wide title={copy.speakers.title} eyebrow={copy.speakers.eyebrow}>
       <div className={styles.speakers}>{copy.speakers.people.map(person => <SpeakerCard key={person.name} speaker={person} unoptimized />)}</div>
     </Section>
 

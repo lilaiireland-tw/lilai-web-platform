@@ -1,10 +1,14 @@
 /* Opt-in primitives: do not impose new typography/spacing on legacy content. */
 .ds-container {
-  width: min(var(--container-width), calc(100% - var(--container-gutter)));
+  --container-size: var(--container-width-default);
+  width: min(var(--container-size), calc(100% - 2 * var(--container-gutter)));
   margin-inline: auto;
 }
-.ds-container--narrow { max-width: var(--container-width-narrow); }
-.ds-section { padding: var(--section-padding) 0; }
+.ds-container--wide { --container-size: var(--container-width-wide); }
+.ds-container--narrow { --container-size: var(--container-width-narrow); }
+/* Full-bleed section tones share the shell boundary; children choose reading width. */
+.ds-section { padding: var(--section-padding) var(--container-inset-wide); }
+.ds-section > .ds-container { width: min(var(--container-size), 100%); }
 .ds-section--soft { background: var(--color-section-soft); }
 .ds-section--tint { background: var(--color-primary-light); }
 .ds-body { font: var(--font-weight-regular) var(--text-body)/var(--line-height-body) var(--font-body); }
