@@ -1,7 +1,8 @@
 # Cloudflare staging and path routing plan (Issue #3)
 
-Status: reviewable plan and application indexing safeguards only. No deployment,
-Worker route, DNS, origin, or production traffic changes are made by this issue.
+Status: phase-one plan from PR #18, followed by the staging implementation in
+[Staging provisioning](cloudflare-staging.md). No live deployment, Worker route,
+DNS, origin, or production traffic changes have been made.
 This is the phase-one ownership plan; the broader migration ideas in
 `route-preservation-plan.md` are future work, not permission to migrate routes now.
 
@@ -13,9 +14,9 @@ This is the phase-one ownership plan; the broader migration ideas in
 | `develop` | Staging | Dedicated staging Worker and hostname; actual URL must be recorded after provisioning | noindex |
 | `main` | Production | `https://lilaiireland.com`; release artifact only until a separately approved cutover | production policy |
 
-The account subdomain, existing Worker names/IDs, and an approved staging hostname
-are absent from this repository. Do not guess a working staging URL. Provisioning
-and verifying it remain blocked on the operator supplying those values. Use the
+Read-only account/zone/subdomain discovery is recorded in the staging runbook.
+There is still no provisioned or verified staging URL. Provisioning remains
+blocked on nonproduction origins, CI credentials and Access setup. Use the
 dedicated staging Worker's issued `workers.dev` URL initially; any custom staging
 hostname must be outside the production hostname's route patterns. Record the
 exact staging URL, account/zone IDs, Worker IDs, and Git SHA in the release record.
@@ -27,10 +28,9 @@ fixture and sandbox service integrations. Never reuse production form/email,
 Queue, database, payment, or signup credentials. Protect review environments with
 Access when provisioned; retain noindex on the underlying provider URL too.
 
-There is no Wrangler config, Cloudflare adapter, or deployment workflow here.
-This issue does not select/install an adapter or activate CI deployment. A later
-deployment task must preserve the Next.js App Router and demonstrate its runtime
-compatibility. A plain `next build` is not a deployable Cloudflare Worker by itself.
+The staging follow-up adds Wrangler, OpenNext and a gated `develop` workflow;
+see the staging runbook for its build and runtime verification. The Next.js App
+Router is retained. A plain `next build` is not a deployable Cloudflare Worker by itself.
 Neither a push to `develop` nor a merge to `main` authorizes traffic changes.
 
 ## Route ownership
@@ -158,11 +158,11 @@ Build policy changes require rebuilding: do not promote a staging artifact to
 production by changing only runtime variables. Do not promote a production
 artifact to a publicly accessible preview.
 
-Provisioning follow-up: add a build/CI mismatch guard requiring the site and event
+The build/CI mismatch guard requires the site and event
 production markers to agree before staging or production deployment. Staging uses
 `SITE_DEPLOYMENT_ENV=staging` and `EVENT_DEPLOYMENT_ENV=preview`; production requires
-both markers to be `production`. This plan retains the separate policies and does
-not implement the guard or deployment workflow.
+both markers to be `production`. The separate policies are retained; the guard
+runs when Next configuration loads, including direct `next build` invocations.
 
 The app now emits noindex headers and inherited root metadata, disallows crawling
 in robots, and produces an empty sitemap outside production. Child metadata may
@@ -246,11 +246,11 @@ accepts any 2xx/3xx, so it is not sufficient cutover evidence.
 
 ## Outstanding release gates
 
-- Approved staging URL and account/zone/Worker identifiers.
+- Provisioned and verified staging URL/Worker (account and zone were discovered).
 - Live route/rule/DNS export, signup dependency inventory and verified CMS origin.
 - Legacy WordPress event URL/asset inventory and approved collision resolutions.
 - Provisioned isolated staging runtime and nonproduction integration credentials.
-- Build/CI guard against mismatched site/event production markers during provisioning.
+- Configure the gated staging CI environment with nonproduction origins and credentials.
 - Edge-wide noindex verification, route-winner evidence and full smoke/browser QA.
 - Separately reviewed implementation of the router/adapter and explicit production
   cutover authorization. Readiness migration has its own acceptance gate.

@@ -51,6 +51,7 @@ async function main() {
     env: {
       ...process.env,
       SITE_DEPLOYMENT_ENV: deploymentEnv,
+      EVENT_DEPLOYMENT_ENV: deploymentEnv === "production" ? "production" : "preview",
       NEXT_PUBLIC_SITE_URL: "https://invalid-staging.example",
       WORDPRESS_ORIGIN: fixtureUrl,
       WORDPRESS_API_BASE: `${fixtureUrl}/wp-json/wp/v2`,
