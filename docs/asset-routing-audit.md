@@ -15,18 +15,21 @@ npm run audit:production-assets
 
 The script inventories `public/` and `.open-next/assets`, maps files in
 `/_next/`, `/assets/`, `/fonts/`, and `/events/` to the current route owner, and
-fails if one of those files is not platform-owned. In the current checkout before
-the OpenNext build, it found 325 public files, all under routed namespaces:
-32 under `/assets/`, 76 under `/events/`, and 217 under `/fonts/`. It reported no
-policy misroutes. The build inventory was unavailable
-because `.open-next/assets` had not been generated locally; Linux CI must run the
-script after the production build to include generated chunks and hashed assets.
+fails if one of those files is not platform-owned. The local checkout before the
+OpenNext build found 325 public files: 32 under `/assets/`, 76 under `/events/`,
+and 217 under `/fonts/`. It reported no policy misroutes.
+
+PR #29 Linux validation then built OpenNext and audited 696 files (371 generated,
+325 public). It checked 686 routed files with no policy misroutes: 36 under
+`/_next/`, 64 under `/assets/`, 152 under `/events/`, and 434 under `/fonts/`.
+The remaining 10 OpenNext files are internal build files outside routed URL
+namespaces.
 
 Existing source inventory includes the homepage `/assets/*` images and video,
 event campaign assets under `/events/daydream-adventure-2027/*` (including
 images/fonts), and self-hosted `/fonts/*` families. `/_next/static/*` is covered
-by the policy and by the isolated harness; its generated file list comes from the
-OpenNext build.
+by the policy and by the isolated harness; its generated file list is now checked
+in PR validation.
 
 The isolated integration harness sends representative homepage/event HTML,
 JavaScript, CSS, image and font fixtures through the same Router dispatch helper.
@@ -38,10 +41,10 @@ it is not evidence of live Worker asset delivery or live CMS collision absence.
 
 | Namespace | Repository result | Live WordPress collision status |
 | --- | --- | --- |
-| `/_next/*` | Platform policy; generated build inventory still needs Linux CI output | Unknown |
-| `/assets/*` | 306 routed repository assets across shared and event files; policy maps them to Platform | Unknown |
+| `/_next/*` | 36 generated OpenNext files checked against Platform policy in Linux CI | Unknown |
+| `/assets/*` | 64 generated plus source assets checked against Platform policy | Unknown |
 | `/fonts/*` | Self-hosted font files present; policy maps them to Platform | Unknown |
-| `/events/*` | Campaign assets are platform-owned; unknown slugs/assets resolve through Platform and should 404 | Existing public sample requests returned 404 before cutover; full namespace unknown |
+| `/events/*` | 152 generated plus source assets checked against Platform policy; unknown slugs/assets should remain 404 | Existing public sample requests returned 404 before cutover; full namespace unknown |
 
 The broad prefixes shadow any WordPress URL with the same path after the
 catch-all Router Route is attached. The earlier read-only audit sampled
@@ -54,8 +57,7 @@ cutover blocker.
 
 ## Conclusion
 
-Code and repository assets are consistent with the planned Platform namespaces.
-No live collision can be declared absent from the available evidence. Keep the
-release **NO-GO** until the generated OpenNext inventory is reviewed and the live
-WordPress namespace, signup dependencies, and historical `/events` URLs are
-checked before cutover.
+Code and generated repository assets are consistent with the planned Platform
+namespaces. No live collision can be declared absent from the available evidence.
+Keep the release **NO-GO** until the live WordPress namespace, signup
+dependencies, and historical `/events` URLs are checked before cutover.
