@@ -63,10 +63,12 @@ with `deploy_private_workers=false`. To deploy private Workers, dispatch this
 workflow on `develop`, then select `true` only after a separately recorded
 deployment approval and after confirming
 the `production` environment reviewers (if configured),
-`CLOUDFLARE_API_TOKEN` secret, and `CLOUDFLARE_ACCOUNT_ID` variable. The token
-needs permission to deploy Workers and manage the Service Binding for the target
-account. The script builds/deploys Platform first, then Router. Never add a route
-in this workflow.
+`CLOUDFLARE_API_TOKEN` secret, and `CLOUDFLARE_ACCOUNT_ID` variable. Both Worker
+configs and the variable must target the approved production account
+`622900d9297cd7c09cad966aaae64617`; a mismatch fails before either deploy. The
+token needs permission to deploy Workers and manage the Service Binding for the
+target account. The script builds/deploys Platform first, then Router. Never add
+a route in this workflow.
 
 ## Requires Cloudflare account evidence
 

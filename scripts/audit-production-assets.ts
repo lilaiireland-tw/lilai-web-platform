@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { productionRouteOwner } from "../cloudflare/production-routing-policy";
@@ -13,10 +14,13 @@ function filesUnder(root: string): string[] {
   return result;
 }
 
-const built = filesUnder(".open-next/assets");
+const buildAssetsRoot = ".open-next/assets";
+assert(existsSync(buildAssetsRoot), "Production asset audit requires .open-next/assets; run the production OpenNext build first.");
+const built = filesUnder(buildAssetsRoot);
+assert(built.length > 0, "Production asset audit requires non-empty .open-next/assets; run the production OpenNext build first.");
 const publicFiles = filesUnder("public");
 const tracked = [
-  ...built.map(path => ({ source: "OpenNext", root: ".open-next/assets", path })),
+  ...built.map(path => ({ source: "OpenNext", root: buildAssetsRoot, path })),
   ...publicFiles.map(path => ({ source: "public", root: "public", path })),
 ];
 const routedFiles = tracked.filter(({ root, path }) => {
@@ -36,6 +40,5 @@ for (const { source, path } of routedFiles) {
 console.log(`Repository asset inventory: ${tracked.length} files (${built.length} built, ${publicFiles.length} public).`);
 console.log(`Files under routed namespaces: ${routedFiles.length}; each checked against the route policy.`);
 for (const [namespace, count] of namespaceCounts) console.log(`  /${namespace}/: ${count}`);
-if (built.length === 0) console.log("BUILD INVENTORY UNAVAILABLE: .open-next/assets is absent; run the production build first.");
 console.log("CMS COLLISION STATUS: UNVERIFIED. Repository artifacts cannot enumerate live WordPress media, plugins, backlinks, or CDN paths.");
 console.log("Known risk: the broad /_next/, /assets/, and /fonts/ Platform prefixes shadow any current WordPress resource at the same path.");
