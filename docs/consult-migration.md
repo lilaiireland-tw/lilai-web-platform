@@ -13,6 +13,21 @@ uses the supplied root source for form content, values, calculations and
 submission behavior. The public canonical and title are retained; its broken
 CSS-text meta description is replaced with a meaningful page description.
 
+## Owner-approved questionnaire
+
+The project owner approved the supplied questionnaire as the version to keep.
+The older form still published in WordPress is not a source for reverting these
+fields. `index-with-wp-note.md` remains authoritative for wording, option
+values, calculations, GAS payloads and assessment results. Specifically:
+
+1. LINE ID remains optional.
+2. The course choices retain `考試準備班／商業英文` instead of the older
+   `碩士／專業文憑課程` choice.
+3. The Ireland work-intention question remains.
+4. The English-learning priority question remains.
+5. The city-preference question remains.
+6. The new budget range from `NT$30 萬以下` through `NT$45 萬以上` remains.
+
 ## Preserved integration behavior
 
 - Main submission and accuracy feedback still post directly to the same Google
@@ -23,10 +38,28 @@ CSS-text meta description is replaced with a meaningful page description.
   team email, resource link, discount values and Taipei timestamp.
 - Accuracy feedback retains `type: accuracy_feedback` and adds
   `urgentFollowUp: true` only for `不太準`.
-- Google Ads retains event `conversion` and
+- The signup repository's `main` branch is the reference architecture for the
+  global tag and conversion helper. All apps share tag ID `AW-17610996814`, but
+  the conversion actions stay separate: direct signup uses
+  `AW-17610996814/MeKhCKz2-e0cEM74yc1B`, signup consultation uses
+  `AW-17610996814/b4bzCNrO-u0cEM74yc1B`, and this Consultation Page retains
+  `AW-17610996814/Ynp6CPHkhe4cEM74yc1B`.
+- The root layout owns one reusable Google Tag loader. On an explicitly marked
+  production build served from exactly `lilaiireland.com`, it initializes
+  `dataLayer`, queues `gtag('js', new Date())`, configures
+  `gtag('config', 'AW-17610996814')`, and loads Google's official script with
+  Next.js `afterInteractive`. Staging/preview/local builds and non-production
+  hostnames do not initialize `gtag` or load the remote script.
+- The consultation conversion remains event `conversion` with
   `send_to: AW-17610996814/Ynp6CPHkhe4cEM74yc1B`. It runs only after the main
-  `fetch` promise resolves and is guarded against duplicate firing. Carousel,
-  form navigation and accuracy feedback do not fire a conversion.
+  GAS `fetch` promise resolves. A synchronous in-flight/completed gate prevents
+  repeated clicks and handler re-entry; a separate per-mount conversion guard
+  prevents React re-render duplicates. A rejected fetch remains retryable, and
+  a fresh page/form lifecycle can make a genuinely separate submission.
+- The local `gtag` queue is created before the external script is ready, so an
+  eligible post-fetch conversion is queued rather than silently discarded.
+  Carousel use, form navigation, validation failures, loading state and
+  accuracy feedback never invoke the main conversion.
 - No GAS, Google Forms, Queue, Sheet, email, Worker, WordPress or production
   route configuration is changed.
 
@@ -38,8 +71,11 @@ that contract needs a separate issue and coordinated backend work.
 
 ## Routing and SEO
 
-- Next.js serves `/consult` and `/consult/`; query strings remain on the current
-  URL because the page does not redirect or replace browser history.
+- With the repository's canonical no-trailing-slash behavior, `/consult/`
+  redirects once with HTTP 308 to `/consult`. Next.js preserves the query
+  string, including Google Ads attribution parameters such as `gclid` and UTM
+  values. The redirect happens before the page mounts, so it cannot create a
+  duplicate page view or conversion in this application.
 - The production canonical is `https://lilaiireland.com/consult/`.
 - Staging builds set page robots to `noindex, nofollow`; the existing staging
   Worker also adds `X-Robots-Tag: noindex, nofollow`.
@@ -70,3 +106,30 @@ production ad-conversion tooling during verification.
 
 Automated checks mock or inspect the contract only; they never call GAS, submit
 Google Forms, or invoke `gtag`.
+
+## Manual Google Tag Assistant verification
+
+Perform this only on an authorized production-host test window with an approved
+non-lead test plan; staging and localhost intentionally have no Google Tag.
+
+1. Start a Tag Assistant session on `https://lilaiireland.com/consult` and
+   confirm one Google tag for `AW-17610996814` and one config initialization.
+2. Open `/consult/?gclid=test-tag-assistant&utm_source=manual-qa`, follow the
+   `/consult/` redirect variant as well, and confirm the query parameters reach
+   the final URL before the page initializes.
+3. Navigate between steps and provoke validation errors. Confirm no
+   `conversion` event appears.
+4. With the GAS request safely mocked or otherwise explicitly authorized,
+   confirm a rejected request produces no conversion and a resolved opaque
+   request produces exactly one event sent to
+   `AW-17610996814/Ynp6CPHkhe4cEM74yc1B`.
+5. Repeat-click during submission and submit accuracy feedback; confirm neither
+   creates another main conversion. Confirm neither signup label appears.
+
+No consent-management platform or Google Consent Mode integration was present
+in this repository or the referenced signup implementation during this review.
+The form's two existing consent controls are unchanged and remain required
+before submission, but they are not documented as cookie-consent controls.
+Production consent/banner behavior therefore remains unverified and must be
+checked in the real public shell before cutover; this PR does not bypass or
+invent a consent decision.

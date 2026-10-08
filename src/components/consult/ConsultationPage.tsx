@@ -10,6 +10,15 @@ import {
   getTimeAnchor,
   type AssessmentData,
 } from "@/lib/consult/assessment";
+import {
+  trackConsultationConversion,
+  type GoogleAdsConversionGuard,
+} from "@/lib/analytics/google-ads";
+import {
+  runAccuracyFeedbackSubmission,
+  runConsultationSubmission,
+  type ConsultationSubmissionGate,
+} from "@/lib/consult/submission";
 import { benefits, faqs, heroImages, optionLabels, options } from "./consult-content";
 import styles from "./consultation.module.css";
 
@@ -150,7 +159,7 @@ function StageCta({ type }: { type: string }) {
   );
 }
 
-export function ConsultationPage() {
+export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boolean }) {
   const [slide, setSlide] = useState(0);
   const [step, setStep] = useState(1);
   const [values, setValues] = useState(initialValues);
@@ -161,7 +170,8 @@ export function ConsultationPage() {
   const [result, setResult] = useState<null | { data: AssessmentData; stageInfo: ReturnType<typeof getAssessmentContent>; stageName: string; leadQuality: string }>(null);
   const [accuracy, setAccuracy] = useState<string | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const conversionSent = useRef(false);
+  const conversionGuard = useRef<GoogleAdsConversionGuard>({ sent: false });
+  const submissionGate = useRef<ConsultationSubmissionGate>({ inFlight: false, completed: false });
   const formRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -240,22 +250,7 @@ export function ConsultationPage() {
     resources: values.resources.join("、"), webinar: values.webinar.join("、"),
   });
 
-  const trackConversion = () => {
-    const gtag = (window as Window & { gtag?: (...args: unknown[]) => void }).gtag;
-    if (conversionSent.current || typeof gtag !== "function") return;
-    gtag("event", "conversion", { send_to: "AW-17610996814/Ynp6CPHkhe4cEM74yc1B" });
-    conversionSent.current = true;
-  };
-
   const submit = async () => {
-    if (submitting || submitted) return;
-    for (let target = 1; target <= 5; target += 1) {
-      if (validateFields(stepFields[target]).length) {
-        goToStep(target);
-        scrollToFirstError();
-        return;
-      }
-    }
     const data = assessmentData();
     const stage = classifyStage(data);
     const leadQuality = classifyLead(data);
@@ -274,18 +269,33 @@ export function ConsultationPage() {
       originalPrice: WEBINAR_DISCOUNT.original_price,
       submittedAt: new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei" }),
     };
-    setSubmitting(true);
     try {
-      await fetch(GAS_ENDPOINT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-      trackConversion();
-      setResult({ data, stageInfo, stageName, leadQuality });
-      setSubmitted(true);
-      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      await runConsultationSubmission({
+        gate: submissionGate.current,
+        validate: () => {
+          for (let target = 1; target <= 5; target += 1) {
+            if (validateFields(stepFields[target]).length) {
+              goToStep(target);
+              scrollToFirstError();
+              return false;
+            }
+          }
+          return true;
+        },
+        request: () => fetch(GAS_ENDPOINT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }),
+        onResolved: () => {
+          trackConsultationConversion(conversionGuard.current, {
+            productionDeployment: googleAdsEnabled,
+          });
+          setResult({ data, stageInfo, stageName, leadQuality });
+          setSubmitted(true);
+          formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        },
+        onSubmittingChange: setSubmitting,
+      });
     } catch (error) {
       console.error(error);
       window.alert("送出時遇到問題，請稍後再試，或直接私訊哩來愛爾蘭 IG。");
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -298,7 +308,7 @@ export function ConsultationPage() {
       accuracyAnswer: answer, submittedAt: new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei" }),
     };
     if (answer === "不太準") feedbackPayload.urgentFollowUp = true;
-    fetch(GAS_ENDPOINT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(feedbackPayload) })
+    runAccuracyFeedbackSubmission(() => fetch(GAS_ENDPOINT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(feedbackPayload) }))
       .catch(error => console.log("Feedback send error:", error));
   };
 

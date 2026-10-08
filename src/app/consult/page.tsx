@@ -27,5 +27,5 @@ export const metadata: Metadata = {
 };
 
 export default function ConsultPage() {
-  return <ConsultationPage />;
+  return <ConsultationPage googleAdsEnabled={isProductionDeployment()} />;
 }
