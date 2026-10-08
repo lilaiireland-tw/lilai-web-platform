@@ -181,7 +181,7 @@ export const daydreamCopy = {
         "role": "哩來愛爾蘭學長",
         "bio": "從語校選擇、哩來服務到報名下一步，\n讓想出發的人知道可以怎麼開始。",
         "image": {
-          "src": "/events/daydream-adventure-2027/arsha.webp",
+          "src": "/events/daydream-adventure-2027/arsha.jpg",
           "alt": "Arsha 在 Trinity College 鐘樓前",
           "width": 1066,
           "height": 1600

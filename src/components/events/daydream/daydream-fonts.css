@@ -1,0 +1,729 @@
+/* Exact font subsets from Landing Page v3, isolated from the shared shell. */
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/47d56f46-09a1-44f2-a08c-c0e4e278422d.woff2") format('woff2');
+  unicode-range: U+2618;
+}
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/2515a17a-4570-48fa-83b3-5a12ec6bc201.woff2") format('woff2');
+  unicode-range: U+2212;
+}
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/adf3fa09-9a35-48fb-9a8d-3e21dd4347a7.woff2") format('woff2');
+  unicode-range: U+9713;
+}
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/7cf6c233-c233-4c07-8429-310b0bf3efb4.woff2") format('woff2');
+  unicode-range: U+60,U+508d;
+}
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/00fc35f8-dadf-458a-9cdf-8d6833b9dd13.woff2") format('woff2');
+  unicode-range: U+2193;
+}
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/1b90ab0e-79cf-4bdd-b1e5-04be2ab5fe36.woff2") format('woff2');
+  unicode-range: U+964c,U+fe0f,U+ff0b;
+}
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/ebfd6ca3-d3c0-43bc-886d-0cebfb01f782.woff2") format('woff2');
+  unicode-range: U+5141,U+54e9,U+6daf,U+82bd,U+8ef8,U+ff0a;
+}
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/0255ec45-4a15-4a68-83fb-96170cdf1b42.woff2") format('woff2');
+  unicode-range: U+6490,U+7b52,U+8679;
+}
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/1b4decc8-c7d3-4f41-95f1-8073df29b9d7.woff2") format('woff2');
+  unicode-range: U+4f30,U+52c7,U+616e,U+622a,U+6293,U+62c6,U+6372,U+7bc9,U+966a;
+}
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/ddcecbb4-74b7-48b7-a278-148adb0c6670.woff2") format('woff2');
+  unicode-range: U+2192,U+5192,U+57f7,U+59d3,U+5bec,U+5cb8,U+5f1f,U+6383,U+6562,U+65c1,U+695a,U+6b04,U+7126,U+7c3d,U+9f61;
+}
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/8fa808b2-db52-4065-ba1a-00357c57bfe9.woff2") format('woff2');
+  unicode-range: U+4ecd,U+56fa,U+5bbf,U+6311,U+63f4,U+675f,U+7a81,U+7e6b,U+804a,U+8212,U+8ab0,U+968e,U+ff0f,U+ff5c;
+}
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/bf7ab01a-d21e-4614-9a9c-1da90833c914.woff2") format('woff2');
+  unicode-range: U+b7,U+5283,U+59b9,U+93e1;
+}
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/d84277d8-3ecd-4ecb-8416-7832aa5637b7.woff2") format('woff2');
+  unicode-range: U+24,U+25,U+3d,U+4e45,U+4ed8,U+50c5,U+5287,U+5462,U+54ea,U+555f,U+5922,U+5979,U+5bc4,U+600e,U+62db,U+64ad,U+65cf,U+665a,U+6821,U+6b62,U+6b72,U+6c7a,U+723e,U+7968,U+7b11,U+7d42,U+8077,U+80cc,U+9047,U+90f5,U+9418,U+9678,U+967d,U+96aa,U+9748,U+9802,U+9806,U+984d,U+9867,U+ff1b;
+}
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/2fb3ab0d-8f87-47b4-93af-5282bba809cb.woff2") format('woff2');
+  unicode-range: U+26,U+40,U+4ec0,U+4f4f,U+503c,U+5047,U+53e6,U+55ce,U+5883,U+59cb,U+5b58,U+5b98,U+5c6c,U+5e33,U+5e6b,U+5e8f,U+5e95,U+5f62,U+5f80,U+5fae,U+614b,U+623f,U+628a,U+64c7,U+652f,U+6545,U+65e9,U+670b,U+6a13,U+6b65,U+6bb5,U+6e90,U+6e96,U+72c0,U+7368,U+74b0,U+78ba,U+78bc,U+7b97,U+7d39,U+7e8c,U+7fa4,U+8003,U+807d,U+862d,U+8857,U+88e1,U+89ba,U+89d2,U+8a31,U+8a72,U+8b58,U+8b80,U+8d70,U+8ddf,U+8fa6,U+900f,U+9031,U+9069,U+9322,U+96e2,U+9805,U+9810;
+}
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/b843409c-8369-40d7-9614-190f6195f3f2.woff2") format('woff2');
+  unicode-range: U+3e,U+300a,U+300b,U+4e94,U+4e9b,U+4ea4,U+4eca,U+4ecb,U+4f46,U+4f55,U+4f9b,U+4f9d,U+505a,U+5099,U+50cf,U+5148,U+514d,U+5341,U+5373,U+53bb,U+53c3,U+53c8,U+53ea,U+592a,U+5c11,U+5c71,U+5df1,U+5e36,U+5e97,U+5f88,U+5f9e,U+624d,U+6253,U+627e,U+63a5,U+653e,U+6574,U+65c5,U+672a,U+6a23,U+6bcf,U+6d41,U+6d77,U+6e05,U+6e2f,U+7136,U+7167,U+738b,U+7531,U+7559,U+767d,U+76f4,U+793a,U+7a2e,U+7d04,U+7d05,U+7d66,U+800c,U+82f1,U+8457,U+85a6,U+8655,U+898f,U+89c0,U+89e3,U+8a55,U+8a8d,U+8a9e,U+8b49,U+8b8a,U+8b93,U+9001,U+90a3,U+9650,U+969b,U+9700,U+975e,U+9a57,U+9ebc;
+}
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/6028eb8c-267c-4668-b0fb-1f878861cbed.woff2") format('woff2');
+  unicode-range: U+d,U+2b,U+300c,U+300d,U+4e09,U+4e3b,U+4e4b,U+4e5f,U+4e86,U+4e8b,U+4e8c,U+4eab,U+4ee3,U+4ef6,U+4f4d,U+4f60,U+4f7f,U+4f86,U+4fdd,U+5011,U+5149,U+5167,U+524d,U+52a0,U+52d9,U+539f,U+53ca,U+53cb,U+5408,U+540c,U+540d,U+548c,U+554f,U+55ae,U+5831,U+5834,U+5916,U+5929,U+597d,U+5982,U+5b57,U+5b78,U+5b8c,U+5b9a,U+5be6,U+5c07,U+5c08,U+5c0d,U+5c31,U+5de5,U+5df2,U+5e38,U+5e74,U+5ea6,U+5f0f,U+5f71,U+5f8c,U+5f97,U+60c5,U+60f3,U+610f,U+611b,U+611f,U+61c9,U+6210,U+624b,U+63a8,U+63d0,U+6536,U+6599,U+65b9,U+660e,U+670d,U+671f,U+679c,U+683c,U+689d,U+6a5f,U+6b21,U+6c92,U+6d3b,U+7063,U+7248,U+73fe,U+7406,U+7576,U+76ee,U+76f8,U+770b,U+771f,U+77e5,U+7a0b,U+7ad9,U+7b2c,U+7cbe,U+7d50,U+7d61,U+7d93,U+7dda,U+7f8e,U+806f,U+80fd,U+81ea,U+8207,U+8272,U+865f,U+8868,U+8981,U+898b,U+8a00,U+8a08,U+8a0a,U+8a2d,U+8aaa,U+8cbb,U+8cc7,U+8d77,U+8def,U+9019,U+901a,U+9023,U+9032,U+904a,U+904e,U+9053,U+9078,U+9084,U+90e8,U+91cd,U+9577,U+9593,U+982d,U+984c,U+9ad8,U+ff08,U+ff09,U+ff1f;
+}
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/86124b64-42ef-49ca-ad2b-4410bba305e3.woff2") format('woff2');
+  unicode-range: U+20,U+22,U+28,U+29,U+2a,U+2c,U+2d,U+2e,U+2f,U+30,U+31,U+32,U+33,U+34,U+35,U+36,U+37,U+38,U+39,U+3a,U+3b,U+41,U+42,U+43,U+44,U+45,U+46,U+47,U+48,U+49,U+4b,U+4c,U+4d,U+4e,U+4f,U+50,U+51,U+52,U+53,U+54,U+55,U+56,U+57,U+58,U+59,U+5b,U+5c,U+5d,U+61,U+62,U+63,U+64,U+65,U+66,U+67,U+68,U+69,U+6a,U+6b,U+6c,U+6d,U+6e,U+6f,U+70,U+71,U+72,U+73,U+74,U+75,U+76,U+77,U+78,U+79,U+7b,U+7d,U+2013,U+2014,U+3001,U+3002,U+4e00,U+4e0a,U+4e0b,U+4e0d,U+4e2d,U+4eba,U+4ee5,U+4f5c,U+500b,U+5168,U+51fa,U+5206,U+5230,U+52d5,U+53ef,U+53f0,U+570b,U+5728,U+591a,U+5927,U+5b50,U+5bb6,U+6211,U+6587,U+65b0,U+65bc,U+65e5,U+662f,U+6642,U+6700,U+6703,U+6709,U+672c,U+6b63,U+70ba,U+751f,U+7528,U+767c,U+7684,U+884c,U+958b,U+95dc,U+96fb,U+9801,U+ff0c,U+ff1a;
+}
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/c7a25666-295f-4bf2-a89d-c67e69bc5508.woff2") format('woff2');
+  unicode-range: U+300a,U+300b;
+}
+@font-face {
+  font-family: "Daydream Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/dc45f023-803c-4755-8614-d58f7732bc0d.woff2") format('woff2');
+  unicode-range: U+a,U+d,U+20,U+22,U+24,U+25,U+26,U+28,U+29,U+2a,U+2b,U+2c,U+2d,U+2e,U+2f,U+30,U+31,U+32,U+33,U+34,U+35,U+36,U+37,U+38,U+39,U+3a,U+3b,U+3d,U+3e,U+40,U+41,U+42,U+43,U+44,U+45,U+46,U+47,U+48,U+49,U+4b,U+4c,U+4d,U+4e,U+4f,U+50,U+51,U+52,U+53,U+54,U+55,U+56,U+57,U+58,U+59,U+5b,U+5c,U+5d,U+60,U+61,U+62,U+63,U+64,U+65,U+66,U+67,U+68,U+69,U+6a,U+6b,U+6c,U+6d,U+6e,U+6f,U+70,U+71,U+72,U+73,U+74,U+75,U+76,U+77,U+78,U+79,U+7b,U+7d,U+b7,U+2013,U+2014,U+2193,U+2212;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/14341e97-d53f-4900-8d0c-81e2f08fdf7c.woff2") format('woff2');
+  unicode-range: U+2618;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/740907fd-459f-43cf-8374-636d68946574.woff2") format('woff2');
+  unicode-range: U+2212;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/b395e357-709e-4c24-8e65-64f122db2998.woff2") format('woff2');
+  unicode-range: U+9713;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/852c5030-0ec6-445a-821d-0efc164c7f0c.woff2") format('woff2');
+  unicode-range: U+60,U+508d;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/91824665-c8a9-4fcf-a9cf-2ae72ff1aa35.woff2") format('woff2');
+  unicode-range: U+2193;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/445490ad-58ff-4dc4-ad7a-cf526c3afc76.woff2") format('woff2');
+  unicode-range: U+964c,U+fe0f,U+ff0b;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/557ed954-3731-4130-a054-3bee866c4d41.woff2") format('woff2');
+  unicode-range: U+5141,U+54e9,U+6daf,U+82bd,U+8ef8,U+ff0a;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/7961c04a-dd8a-4985-9a03-1ca3a02d330a.woff2") format('woff2');
+  unicode-range: U+6490,U+7b52,U+8679;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/00d0e58f-bce5-42eb-b6eb-13c8810f040a.woff2") format('woff2');
+  unicode-range: U+4f30,U+52c7,U+616e,U+622a,U+6293,U+62c6,U+6372,U+7bc9,U+966a;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/67fbb8b9-1c3b-4599-9930-27ebb8dc8f2d.woff2") format('woff2');
+  unicode-range: U+2192,U+5192,U+57f7,U+59d3,U+5bec,U+5cb8,U+5f1f,U+6383,U+6562,U+65c1,U+695a,U+6b04,U+7126,U+7c3d,U+9f61;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/34037a58-4f17-45c1-9343-c2cdee8c67c5.woff2") format('woff2');
+  unicode-range: U+4ecd,U+56fa,U+5bbf,U+6311,U+63f4,U+675f,U+7a81,U+7e6b,U+804a,U+8212,U+8ab0,U+968e,U+ff0f,U+ff5c;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/d5e891f2-554e-4d45-842d-5c3997351d94.woff2") format('woff2');
+  unicode-range: U+b7,U+5283,U+59b9,U+93e1;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/4b3fa0d1-82d5-4023-89bf-0856ef66d75d.woff2") format('woff2');
+  unicode-range: U+24,U+25,U+3d,U+4e45,U+4ed8,U+50c5,U+5287,U+5462,U+54ea,U+555f,U+5922,U+5979,U+5bc4,U+600e,U+62db,U+64ad,U+65cf,U+665a,U+6821,U+6b62,U+6b72,U+6c7a,U+723e,U+7968,U+7b11,U+7d42,U+8077,U+80cc,U+9047,U+90f5,U+9418,U+9678,U+967d,U+96aa,U+9748,U+9802,U+9806,U+984d,U+9867,U+ff1b;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/884b44b2-e34b-413f-ae2f-18abc7e7e5ee.woff2") format('woff2');
+  unicode-range: U+26,U+40,U+4ec0,U+4f4f,U+503c,U+5047,U+53e6,U+55ce,U+5883,U+59cb,U+5b58,U+5b98,U+5c6c,U+5e33,U+5e6b,U+5e8f,U+5e95,U+5f62,U+5f80,U+5fae,U+614b,U+623f,U+628a,U+64c7,U+652f,U+6545,U+65e9,U+670b,U+6a13,U+6b65,U+6bb5,U+6e90,U+6e96,U+72c0,U+7368,U+74b0,U+78ba,U+78bc,U+7b97,U+7d39,U+7e8c,U+7fa4,U+8003,U+807d,U+862d,U+8857,U+88e1,U+89ba,U+89d2,U+8a31,U+8a72,U+8b58,U+8b80,U+8d70,U+8ddf,U+8fa6,U+900f,U+9031,U+9069,U+9322,U+96e2,U+9805,U+9810;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/34d73685-7953-4734-934b-dd6d98dfb73c.woff2") format('woff2');
+  unicode-range: U+3e,U+300a,U+300b,U+4e94,U+4e9b,U+4ea4,U+4eca,U+4ecb,U+4f46,U+4f55,U+4f9b,U+4f9d,U+505a,U+5099,U+50cf,U+5148,U+514d,U+5341,U+5373,U+53bb,U+53c3,U+53c8,U+53ea,U+592a,U+5c11,U+5c71,U+5df1,U+5e36,U+5e97,U+5f88,U+5f9e,U+624d,U+6253,U+627e,U+63a5,U+653e,U+6574,U+65c5,U+672a,U+6a23,U+6bcf,U+6d41,U+6d77,U+6e05,U+6e2f,U+7136,U+7167,U+738b,U+7531,U+7559,U+767d,U+76f4,U+793a,U+7a2e,U+7d04,U+7d05,U+7d66,U+800c,U+82f1,U+8457,U+85a6,U+8655,U+898f,U+89c0,U+89e3,U+8a55,U+8a8d,U+8a9e,U+8b49,U+8b8a,U+8b93,U+9001,U+90a3,U+9650,U+969b,U+9700,U+975e,U+9a57,U+9ebc;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/7ee811c0-bf31-461b-9280-eb09ace271ef.woff2") format('woff2');
+  unicode-range: U+d,U+2b,U+300c,U+300d,U+4e09,U+4e3b,U+4e4b,U+4e5f,U+4e86,U+4e8b,U+4e8c,U+4eab,U+4ee3,U+4ef6,U+4f4d,U+4f60,U+4f7f,U+4f86,U+4fdd,U+5011,U+5149,U+5167,U+524d,U+52a0,U+52d9,U+539f,U+53ca,U+53cb,U+5408,U+540c,U+540d,U+548c,U+554f,U+55ae,U+5831,U+5834,U+5916,U+5929,U+597d,U+5982,U+5b57,U+5b78,U+5b8c,U+5b9a,U+5be6,U+5c07,U+5c08,U+5c0d,U+5c31,U+5de5,U+5df2,U+5e38,U+5e74,U+5ea6,U+5f0f,U+5f71,U+5f8c,U+5f97,U+60c5,U+60f3,U+610f,U+611b,U+611f,U+61c9,U+6210,U+624b,U+63a8,U+63d0,U+6536,U+6599,U+65b9,U+660e,U+670d,U+671f,U+679c,U+683c,U+689d,U+6a5f,U+6b21,U+6c92,U+6d3b,U+7063,U+7248,U+73fe,U+7406,U+7576,U+76ee,U+76f8,U+770b,U+771f,U+77e5,U+7a0b,U+7ad9,U+7b2c,U+7cbe,U+7d50,U+7d61,U+7d93,U+7dda,U+7f8e,U+806f,U+80fd,U+81ea,U+8207,U+8272,U+865f,U+8868,U+8981,U+898b,U+8a00,U+8a08,U+8a0a,U+8a2d,U+8aaa,U+8cbb,U+8cc7,U+8d77,U+8def,U+9019,U+901a,U+9023,U+9032,U+904a,U+904e,U+9053,U+9078,U+9084,U+90e8,U+91cd,U+9577,U+9593,U+982d,U+984c,U+9ad8,U+ff08,U+ff09,U+ff1f;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/1bd6797e-fec9-4b71-b08d-b400d11a1daf.woff2") format('woff2');
+  unicode-range: U+20,U+22,U+28,U+29,U+2a,U+2c,U+2d,U+2e,U+2f,U+30,U+31,U+32,U+33,U+34,U+35,U+36,U+37,U+38,U+39,U+3a,U+3b,U+41,U+42,U+43,U+44,U+45,U+46,U+47,U+48,U+49,U+4b,U+4c,U+4d,U+4e,U+4f,U+50,U+51,U+52,U+53,U+54,U+55,U+56,U+57,U+58,U+59,U+5b,U+5c,U+5d,U+61,U+62,U+63,U+64,U+65,U+66,U+67,U+68,U+69,U+6a,U+6b,U+6c,U+6d,U+6e,U+6f,U+70,U+71,U+72,U+73,U+74,U+75,U+76,U+77,U+78,U+79,U+7b,U+7d,U+2013,U+2014,U+3001,U+3002,U+4e00,U+4e0a,U+4e0b,U+4e0d,U+4e2d,U+4eba,U+4ee5,U+4f5c,U+500b,U+5168,U+51fa,U+5206,U+5230,U+52d5,U+53ef,U+53f0,U+570b,U+5728,U+591a,U+5927,U+5b50,U+5bb6,U+6211,U+6587,U+65b0,U+65bc,U+65e5,U+662f,U+6642,U+6700,U+6703,U+6709,U+672c,U+6b63,U+70ba,U+751f,U+7528,U+767c,U+7684,U+884c,U+958b,U+95dc,U+96fb,U+9801,U+ff0c,U+ff1a;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/1ca0c36e-0a2d-44e0-9130-6b8a228d1456.woff2") format('woff2');
+  unicode-range: U+a,U+d,U+20,U+22,U+24,U+25,U+26,U+28,U+29,U+2a,U+2b,U+2c,U+2d,U+2e,U+2f,U+30,U+31,U+32,U+33,U+34,U+35,U+36,U+37,U+38,U+39,U+3a,U+3b,U+3d,U+3e,U+40,U+41,U+42,U+43,U+44,U+45,U+46,U+47,U+48,U+49,U+4b,U+4c,U+4d,U+4e,U+4f,U+50,U+51,U+52,U+53,U+54,U+55,U+56,U+57,U+58,U+59,U+5b,U+5c,U+5d,U+60,U+61,U+62,U+63,U+64,U+65,U+66,U+67,U+68,U+69,U+6a,U+6b,U+6c,U+6d,U+6e,U+6f,U+70,U+71,U+72,U+73,U+74,U+75,U+76,U+77,U+78,U+79,U+7b,U+7d,U+b7,U+2013,U+2014,U+2193,U+2212;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/14341e97-d53f-4900-8d0c-81e2f08fdf7c.woff2") format('woff2');
+  unicode-range: U+2618;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/740907fd-459f-43cf-8374-636d68946574.woff2") format('woff2');
+  unicode-range: U+2212;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/b395e357-709e-4c24-8e65-64f122db2998.woff2") format('woff2');
+  unicode-range: U+9713;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/852c5030-0ec6-445a-821d-0efc164c7f0c.woff2") format('woff2');
+  unicode-range: U+60,U+508d;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/91824665-c8a9-4fcf-a9cf-2ae72ff1aa35.woff2") format('woff2');
+  unicode-range: U+2193;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/445490ad-58ff-4dc4-ad7a-cf526c3afc76.woff2") format('woff2');
+  unicode-range: U+964c,U+fe0f,U+ff0b;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/557ed954-3731-4130-a054-3bee866c4d41.woff2") format('woff2');
+  unicode-range: U+5141,U+54e9,U+6daf,U+82bd,U+8ef8,U+ff0a;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/7961c04a-dd8a-4985-9a03-1ca3a02d330a.woff2") format('woff2');
+  unicode-range: U+6490,U+7b52,U+8679;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/00d0e58f-bce5-42eb-b6eb-13c8810f040a.woff2") format('woff2');
+  unicode-range: U+4f30,U+52c7,U+616e,U+622a,U+6293,U+62c6,U+6372,U+7bc9,U+966a;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/67fbb8b9-1c3b-4599-9930-27ebb8dc8f2d.woff2") format('woff2');
+  unicode-range: U+2192,U+5192,U+57f7,U+59d3,U+5bec,U+5cb8,U+5f1f,U+6383,U+6562,U+65c1,U+695a,U+6b04,U+7126,U+7c3d,U+9f61;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/34037a58-4f17-45c1-9343-c2cdee8c67c5.woff2") format('woff2');
+  unicode-range: U+4ecd,U+56fa,U+5bbf,U+6311,U+63f4,U+675f,U+7a81,U+7e6b,U+804a,U+8212,U+8ab0,U+968e,U+ff0f,U+ff5c;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/d5e891f2-554e-4d45-842d-5c3997351d94.woff2") format('woff2');
+  unicode-range: U+b7,U+5283,U+59b9,U+93e1;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/4b3fa0d1-82d5-4023-89bf-0856ef66d75d.woff2") format('woff2');
+  unicode-range: U+24,U+25,U+3d,U+4e45,U+4ed8,U+50c5,U+5287,U+5462,U+54ea,U+555f,U+5922,U+5979,U+5bc4,U+600e,U+62db,U+64ad,U+65cf,U+665a,U+6821,U+6b62,U+6b72,U+6c7a,U+723e,U+7968,U+7b11,U+7d42,U+8077,U+80cc,U+9047,U+90f5,U+9418,U+9678,U+967d,U+96aa,U+9748,U+9802,U+9806,U+984d,U+9867,U+ff1b;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/884b44b2-e34b-413f-ae2f-18abc7e7e5ee.woff2") format('woff2');
+  unicode-range: U+26,U+40,U+4ec0,U+4f4f,U+503c,U+5047,U+53e6,U+55ce,U+5883,U+59cb,U+5b58,U+5b98,U+5c6c,U+5e33,U+5e6b,U+5e8f,U+5e95,U+5f62,U+5f80,U+5fae,U+614b,U+623f,U+628a,U+64c7,U+652f,U+6545,U+65e9,U+670b,U+6a13,U+6b65,U+6bb5,U+6e90,U+6e96,U+72c0,U+7368,U+74b0,U+78ba,U+78bc,U+7b97,U+7d39,U+7e8c,U+7fa4,U+8003,U+807d,U+862d,U+8857,U+88e1,U+89ba,U+89d2,U+8a31,U+8a72,U+8b58,U+8b80,U+8d70,U+8ddf,U+8fa6,U+900f,U+9031,U+9069,U+9322,U+96e2,U+9805,U+9810;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/34d73685-7953-4734-934b-dd6d98dfb73c.woff2") format('woff2');
+  unicode-range: U+3e,U+300a,U+300b,U+4e94,U+4e9b,U+4ea4,U+4eca,U+4ecb,U+4f46,U+4f55,U+4f9b,U+4f9d,U+505a,U+5099,U+50cf,U+5148,U+514d,U+5341,U+5373,U+53bb,U+53c3,U+53c8,U+53ea,U+592a,U+5c11,U+5c71,U+5df1,U+5e36,U+5e97,U+5f88,U+5f9e,U+624d,U+6253,U+627e,U+63a5,U+653e,U+6574,U+65c5,U+672a,U+6a23,U+6bcf,U+6d41,U+6d77,U+6e05,U+6e2f,U+7136,U+7167,U+738b,U+7531,U+7559,U+767d,U+76f4,U+793a,U+7a2e,U+7d04,U+7d05,U+7d66,U+800c,U+82f1,U+8457,U+85a6,U+8655,U+898f,U+89c0,U+89e3,U+8a55,U+8a8d,U+8a9e,U+8b49,U+8b8a,U+8b93,U+9001,U+90a3,U+9650,U+969b,U+9700,U+975e,U+9a57,U+9ebc;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/7ee811c0-bf31-461b-9280-eb09ace271ef.woff2") format('woff2');
+  unicode-range: U+d,U+2b,U+300c,U+300d,U+4e09,U+4e3b,U+4e4b,U+4e5f,U+4e86,U+4e8b,U+4e8c,U+4eab,U+4ee3,U+4ef6,U+4f4d,U+4f60,U+4f7f,U+4f86,U+4fdd,U+5011,U+5149,U+5167,U+524d,U+52a0,U+52d9,U+539f,U+53ca,U+53cb,U+5408,U+540c,U+540d,U+548c,U+554f,U+55ae,U+5831,U+5834,U+5916,U+5929,U+597d,U+5982,U+5b57,U+5b78,U+5b8c,U+5b9a,U+5be6,U+5c07,U+5c08,U+5c0d,U+5c31,U+5de5,U+5df2,U+5e38,U+5e74,U+5ea6,U+5f0f,U+5f71,U+5f8c,U+5f97,U+60c5,U+60f3,U+610f,U+611b,U+611f,U+61c9,U+6210,U+624b,U+63a8,U+63d0,U+6536,U+6599,U+65b9,U+660e,U+670d,U+671f,U+679c,U+683c,U+689d,U+6a5f,U+6b21,U+6c92,U+6d3b,U+7063,U+7248,U+73fe,U+7406,U+7576,U+76ee,U+76f8,U+770b,U+771f,U+77e5,U+7a0b,U+7ad9,U+7b2c,U+7cbe,U+7d50,U+7d61,U+7d93,U+7dda,U+7f8e,U+806f,U+80fd,U+81ea,U+8207,U+8272,U+865f,U+8868,U+8981,U+898b,U+8a00,U+8a08,U+8a0a,U+8a2d,U+8aaa,U+8cbb,U+8cc7,U+8d77,U+8def,U+9019,U+901a,U+9023,U+9032,U+904a,U+904e,U+9053,U+9078,U+9084,U+90e8,U+91cd,U+9577,U+9593,U+982d,U+984c,U+9ad8,U+ff08,U+ff09,U+ff1f;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/1bd6797e-fec9-4b71-b08d-b400d11a1daf.woff2") format('woff2');
+  unicode-range: U+20,U+22,U+28,U+29,U+2a,U+2c,U+2d,U+2e,U+2f,U+30,U+31,U+32,U+33,U+34,U+35,U+36,U+37,U+38,U+39,U+3a,U+3b,U+41,U+42,U+43,U+44,U+45,U+46,U+47,U+48,U+49,U+4b,U+4c,U+4d,U+4e,U+4f,U+50,U+51,U+52,U+53,U+54,U+55,U+56,U+57,U+58,U+59,U+5b,U+5c,U+5d,U+61,U+62,U+63,U+64,U+65,U+66,U+67,U+68,U+69,U+6a,U+6b,U+6c,U+6d,U+6e,U+6f,U+70,U+71,U+72,U+73,U+74,U+75,U+76,U+77,U+78,U+79,U+7b,U+7d,U+2013,U+2014,U+3001,U+3002,U+4e00,U+4e0a,U+4e0b,U+4e0d,U+4e2d,U+4eba,U+4ee5,U+4f5c,U+500b,U+5168,U+51fa,U+5206,U+5230,U+52d5,U+53ef,U+53f0,U+570b,U+5728,U+591a,U+5927,U+5b50,U+5bb6,U+6211,U+6587,U+65b0,U+65bc,U+65e5,U+662f,U+6642,U+6700,U+6703,U+6709,U+672c,U+6b63,U+70ba,U+751f,U+7528,U+767c,U+7684,U+884c,U+958b,U+95dc,U+96fb,U+9801,U+ff0c,U+ff1a;
+}
+@font-face {
+  font-family: "Daydream Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/1ca0c36e-0a2d-44e0-9130-6b8a228d1456.woff2") format('woff2');
+  unicode-range: U+a,U+d,U+20,U+22,U+24,U+25,U+26,U+28,U+29,U+2a,U+2b,U+2c,U+2d,U+2e,U+2f,U+30,U+31,U+32,U+33,U+34,U+35,U+36,U+37,U+38,U+39,U+3a,U+3b,U+3d,U+3e,U+40,U+41,U+42,U+43,U+44,U+45,U+46,U+47,U+48,U+49,U+4b,U+4c,U+4d,U+4e,U+4f,U+50,U+51,U+52,U+53,U+54,U+55,U+56,U+57,U+58,U+59,U+5b,U+5c,U+5d,U+60,U+61,U+62,U+63,U+64,U+65,U+66,U+67,U+68,U+69,U+6a,U+6b,U+6c,U+6d,U+6e,U+6f,U+70,U+71,U+72,U+73,U+74,U+75,U+76,U+77,U+78,U+79,U+7b,U+7d,U+b7,U+2013,U+2014,U+2193,U+2212;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/f5cb0862-69da-41cd-aede-b0692a8dc9f7.woff2") format('woff2');
+  unicode-range: U+2618;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/ce1f2030-54f3-484c-9d6a-2cdd0ef63677.woff2") format('woff2');
+  unicode-range: U+2212;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/fc93b95e-a71c-4206-9377-3de42d861ce1.woff2") format('woff2');
+  unicode-range: U+9713;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/596c358e-cce7-4453-9a58-c916ac82f1fa.woff2") format('woff2');
+  unicode-range: U+60,U+508d;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/6ec0bbdb-1e19-458c-b7cb-5773a7b3edd4.woff2") format('woff2');
+  unicode-range: U+2193;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/88ca1f63-46ec-4235-a0e4-ac99f0841f0d.woff2") format('woff2');
+  unicode-range: U+964c,U+fe0f,U+ff0b;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/6cc829b1-aa37-40f9-a21e-f1bf19a54944.woff2") format('woff2');
+  unicode-range: U+5141,U+54e9,U+6daf,U+82bd,U+8ef8,U+ff0a;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/38ee1a51-082a-4591-b946-50a4c15388ec.woff2") format('woff2');
+  unicode-range: U+6490,U+7b52,U+8679;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/fd40ec8a-7c0d-4c90-b37e-e0149ce41ea7.woff2") format('woff2');
+  unicode-range: U+4f30,U+52c7,U+616e,U+622a,U+6293,U+62c6,U+6372,U+7bc9,U+966a;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/131d7590-5732-4e04-8136-aa7bb9df1c3a.woff2") format('woff2');
+  unicode-range: U+2192,U+5192,U+57f7,U+59d3,U+5bec,U+5cb8,U+5f1f,U+6383,U+6562,U+65c1,U+695a,U+6b04,U+7126,U+7c3d,U+9f61;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/349672c0-2f4c-4f35-a569-5d0e7ed72ba0.woff2") format('woff2');
+  unicode-range: U+4ecd,U+56fa,U+5bbf,U+6311,U+63f4,U+675f,U+7a81,U+7e6b,U+804a,U+8212,U+8ab0,U+968e,U+ff0f,U+ff5c;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/7e6ddd58-4080-400a-867d-7ee864e5a628.woff2") format('woff2');
+  unicode-range: U+b7,U+5283,U+59b9,U+93e1;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/65565c71-80d3-4522-a93d-6e0fb84a91d9.woff2") format('woff2');
+  unicode-range: U+24,U+25,U+3d,U+4e45,U+4ed8,U+50c5,U+5287,U+5462,U+54ea,U+555f,U+5922,U+5979,U+5bc4,U+600e,U+62db,U+64ad,U+65cf,U+665a,U+6821,U+6b62,U+6b72,U+6c7a,U+723e,U+7968,U+7b11,U+7d42,U+8077,U+80cc,U+9047,U+90f5,U+9418,U+9678,U+967d,U+96aa,U+9748,U+9802,U+9806,U+984d,U+9867,U+ff1b;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/3a669457-a91f-4da5-91bd-b07b6d171deb.woff2") format('woff2');
+  unicode-range: U+26,U+40,U+4ec0,U+4f4f,U+503c,U+5047,U+53e6,U+55ce,U+5883,U+59cb,U+5b58,U+5b98,U+5c6c,U+5e33,U+5e6b,U+5e8f,U+5e95,U+5f62,U+5f80,U+5fae,U+614b,U+623f,U+628a,U+64c7,U+652f,U+6545,U+65e9,U+670b,U+6a13,U+6b65,U+6bb5,U+6e90,U+6e96,U+72c0,U+7368,U+74b0,U+78ba,U+78bc,U+7b97,U+7d39,U+7e8c,U+7fa4,U+8003,U+807d,U+862d,U+8857,U+88e1,U+89ba,U+89d2,U+8a31,U+8a72,U+8b58,U+8b80,U+8d70,U+8ddf,U+8fa6,U+900f,U+9031,U+9069,U+9322,U+96e2,U+9805,U+9810;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/0aa98b02-ed90-4be5-8f6a-85fd390be8c4.woff2") format('woff2');
+  unicode-range: U+3e,U+300a,U+300b,U+4e94,U+4e9b,U+4ea4,U+4eca,U+4ecb,U+4f46,U+4f55,U+4f9b,U+4f9d,U+505a,U+5099,U+50cf,U+5148,U+514d,U+5341,U+5373,U+53bb,U+53c3,U+53c8,U+53ea,U+592a,U+5c11,U+5c71,U+5df1,U+5e36,U+5e97,U+5f88,U+5f9e,U+624d,U+6253,U+627e,U+63a5,U+653e,U+6574,U+65c5,U+672a,U+6a23,U+6bcf,U+6d41,U+6d77,U+6e05,U+6e2f,U+7136,U+7167,U+738b,U+7531,U+7559,U+767d,U+76f4,U+793a,U+7a2e,U+7d04,U+7d05,U+7d66,U+800c,U+82f1,U+8457,U+85a6,U+8655,U+898f,U+89c0,U+89e3,U+8a55,U+8a8d,U+8a9e,U+8b49,U+8b8a,U+8b93,U+9001,U+90a3,U+9650,U+969b,U+9700,U+975e,U+9a57,U+9ebc;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/e92b13af-80a6-4451-92f1-70deee864e9e.woff2") format('woff2');
+  unicode-range: U+d,U+2b,U+300c,U+300d,U+4e09,U+4e3b,U+4e4b,U+4e5f,U+4e86,U+4e8b,U+4e8c,U+4eab,U+4ee3,U+4ef6,U+4f4d,U+4f60,U+4f7f,U+4f86,U+4fdd,U+5011,U+5149,U+5167,U+524d,U+52a0,U+52d9,U+539f,U+53ca,U+53cb,U+5408,U+540c,U+540d,U+548c,U+554f,U+55ae,U+5831,U+5834,U+5916,U+5929,U+597d,U+5982,U+5b57,U+5b78,U+5b8c,U+5b9a,U+5be6,U+5c07,U+5c08,U+5c0d,U+5c31,U+5de5,U+5df2,U+5e38,U+5e74,U+5ea6,U+5f0f,U+5f71,U+5f8c,U+5f97,U+60c5,U+60f3,U+610f,U+611b,U+611f,U+61c9,U+6210,U+624b,U+63a8,U+63d0,U+6536,U+6599,U+65b9,U+660e,U+670d,U+671f,U+679c,U+683c,U+689d,U+6a5f,U+6b21,U+6c92,U+6d3b,U+7063,U+7248,U+73fe,U+7406,U+7576,U+76ee,U+76f8,U+770b,U+771f,U+77e5,U+7a0b,U+7ad9,U+7b2c,U+7cbe,U+7d50,U+7d61,U+7d93,U+7dda,U+7f8e,U+806f,U+80fd,U+81ea,U+8207,U+8272,U+865f,U+8868,U+8981,U+898b,U+8a00,U+8a08,U+8a0a,U+8a2d,U+8aaa,U+8cbb,U+8cc7,U+8d77,U+8def,U+9019,U+901a,U+9023,U+9032,U+904a,U+904e,U+9053,U+9078,U+9084,U+90e8,U+91cd,U+9577,U+9593,U+982d,U+984c,U+9ad8,U+ff08,U+ff09,U+ff1f;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/f06d2b20-a80d-4440-b622-639f55d87147.woff2") format('woff2');
+  unicode-range: U+20,U+22,U+28,U+29,U+2a,U+2c,U+2d,U+2e,U+2f,U+30,U+31,U+32,U+33,U+34,U+35,U+36,U+37,U+38,U+39,U+3a,U+3b,U+41,U+42,U+43,U+44,U+45,U+46,U+47,U+48,U+49,U+4b,U+4c,U+4d,U+4e,U+4f,U+50,U+51,U+52,U+53,U+54,U+55,U+56,U+57,U+58,U+59,U+5b,U+5c,U+5d,U+61,U+62,U+63,U+64,U+65,U+66,U+67,U+68,U+69,U+6a,U+6b,U+6c,U+6d,U+6e,U+6f,U+70,U+71,U+72,U+73,U+74,U+75,U+76,U+77,U+78,U+79,U+7b,U+7d,U+2013,U+2014,U+3001,U+3002,U+4e00,U+4e0a,U+4e0b,U+4e0d,U+4e2d,U+4eba,U+4ee5,U+4f5c,U+500b,U+5168,U+51fa,U+5206,U+5230,U+52d5,U+53ef,U+53f0,U+570b,U+5728,U+591a,U+5927,U+5b50,U+5bb6,U+6211,U+6587,U+65b0,U+65bc,U+65e5,U+662f,U+6642,U+6700,U+6703,U+6709,U+672c,U+6b63,U+70ba,U+751f,U+7528,U+767c,U+7684,U+884c,U+958b,U+95dc,U+96fb,U+9801,U+ff0c,U+ff1a;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/ccdfba79-c4e2-457d-8fed-6a368a48c4ac.woff2") format('woff2');
+  unicode-range: U+a,U+d,U+20,U+22,U+24,U+25,U+26,U+28,U+29,U+2a,U+2b,U+2c,U+2d,U+2e,U+2f,U+30,U+31,U+32,U+33,U+34,U+35,U+36,U+37,U+38,U+39,U+3a,U+3b,U+3d,U+3e,U+40,U+41,U+42,U+43,U+44,U+45,U+46,U+47,U+48,U+49,U+4b,U+4c,U+4d,U+4e,U+4f,U+50,U+51,U+52,U+53,U+54,U+55,U+56,U+57,U+58,U+59,U+5b,U+5c,U+5d,U+60,U+61,U+62,U+63,U+64,U+65,U+66,U+67,U+68,U+69,U+6a,U+6b,U+6c,U+6d,U+6e,U+6f,U+70,U+71,U+72,U+73,U+74,U+75,U+76,U+77,U+78,U+79,U+7b,U+7d,U+b7,U+2013,U+2014,U+2193,U+2212;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/f5cb0862-69da-41cd-aede-b0692a8dc9f7.woff2") format('woff2');
+  unicode-range: U+2618;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/ce1f2030-54f3-484c-9d6a-2cdd0ef63677.woff2") format('woff2');
+  unicode-range: U+2212;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/fc93b95e-a71c-4206-9377-3de42d861ce1.woff2") format('woff2');
+  unicode-range: U+9713;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/596c358e-cce7-4453-9a58-c916ac82f1fa.woff2") format('woff2');
+  unicode-range: U+60,U+508d;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/6ec0bbdb-1e19-458c-b7cb-5773a7b3edd4.woff2") format('woff2');
+  unicode-range: U+2193;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/88ca1f63-46ec-4235-a0e4-ac99f0841f0d.woff2") format('woff2');
+  unicode-range: U+964c,U+fe0f,U+ff0b;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/6cc829b1-aa37-40f9-a21e-f1bf19a54944.woff2") format('woff2');
+  unicode-range: U+5141,U+54e9,U+6daf,U+82bd,U+8ef8,U+ff0a;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/38ee1a51-082a-4591-b946-50a4c15388ec.woff2") format('woff2');
+  unicode-range: U+6490,U+7b52,U+8679;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/fd40ec8a-7c0d-4c90-b37e-e0149ce41ea7.woff2") format('woff2');
+  unicode-range: U+4f30,U+52c7,U+616e,U+622a,U+6293,U+62c6,U+6372,U+7bc9,U+966a;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/131d7590-5732-4e04-8136-aa7bb9df1c3a.woff2") format('woff2');
+  unicode-range: U+2192,U+5192,U+57f7,U+59d3,U+5bec,U+5cb8,U+5f1f,U+6383,U+6562,U+65c1,U+695a,U+6b04,U+7126,U+7c3d,U+9f61;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/349672c0-2f4c-4f35-a569-5d0e7ed72ba0.woff2") format('woff2');
+  unicode-range: U+4ecd,U+56fa,U+5bbf,U+6311,U+63f4,U+675f,U+7a81,U+7e6b,U+804a,U+8212,U+8ab0,U+968e,U+ff0f,U+ff5c;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/7e6ddd58-4080-400a-867d-7ee864e5a628.woff2") format('woff2');
+  unicode-range: U+b7,U+5283,U+59b9,U+93e1;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/65565c71-80d3-4522-a93d-6e0fb84a91d9.woff2") format('woff2');
+  unicode-range: U+24,U+25,U+3d,U+4e45,U+4ed8,U+50c5,U+5287,U+5462,U+54ea,U+555f,U+5922,U+5979,U+5bc4,U+600e,U+62db,U+64ad,U+65cf,U+665a,U+6821,U+6b62,U+6b72,U+6c7a,U+723e,U+7968,U+7b11,U+7d42,U+8077,U+80cc,U+9047,U+90f5,U+9418,U+9678,U+967d,U+96aa,U+9748,U+9802,U+9806,U+984d,U+9867,U+ff1b;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/3a669457-a91f-4da5-91bd-b07b6d171deb.woff2") format('woff2');
+  unicode-range: U+26,U+40,U+4ec0,U+4f4f,U+503c,U+5047,U+53e6,U+55ce,U+5883,U+59cb,U+5b58,U+5b98,U+5c6c,U+5e33,U+5e6b,U+5e8f,U+5e95,U+5f62,U+5f80,U+5fae,U+614b,U+623f,U+628a,U+64c7,U+652f,U+6545,U+65e9,U+670b,U+6a13,U+6b65,U+6bb5,U+6e90,U+6e96,U+72c0,U+7368,U+74b0,U+78ba,U+78bc,U+7b97,U+7d39,U+7e8c,U+7fa4,U+8003,U+807d,U+862d,U+8857,U+88e1,U+89ba,U+89d2,U+8a31,U+8a72,U+8b58,U+8b80,U+8d70,U+8ddf,U+8fa6,U+900f,U+9031,U+9069,U+9322,U+96e2,U+9805,U+9810;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/0aa98b02-ed90-4be5-8f6a-85fd390be8c4.woff2") format('woff2');
+  unicode-range: U+3e,U+300a,U+300b,U+4e94,U+4e9b,U+4ea4,U+4eca,U+4ecb,U+4f46,U+4f55,U+4f9b,U+4f9d,U+505a,U+5099,U+50cf,U+5148,U+514d,U+5341,U+5373,U+53bb,U+53c3,U+53c8,U+53ea,U+592a,U+5c11,U+5c71,U+5df1,U+5e36,U+5e97,U+5f88,U+5f9e,U+624d,U+6253,U+627e,U+63a5,U+653e,U+6574,U+65c5,U+672a,U+6a23,U+6bcf,U+6d41,U+6d77,U+6e05,U+6e2f,U+7136,U+7167,U+738b,U+7531,U+7559,U+767d,U+76f4,U+793a,U+7a2e,U+7d04,U+7d05,U+7d66,U+800c,U+82f1,U+8457,U+85a6,U+8655,U+898f,U+89c0,U+89e3,U+8a55,U+8a8d,U+8a9e,U+8b49,U+8b8a,U+8b93,U+9001,U+90a3,U+9650,U+969b,U+9700,U+975e,U+9a57,U+9ebc;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/e92b13af-80a6-4451-92f1-70deee864e9e.woff2") format('woff2');
+  unicode-range: U+d,U+2b,U+300c,U+300d,U+4e09,U+4e3b,U+4e4b,U+4e5f,U+4e86,U+4e8b,U+4e8c,U+4eab,U+4ee3,U+4ef6,U+4f4d,U+4f60,U+4f7f,U+4f86,U+4fdd,U+5011,U+5149,U+5167,U+524d,U+52a0,U+52d9,U+539f,U+53ca,U+53cb,U+5408,U+540c,U+540d,U+548c,U+554f,U+55ae,U+5831,U+5834,U+5916,U+5929,U+597d,U+5982,U+5b57,U+5b78,U+5b8c,U+5b9a,U+5be6,U+5c07,U+5c08,U+5c0d,U+5c31,U+5de5,U+5df2,U+5e38,U+5e74,U+5ea6,U+5f0f,U+5f71,U+5f8c,U+5f97,U+60c5,U+60f3,U+610f,U+611b,U+611f,U+61c9,U+6210,U+624b,U+63a8,U+63d0,U+6536,U+6599,U+65b9,U+660e,U+670d,U+671f,U+679c,U+683c,U+689d,U+6a5f,U+6b21,U+6c92,U+6d3b,U+7063,U+7248,U+73fe,U+7406,U+7576,U+76ee,U+76f8,U+770b,U+771f,U+77e5,U+7a0b,U+7ad9,U+7b2c,U+7cbe,U+7d50,U+7d61,U+7d93,U+7dda,U+7f8e,U+806f,U+80fd,U+81ea,U+8207,U+8272,U+865f,U+8868,U+8981,U+898b,U+8a00,U+8a08,U+8a0a,U+8a2d,U+8aaa,U+8cbb,U+8cc7,U+8d77,U+8def,U+9019,U+901a,U+9023,U+9032,U+904a,U+904e,U+9053,U+9078,U+9084,U+90e8,U+91cd,U+9577,U+9593,U+982d,U+984c,U+9ad8,U+ff08,U+ff09,U+ff1f;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/f06d2b20-a80d-4440-b622-639f55d87147.woff2") format('woff2');
+  unicode-range: U+20,U+22,U+28,U+29,U+2a,U+2c,U+2d,U+2e,U+2f,U+30,U+31,U+32,U+33,U+34,U+35,U+36,U+37,U+38,U+39,U+3a,U+3b,U+41,U+42,U+43,U+44,U+45,U+46,U+47,U+48,U+49,U+4b,U+4c,U+4d,U+4e,U+4f,U+50,U+51,U+52,U+53,U+54,U+55,U+56,U+57,U+58,U+59,U+5b,U+5c,U+5d,U+61,U+62,U+63,U+64,U+65,U+66,U+67,U+68,U+69,U+6a,U+6b,U+6c,U+6d,U+6e,U+6f,U+70,U+71,U+72,U+73,U+74,U+75,U+76,U+77,U+78,U+79,U+7b,U+7d,U+2013,U+2014,U+3001,U+3002,U+4e00,U+4e0a,U+4e0b,U+4e0d,U+4e2d,U+4eba,U+4ee5,U+4f5c,U+500b,U+5168,U+51fa,U+5206,U+5230,U+52d5,U+53ef,U+53f0,U+570b,U+5728,U+591a,U+5927,U+5b50,U+5bb6,U+6211,U+6587,U+65b0,U+65bc,U+65e5,U+662f,U+6642,U+6700,U+6703,U+6709,U+672c,U+6b63,U+70ba,U+751f,U+7528,U+767c,U+7684,U+884c,U+958b,U+95dc,U+96fb,U+9801,U+ff0c,U+ff1a;
+}
+@font-face {
+  font-family: "Daydream Serif";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/events/daydream-adventure-2027/fonts/ccdfba79-c4e2-457d-8fed-6a368a48c4ac.woff2") format('woff2');
+  unicode-range: U+a,U+d,U+20,U+22,U+24,U+25,U+26,U+28,U+29,U+2a,U+2b,U+2c,U+2d,U+2e,U+2f,U+30,U+31,U+32,U+33,U+34,U+35,U+36,U+37,U+38,U+39,U+3a,U+3b,U+3d,U+3e,U+40,U+41,U+42,U+43,U+44,U+45,U+46,U+47,U+48,U+49,U+4b,U+4c,U+4d,U+4e,U+4f,U+50,U+51,U+52,U+53,U+54,U+55,U+56,U+57,U+58,U+59,U+5b,U+5c,U+5d,U+60,U+61,U+62,U+63,U+64,U+65,U+66,U+67,U+68,U+69,U+6a,U+6b,U+6c,U+6d,U+6e,U+6f,U+70,U+71,U+72,U+73,U+74,U+75,U+76,U+77,U+78,U+79,U+7b,U+7d,U+b7,U+2013,U+2014,U+2193,U+2212;
+}

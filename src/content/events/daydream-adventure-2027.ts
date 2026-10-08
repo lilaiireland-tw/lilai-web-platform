@@ -30,11 +30,11 @@ export const daydreamEvent: EventContent = {
 };
 
 export const daydreamDetails = [
-  { label: "DATE", value: "2026 / 10 / 18（日）" },
-  { label: "TIME", value: "20:00", note: "台灣時間 UTC+8" },
-  { label: "FORMAT", value: daydreamEvent.venue },
+  { label: "DATE", value: "2026 / 10 / 18（日）", icon: "calendar-days" },
+  { label: "TIME", value: "20:00", note: "台灣時間 UTC+8", icon: "clock" },
+  { label: "FORMAT", value: daydreamEvent.venue, icon: "monitor" },
   { label: "DURATION", value: "約 90–120 分鐘" },
-  { label: "PRICE", value: "免費參加" },
+  { label: "PRICE", value: "免費參加", icon: "ticket" },
   { label: "CAPACITY", value: "限額 200 位" },
   { label: "REGISTRATION DEADLINE", value: "10 / 18（日）18:00" },
   { label: "SPEAKERS", value: copy.speakers.people.map(person => person.name).join(" · "), note: "Alex、Arsha 哩來愛爾蘭學長 · Bella 哩來合作分享人" },
@@ -48,3 +48,10 @@ export const daydreamContact = {
   qrImage: { src: "/events/daydream-adventure-2027/qr-register.png", alt: "報名表單 QR Code", width: 300, height: 300 },
   disclaimer: "本活動主題靈感來自電影《白日夢冒險王》，為非官方合作活動。",
 };
+
+/** Source display labels; the shared shell and event metadata keep their defaults. */
+export const daydreamPresentation = {
+  heroDate: daydreamEvent.dateLabel.split(" · ")[0],
+  registrationDate: `${daydreamEvent.dateLabel.split(" · ")[0].replace(/^\d{4}\./, "")} ${daydreamDetails[1].note.replace("台灣時間 ", "")}`,
+  logo: { src: "/events/daydream-adventure-2027/lilai-logo.png", alt: "Lilai Ireland 哩來愛爾蘭", width: 780, height: 805 },
+} as const;
