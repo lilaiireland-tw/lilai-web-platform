@@ -15,12 +15,18 @@ function filesUnder(root: string): string[] {
 
 const built = filesUnder(".open-next/assets");
 const publicFiles = filesUnder("public");
-const tracked = [...built.map(path => ({ source: "OpenNext", path })), ...publicFiles.map(path => ({ source: "public", path }))];
-const routedFiles = tracked.filter(({ path }) => /(^|[\\/])(_next|assets|fonts|events)([\\/]|$)/i.test(path));
+const tracked = [
+  ...built.map(path => ({ source: "OpenNext", root: ".open-next/assets", path })),
+  ...publicFiles.map(path => ({ source: "public", root: "public", path })),
+];
+const routedFiles = tracked.filter(({ root, path }) => {
+  const rel = relative(root, path).split(sep).join("/");
+  return /^(_next|assets|fonts|events)\//i.test(rel);
+});
 const namespaceCounts = new Map<string, number>();
 for (const { source, path } of routedFiles) {
   const rel = relative(source === "OpenNext" ? ".open-next/assets" : "public", path).split(sep).join("/");
-  const url = source === "OpenNext" ? `/${rel}` : `/${rel}`;
+  const url = `/${rel}`;
   const owner = productionRouteOwner(url);
   if (owner !== "platform") throw new Error(`${source} asset is not owned by Platform: ${url} (${owner})`);
   const namespace = url.split("/")[1] || "root";
