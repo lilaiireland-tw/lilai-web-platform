@@ -4,10 +4,11 @@ This standardizes the existing brand, without migrating any production form or
 homepage architecture. Reference: [signup repository](https://github.com/lilaiireland-tw/language-school-signup-page/tree/a7d0fbd4d74f3b0be923a1ac85c774a3328ecf88),
 especially `app/globals.css`, `app/layout.tsx` and `app/page.tsx`.
 
-`src/styles/tokens.css` is the canonical source for brand values and font faces.
-Root layout loads tokens, legacy globals, then `primitives.css`. New pages opt
-into `ds-*` classes; the homepage keeps its own section spacing and typography
-scale. Do not add another token palette in a page or CSS Module.
+`src/styles/tokens.css` is the canonical source for brand values and typography
+tokens. `src/styles/fonts.css` is the generated, self-hosted font-face manifest.
+Root layout loads fonts, tokens, legacy globals, then `primitives.css`. New pages
+opt into `ds-*` classes; the homepage keeps its own section spacing and
+typography scale. Do not add another token palette in a page or CSS Module.
 
 ## Brand colors
 
@@ -36,11 +37,17 @@ scale. Do not add another token palette in a page or CSS Module.
 ## Typography
 
 `--font-sans` / `--font-body`: Noto Sans TC. `--font-serif` / `--font-heading`:
-Noto Serif TC. Reuse existing local regular (400) and bold (700) Sans, and bold
-(700) Serif files. OFL remains in `public/fonts/OFL.txt`; no new fonts are copied.
-These are reference subsets, not complete CJK fonts: verify new characters;
-missing glyphs fall back to the documented system fonts. Intermediate and heavy
-legacy weights remain browser matched/synthesized; new code uses 400/700.
+Noto Serif TC. The site self-hosts complete Traditional Chinese coverage as
+unicode-range WOFF2 shards: variable Sans 400–700 and Serif 700. Browsers fetch
+only the shards required by visible text. Shared UI uses only regular (400) and
+bold (700); page CSS must use the weight tokens instead of synthetic 800–950
+weights. System fonts remain last-resort fallbacks. OFL remains in
+`public/fonts/OFL.txt`.
+
+Run `npm run update:fonts` to refresh the local files from the official Google
+Fonts CSS2 manifests. `scripts/check-design-system.ts` verifies that both brand
+families cover every Han character in `src`, every declared WOFF2 exists, and
+shared styles do not introduce unsupported numeric weights.
 
 | Class | Token / size | Usage |
 | --- | --- | --- |

@@ -25,9 +25,11 @@ Header, Footer, Brand and Navigation are Server Components. Only MobileNavigatio
 enhances the native `<details>` disclosure (Escape, outside click, focus leaving,
 link selection and desktop resize). It is not a modal or a focus trap.
 Shell structure styles are scoped in `layout.module.css`; canonical brand tokens
-and self-hosted Noto font faces live in `src/styles/tokens.css`.
-The production reference's font subsets and SIL license live in `public/fonts`.
-When extending shell copy, verify that those subsets contain the new characters.
+live in `src/styles/tokens.css`, while the self-hosted Noto unicode-range
+manifest lives in `src/styles/fonts.css`. Complete Traditional Chinese coverage
+and the SIL license live in `public/fonts`; `npm run update:fonts` refreshes the
+official Google Fonts shards. The design-system check prevents missing-glyph and
+unsupported-weight regressions.
 New pages should use the opt-in `ds-*` primitives and Button component.
 See [Design system foundation](docs/design-system.md) for examples, accessibility
 and legacy compatibility. `/design-system/` is a noindex visual review page.
