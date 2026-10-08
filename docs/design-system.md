@@ -166,12 +166,36 @@ Section variants: default, soft, tint. Vertical padding: 96px desktop, 78px
 tablet, 64px mobile. Homepage vertical spacing, HTML and interactions remain
 page-specific; its section horizontal insets now share the wide shell boundary.
 Events index and generic event sections use that same outer inset with default
-or narrow content. Daydream retains default hero/story/agenda composition and a
-narrow FAQ; film strip and speakers opt into wide. Reading copy within wider
-compositions stays capped at the narrow tier. WordPress fallback and 404 share
+or narrow content. Daydream uses the campaign-specific reference-parity
+exception documented below. WordPress fallback and 404 share
 wide outer insets and narrow reading content. Homepage video/final CTA use the
 default tier and story copy uses narrow. Component-specific heading/copy/image
 constraints and existing grid breakpoints are not global containers.
+
+### Daydream campaign reference-parity exception
+
+The user explicitly requested matching the supplied Landing Page v3 activity
+content while retaining the existing site-wide Top Strip, Header and Footer.
+`src/components/events/daydream/daydream.module.css` therefore scopes the source
+paper/mist palette, font stacks, editorial scale and original composition to
+`.campaign`. Canonical green, forest, cream, white, gold and pill-radius tokens
+remain reused. These reference values are not new defaults for other pages.
+
+The campaign uses 1320px wide, 1120px main, 720px FAQ and 880px closing containers,
+the source's fluid section spacing and flex wrapping, and a strict `<760px`
+mobile breakpoint. It reuses the shared Button with campaign-scoped visuals;
+its PhotoFrame, Eyebrow, DateStamp, annotations and single-open FAQ reproduce
+the source components. Shared SpeakerCard and EventFaq remain unchanged.
+
+Source font subsets use private CSS family names (Daydream Sans/Serif/Hand),
+including Serif 400/700 and LXGW WenKai TC. Their original binary files and
+licenses live under `public/events/daydream-adventure-2027/fonts/`; the local
+font-face declarations include only the character ranges used by this content.
+When changing campaign copy, audit font coverage against the supplied source.
+
+Run `npx tsx scripts/check-daydream.ts "<path to Landing Page v3.html>"` for an
+optional SHA-256 comparison of every referenced image, logo, icon and font with
+the user's original bundle. The original HTML itself is not checked into Git.
 
 ## Responsive
 
