@@ -1,12 +1,12 @@
 import { eventManifest } from "../src/content/events/event-manifest";
 
-const frontendExactPaths = new Set(["/", "/robots.txt", "/sitemap.xml"]);
+const frontendExactPaths = new Set(["/", "/consult", "/robots.txt", "/sitemap.xml"]);
 const eventPaths = new Set(eventManifest.map(event => `/events/${event.slug}`));
 const staticAssetPrefixes = ["/_next/", "/assets/", "/fonts/", "/events/"] as const;
 
 export function isStandaloneFrontendPath(pathname: string) {
   const normalized = pathname.length > 1 ? pathname.replace(/\/$/, "") : pathname;
-  return frontendExactPaths.has(pathname) || normalized === "/events" || eventPaths.has(normalized);
+  return frontendExactPaths.has(normalized) || normalized === "/events" || eventPaths.has(normalized);
 }
 
 export function isStandaloneStaticAssetPath(pathname: string) {

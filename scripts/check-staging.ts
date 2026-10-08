@@ -99,7 +99,7 @@ async function main() {
   }
   console.log("PASS standalone staging build omits WordPress rewrites");
 
-  for (const path of ["/", "/events", "/events/", "/events/daydream-adventure-2027",
+  for (const path of ["/", "/consult", "/consult/", "/events", "/events/", "/events/daydream-adventure-2027",
     "/events/daydream-adventure-2027/", "/robots.txt", "/sitemap.xml"]) {
     assert(isStandaloneFrontendPath(path), path);
   }
