@@ -4,8 +4,6 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { assertDeploymentEnvironment } from "../src/lib/deployment";
 
-assert.equal(process.argv[2], "build", "Only the non-deploying production build is supported");
-
 const config = JSON.parse(readFileSync("cloudflare/production-platform.jsonc", "utf8"));
 assert.equal(config.name, "lilai-web-platform-production", "Unexpected production platform Worker name");
 assert.equal(config.workers_dev, false, "Production platform Worker must not have a workers.dev endpoint");
@@ -42,5 +40,29 @@ function run(entry: string, args: string[]) {
   assert.equal(result.status, 0, `${entry} failed`);
 }
 
-run("node_modules/@opennextjs/cloudflare/dist/cli/index.js", ["build", "--config", configPath]);
-run("node_modules/@opennextjs/cloudflare/dist/cli/index.js", ["populateCache", "local", "--config", configPath]);
+function build() {
+  run("node_modules/@opennextjs/cloudflare/dist/cli/index.js", ["build", "--config", configPath]);
+  run("node_modules/@opennextjs/cloudflare/dist/cli/index.js", ["populateCache", "local", "--config", configPath]);
+}
+
+function deployPrivate() {
+  assert.equal(process.argv[3], "--confirm-private-production-deploy",
+    "Private production deploy requires --confirm-private-production-deploy");
+  assert(process.env.CLOUDFLARE_API_TOKEN, "CLOUDFLARE_API_TOKEN is required");
+  const router = JSON.parse(readFileSync("cloudflare/production-router.jsonc", "utf8"));
+  assert.equal(router.name, "lilai-web-platform-router");
+  assert.equal(router.workers_dev, false);
+  assert.equal(router.preview_urls, false);
+  assert.deepEqual(router.routes, [], "Router must have no public route during private deployment");
+  assert.deepEqual(router.services, [{ binding: "PLATFORM", service: config.name }]);
+  assertDeploymentEnvironment({ ...process.env, ...config.vars });
+
+  const wrangler = resolve("node_modules/wrangler/bin/wrangler.js");
+  run(wrangler, ["deploy", "--config", "cloudflare/production-platform.jsonc"]);
+  run(wrangler, ["deploy", "--config", "cloudflare/production-router.jsonc"]);
+}
+
+const action = process.argv[2];
+if (action === "build") build();
+else if (action === "deploy-private") deployPrivate();
+else throw new Error("Use 'build' or 'deploy-private --confirm-private-production-deploy'");
