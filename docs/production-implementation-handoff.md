@@ -5,7 +5,7 @@ Status: implementation candidate in progress; no production release or cutover.
 ## Repository checkpoint
 
 - Branch: `feat/issue-3-production-dual-worker`
-- Latest implementation commit at handoff: `f823d09` (CI verification and implementation docs)
+- Latest implementation commit: `4d803f0` (production Worker dry-run packaging and release gates)
 - Related issue: [Issue #3](https://github.com/lilaiireland-tw/lilai-web-platform/issues/3)
 - Related prior PR: [PR #24](https://github.com/lilaiireland-tw/lilai-web-platform/pull/24), merged routing-readiness audit
 - Current implementation PR: [Draft PR #28](https://github.com/lilaiireland-tw/lilai-web-platform/pull/28), base `develop`
@@ -64,8 +64,8 @@ Status: implementation candidate in progress; no production release or cutover.
 - `npm.cmd run check:production-packaging`: Router dry-run PASS, including its
   `PLATFORM` Service Binding declaration. Platform dry-run BLOCKED locally
   because this Windows checkout has no `.open-next/assets`; the preceding
-  OpenNext build is known to fail on this Windows host. Linux CI must produce
-  real assets and pass both Wrangler packaging dry runs to satisfy merge gate A.
+  OpenNext build is known to fail on this Windows host. The required Linux CI
+  build and both Wrangler packaging dry runs passed (see run below).
 - `npx.cmd tsc --noEmit --incremental false`: PASS.
 - `npx.cmd tsc -p cloudflare/tsconfig.json`: PASS.
 - `npm.cmd run cf:typegen:router`: exit 0 and generated the binding type. Wrangler
@@ -75,30 +75,30 @@ Status: implementation candidate in progress; no production release or cutover.
 - `npm.cmd run cf:build:production-platform`: FAILED on this Windows host while
   OpenNext started; child process exited `3221226505`. OpenNext reported that
   Windows is not fully supported. Only Node.js v24 is installed locally.
-- Prior GitHub Actions run [37851912169](https://github.com/lilaiireland-tw/lilai-web-platform/actions/runs/37851912169): PASS on `ubuntu-latest` before the new packaging coverage was added. A new run must pass after this update.
+- GitHub Actions run [37855910516](https://github.com/lilaiireland-tw/lilai-web-platform/actions/runs/37855910516): PASS on `ubuntu-latest` for head `4d803f0e1fe60b9146a158e95893069a66515163`. It passed `npm ci`, both Wrangler typegen steps, both TypeScript checks, staging/deployment checks, route policy and Router regressions, the production OpenNext build, both Wrangler production `--dry-run` packages, shared-layout/design-system checks, and staging Worker checks. No production Worker was deployed.
+- Local `npx.cmd tsx scripts/check-cloudflare-staging.ts` also hits the known Windows OpenNext child-process failure (`3221226505`); the same check passed in the Linux CI run.
 - An initial `npm run` call was blocked by PowerShell execution policy. Use
   `npm.cmd` on this host.
 
 ## Unfinished work and blockers
 
-- **A. Merge blockers:** the updated CI must pass on Node 22, including packaging
-  both production Wrangler configs after a real OpenNext build. The Platform
-  dry-run was not completed locally because the required generated asset
-  directory is absent after the Windows OpenNext build failure. Cloudflare
-  Service Binding and route runtime integration require an isolated deployed
-  environment and are not claimed by these local mocks/dry runs.
+- **A. Code-level merge blockers:** none remain from the requested verification
+  coverage. The updated Node 22 CI run passed, including the production build
+  and both Wrangler packaging dry runs. Local Windows build limitations are
+  recorded above and cleared by that Linux CI result.
 - **B. Deployment blockers:** live DNS target, SSL/TLS mode and certificate/SNI,
   route/rules export, signup dependency and precedence audit, verified WordPress
   origin and any required WordPress.com approval, WooCommerce session/cache
   evidence, and full static asset/event collision inventory remain unresolved.
+  Live Cloudflare Service Binding resolution, route execution, and origin
+  behavior also remain unverified until an isolated deployed integration check.
 - **C. Before attaching `lilaiireland.com/*`:** re-export and verify DNS, SSL,
   origin/rules, and route precedence; resolve B; confirm signup ownership and
   platform root/event/assets behavior; and record the approved rollback snapshot
   plus smoke-test/monitoring procedure. See `docs/production-dual-worker.md` for
   the complete gates.
 - Draft PR #28 is open against `develop` and references the work as `Part of #3`.
-- Rerun the PR workflow after these changes. Keep PR #28 Draft while any A gate
-  remains incomplete.
+- PR #28 remains Draft. No merge or deployment was performed.
 
 ## Resume commands
 
