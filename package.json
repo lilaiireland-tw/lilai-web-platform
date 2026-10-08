@@ -19,6 +19,7 @@
     "cf:deploy": "tsx scripts/cloudflare-staging.ts deploy",
     "precf:typegen": "node -e \"require('node:fs').mkdirSync('.cloudflare', { recursive: true })\"",
     "cf:typegen": "wrangler types .cloudflare/cloudflare-env.d.ts --env-interface CloudflareEnv --strict-vars false",
+    "cf:typegen:router": "wrangler types --config cloudflare/production-router.jsonc --env-interface ProductionRouterEnv --strict-vars false --include-runtime=false .cloudflare/production-router-env.d.ts",
     "check:staging": "tsx scripts/check-staging.ts"
   },
   "dependencies": {

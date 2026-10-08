@@ -134,6 +134,17 @@ function main() {
   assert.equal(productionPlatform.vars.NEXT_PUBLIC_SITE_URL, PUBLIC_SITE_URL);
   assert(!JSON.stringify(productionPlatform).includes("cms.lilaiireland.com"));
   console.log("PASS private production platform config has no public route or URL");
+
+  const productionRouter = JSON.parse(readFileSync("cloudflare/production-router.jsonc", "utf8"));
+  assert.equal(productionRouter.name, PROPOSED_PRODUCTION_WORKER_ROUTE.script);
+  assert.equal(productionRouter.workers_dev, false);
+  assert.equal(productionRouter.preview_urls, false);
+  assert.deepEqual(productionRouter.routes, [], "production router config must not install a route");
+  assert.deepEqual(productionRouter.services, [{
+    binding: "PLATFORM",
+    service: productionPlatform.name,
+  }]);
+  console.log("PASS production router has a private Service Binding and no public route");
 }
 
 main();
