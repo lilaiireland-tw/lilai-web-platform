@@ -1,8 +1,9 @@
 # Cloudflare staging and path routing plan (Issue #3)
 
 Status: phase-one plan from PR #18, followed by the staging implementation in
-[Staging provisioning](cloudflare-staging.md). No live deployment, Worker route,
-DNS, origin, or production traffic changes have been made.
+[Staging provisioning](cloudflare-staging.md) and the read-only production audit
+in [Production routing readiness](production-routing-readiness-2026-10-08.md).
+No production Worker route, DNS, origin, or traffic changes have been made.
 This is the phase-one ownership plan; the broader migration ideas in
 `route-preservation-plan.md` are future work, not permission to migrate routes now.
 
@@ -125,8 +126,12 @@ are still required inputs.
 ## WordPress origin and fallback
 
 Repository defaults use `https://cms.lilaiireland.com` for `WORDPRESS_ORIGIN` and
-CMS API bases. This is source configuration, not verification of live DNS/TLS or
-reachability. Confirm its origin target and certificate before deployment. Never
+CMS API bases. The 2026-10-08 read-only audit found that hostname is **NXDOMAIN**;
+it is not a usable origin. The public apex currently returns WordPress.com content,
+but the actual Cloudflare DNS target, SSL mode, and origin/rules configuration
+remain permission-blocked release gates. The recommended phase-one router uses
+route-origin `fetch(request)` pass-through and does not depend on the CMS hostname.
+Confirm the apex origin target and certificate before deployment. Never
 set a fallback target to the routed public hostname in a way that re-enters the
 router. Preserve the original request method/body/query, Host/TLS requirements,
 cookies, Location headers, and cache policy. Public responses must not leak the

@@ -31,6 +31,7 @@ jobs:
       - run: npx tsc --noEmit --incremental false
       - run: npm run check:staging
       - run: npx tsx scripts/check-deployment-policy.ts
+      - run: npm run check:production-routing
       - run: npx tsx scripts/check-shared-layout.ts
       - run: npx tsx scripts/check-design-system.ts
       - run: npx tsx scripts/check-cloudflare-staging.ts
