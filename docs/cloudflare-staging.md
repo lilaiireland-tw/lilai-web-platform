@@ -1,120 +1,93 @@
-# Cloudflare staging provisioning (Part of #3)
+# Cloudflare standalone staging deployment (Part of #3)
 
-This follows the [routing plan](cloudflare-routing-plan.md) merged in PR #18.
-Only local configuration, packaging and validation have been implemented. No
-Cloudflare resource, route, custom domain, DNS record or production traffic was
-changed. There is no live staging URL to report yet.
+This runbook prepares the first real Cloudflare staging deployment. It does not
+authorize or perform that deployment. The target is one Worker named
+`lilai-web-platform-staging`, reachable only at its default `workers.dev` URL
+and protected by Cloudflare Access. There is no CMS fixture Worker and no custom
+staging domain.
 
-## Runtime decision
+The implementation keeps Next.js 16.2.10, OpenNext 1.20.1 and Wrangler 4.148.0.
+No production DNS record, zone route, WordPress/WooCommerce setting, production
+Worker, or existing signup Worker is changed.
 
-Use Workers with `@opennextjs/cloudflare` **1.20.1** and Wrangler **4.148.0**,
-pinned in the lockfile. The existing Next.js 16.2.10 / React 19.1.0 App Router,
-application routes, shared shell and public canonical origin remain intact.
-Only the adapter build uses webpack; local workerd exposed missing SSR chunks
-in the Windows Turbopack output. Ordinary `npm run build` remains unchanged.
+## Read-only account snapshot
 
-Cloudflare now recommends vinext for new projects. Its current 1.0.1 peer range
-requires React 19.2.6 and it replaces the Next runtime; this provisioning task
-preserves the existing framework instead. OpenNext 1.20.1 accepts the installed
-Next version. OpenNext 1.20.9 requires Next >=16.3.8 for the 16.x line, so adopting
-that version would need a separately scoped framework update. No unsupported-peer
-override, application migration or dependency audit repair is included.
+The 2026-10-07 discovery recorded account
+`622900d9297cd7c09cad966aaae64617`, Workers subdomain `lilaiireland`, and no
+existing `lilai-web-platform-staging` Worker. Existing Workers included
+`site-creator-vinext-starter`, which owns both the bare and descendant
+`/language-school-signup` production routes. The zone also had a no-script
+`*.lilaiireland.com/*` exclusion. This snapshot is evidence for isolation, not
+permission to edit any route, DNS record or existing Worker. Re-export current
+state before any later production routing work.
 
-References checked during implementation:
+## Standalone preview behavior
 
-- [Cloudflare Next.js options](https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/)
-- [OpenNext existing-app setup](https://opennext.js.org/cloudflare/get-started)
-- [OpenNext custom Worker](https://opennext.js.org/cloudflare/howtos/custom-worker)
-- [OpenNext cache options](https://opennext.js.org/cloudflare/caching)
-- [Workers asset routing](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/)
+The staging build retains:
 
-## Read-only discovery, 2026-10-07
+- `SITE_DEPLOYMENT_ENV=staging`
+- `EVENT_DEPLOYMENT_ENV=preview`
+- `EVENTS_INCLUDE_DRAFTS=false`
+- public canonicals rooted at `https://lilaiireland.com`
+- `X-Robots-Tag: noindex, nofollow` on every Worker response
+- GET/HEAD-only handling; every other method returns `405`
+- the build-time production-environment mismatch guard
 
-The saved Wrangler OAuth session refreshed successfully through `wrangler whoami`.
-It grants account/zone read and Workers write scopes. No credential values were
-printed or committed. No account configuration mutation was performed.
+The homepage, shared layout, `robots.txt`, empty staging sitemap, `/events`,
+registered event pages and their static assets are served by the OpenNext Worker.
+Static files are served from the same Worker's Static Assets binding.
 
-| Item | Observed value |
-| --- | --- |
-| Account ID | `622900d9297cd7c09cad966aaae64617` |
-| Active `lilaiireland.com` zone ID | `2cabb0ba90198b8d4a88a58e5bc6c757` |
-| Workers account subdomain | `lilaiireland` |
-| Existing Workers | `relai-prototype-staging`, `site-creator-vinext-starter`, `site-creator-vinext-starter-staging` |
-| Existing Pages projects / Workers custom domains | Empty GET results |
-| Proposed new Worker | `lilai-web-platform-staging`; absent from the account inventory |
+Staging does not bind a WordPress or WooCommerce URL. Next.js WordPress rewrites
+are omitted when `SITE_DEPLOYMENT_ENV=staging`, and the staging data clients throw
+before fetching. At the edge, only the frontend route allowlist reaches OpenNext.
+All other GET/HEAD paths, including WordPress, WooCommerce, products and CMS-backed
+catch-all pages, return:
 
-GET `/zones/{zone_id}/workers/routes` returned:
+```text
+503 WordPress and WooCommerce routes are unavailable in standalone staging.
+X-Lilai-Staging-Limitation: wordpress-woocommerce-unavailable
+Cache-Control: no-store
+X-Robots-Tag: noindex, nofollow
+```
 
-| Pattern | Script | Route ID |
-| --- | --- | --- |
-| `*.lilaiireland.com/*` | null (no-script exclusion) | `47c1e3cdca974e2097f454582cdfec8a` |
-| `lilaiireland.com/language-school-signup` | `site-creator-vinext-starter` | `5da60c5206414af98c7d5c8c37ab5db4` |
-| `lilaiireland.com/language-school-signup/*` | `site-creator-vinext-starter` | `1fe24fe586f2418dbf7ebbd866d74f42` |
+Unknown event routes remain platform-owned `404` responses. Missing files under
+the static namespaces remain asset `404`s. The Worker returns the same explicit
+standalone `503` for `/_next/image`; it is never executed as a dynamic image proxy
+in this mode. This prevents staging requests
+from reaching the production CMS through rewrites, data APIs or image optimization.
 
-This snapshot is not a complete production DNS/rules/dependency audit. No signup
-configuration, bindings or secrets were copied. The new config has `routes: []`,
-no production environment and no zone ID; the discovered zone is recorded only
-for future review. `workers_dev: true` is the sole intended hosting path, with
-version preview URLs disabled. Record the actual provider URL after provisioning;
-do not treat a derived hostname as a deployed or verified endpoint.
+## Isolation and permissions
 
-GitHub repository secret/variable inventories and environments were empty at
-discovery time. Local OAuth access does not supply a GitHub Actions credential.
+`wrangler.jsonc` fixes all deployment scope:
 
-## Noindex and isolation
+- name: `lilai-web-platform-staging`
+- account: `622900d9297cd7c09cad966aaae64617`
+- `workers_dev: true`
+- `preview_urls: false`
+- `routes: []`
+- no service, KV, R2, D1, Queue or Durable Object bindings
+- no WordPress/WooCommerce URLs or secrets
 
-`SITE_DEPLOYMENT_ENV=staging` and `EVENT_DEPLOYMENT_ENV=preview` are required for
-the staging build. The general Next config guard rejects either production
-marker unless the other also equals `production`. Unset/nonproduction values
-retain the existing noindex policy. Production builds must be rebuilt separately.
+The deployment script rejects a different Worker name, account, hosting mode,
+route list, environment pair, Git ref or missing Access confirmation. Its normal
+deploy path also performs a read-only deployment-list preflight and refuses to
+create a missing Worker. This is intentional: the Worker must already exist with
+its public URL disabled so Access can be attached before `workers.dev` is enabled.
 
-The wrapper runs before all assets (`run_worker_first: true`) and stamps
-`X-Robots-Tag: noindex, nofollow` on application, asset, rewrite, redirect and error
-responses, including caught exceptions. It streams responses and preserves
-statuses, cookies and other headers. Missing runtime configuration returns 503
-with noindex. GET/HEAD are the only allowed methods in this initial staging step;
-forms, Woo writes and revalidation requests return 405 before reaching an origin.
-Provider failures before Worker execution and Access login responses require
-separate live validation; local tests cannot establish those behaviors.
-
-The six existing WordPress rewrite prefixes are shared between Next config and
-the staging Worker. Their source/destination mapping is unchanged. On staging,
-the edge proxies these paths with the destination Host and `redirect: manual`:
-the adapter's default fetch proxy forwards the incoming Host and follows origin
-redirects. Sharing the list avoids inventing or maintaining a second route table.
-This wrapper is only for the standalone staging Worker, not the future production
-path router. Bare paths, descendants and prefix boundaries are checked.
-
-The staging script requires all three CMS/service URLs explicitly and refuses
-`lilaiireland.com` and its subdomains, including the current CMS default. It
-allows loopback fixtures for local builds and refuses loopback at deployment.
-HTTPS nonproduction URLs must be verified by the operator; URL syntax checks
-cannot prove that a different hostname is a sandbox. Runtime vars are generated
-from the exact build inputs into ignored `.cloudflare/wrangler-staging.json`.
-Do not deploy the source config directly: its empty origin fields intentionally
-fail closed. No application or integration secret is provisioned.
-
-The initial cache stores prerendered pages in Workers Static Assets. No R2, KV,
-D1, Queue, Durable Object or shared service binding is provisioned. Content
-refresh requires a rebuild; ISR and on-demand revalidation are not validated or
-enabled by this initial cache configuration. Dynamic CMS pages remain rendered
-on demand. Image optimization for dynamic product content is a later live QA
-gate; existing homepage/event images use their current unoptimized settings.
-
-Local workerd HTTP assertions pass, but runtime logs are **not clean**: unknown
-event paths produce OpenNext `NoFallbackError` diagnostics while returning the
-expected 404, and uncached CMS reads log attempts to write the read-only static
-cache. Optional cache interception is disabled; these diagnostics remain. The
-test saves logs to ignored `.cloudflare/workerd-smoke.log`. Triage the missing-route
-behavior and select/verify the staging data-cache policy on Linux before enabling
-live deployment. This PR does not claim ISR or complete runtime compatibility.
+Use a dedicated account-owned API token with only the account-level Workers
+Scripts edit permission required by Wrangler. Do not grant DNS edit, zone Workers
+Routes edit, WordPress, WooCommerce, or signup Worker credentials. The Access
+administrator may be a separate human/account role; do not add Access permissions
+to the CI deploy token.
 
 ## Local verification
 
-Use Node 22 or newer and npm. On Windows use `npm.cmd` / `npx.cmd` when PowerShell
-blocks the `.ps1` shims. OpenNext warns that Windows support is incomplete; the
-deployment workflow uses Linux. The fixture integration test needs permission to
-start local workerd and loopback HTTP servers.
+Use Node 22 or newer. On Windows, use `npm.cmd` / `npx.cmd` if PowerShell blocks
+the `.ps1` shims. OpenNext warns that Windows support is incomplete; GitHub Actions
+runs the same verification on Ubuntu. A Windows checkout whose absolute path
+contains non-ASCII characters may trigger a Node/OpenNext recursive-copy crash.
+Run from an ASCII-only checkout or a temporary `subst` drive and remove that drive
+after the test; do not change dependencies to work around the local path issue.
 
 ```sh
 npm ci
@@ -126,87 +99,172 @@ npx tsx scripts/check-deployment-policy.ts
 npx tsx scripts/check-shared-layout.ts
 npx tsx scripts/check-design-system.ts
 npx tsx scripts/check-cloudflare-staging.ts
+npm run build
 git diff --check
 ```
 
-The last script creates a local CMS fixture, builds the adapter, populates only
-the local static cache, runs `wrangler deploy --dry-run`, and starts local
-workerd. It checks homepage metadata, robots/sitemap, events/assets, unknown URLs,
-origin rewrites/redirects/errors and rejection of writes before reaching the
-fixture. It does not deploy, submit production forms or contact the real CMS.
-Worker types are generated under ignored `.cloudflare/` and checked separately
-from DOM/Next types to avoid incompatible global declarations.
+`check-cloudflare-staging.ts` performs the OpenNext build, populates the local
+static cache, runs `wrangler deploy --dry-run`, starts local workerd, and checks
+the homepage, robots, sitemap, events, assets, unknown events, CMS/Woo `503`s,
+dynamic image proxy denial, noindex headers and write rejection. It does not use
+Cloudflare credentials or contact any CMS.
 
-For an explicit staging build set these process variables first:
+`npm run lint` remains unavailable because the repository still invokes the
+removed `next lint` command. This issue does not change lint infrastructure.
 
-- `SITE_DEPLOYMENT_ENV=staging`, `EVENT_DEPLOYMENT_ENV=preview`
-- `EVENTS_INCLUDE_DRAFTS=false`
-- `WORDPRESS_ORIGIN`, `WORDPRESS_API_BASE`, `WOOCOMMERCE_STORE_API_BASE` to actual
-  verified nonproduction URLs (loopback permitted for local checks only)
+## Access bootstrap: required manual gate
 
-Then run `npm run cf:build` or `npm run cf:dry-run`. Both rebuild; the latter only
-packages the Worker without uploading. No credentials are needed for these
-checks. `npm run lint` remains invalid because it invokes removed `next lint`.
+The Worker did not exist in the read-only account inventory recorded on
+2026-10-07. Worker-level Access cannot be attached until the Worker exists, while
+the first normal deploy would otherwise enable its public `workers.dev` URL.
+Therefore the first release has a two-stage manual bootstrap. Do not use
+account-wide Access: it could change access to the existing signup and other
+Workers.
 
-## Develop deployment path and exact blockers
+After this PR is approved and explicit Cloudflare authorization is given:
 
-`.github/workflows/staging.yml` separates verification from publication:
+1. Check out the approved `develop` commit and run all local verification above.
+2. Create a dedicated Workers Scripts edit token. Set it only in the operator's
+   protected shell together with the account ID; never paste it into chat or a
+   committed file.
+3. Explicitly acknowledge the exact single-Worker target and run the bootstrap:
 
-1. The credential-free `verify` job runs on pull requests targeting `develop`,
-   pushes to `develop`, and manual dispatches. On GitHub-hosted Ubuntu it installs
-   the lockfile, generates/checks types, runs policy/layout/design guards, then
-   builds, dry-runs and exercises the packaged Worker against loopback fixtures.
-   It does not use the `staging` environment, Cloudflare token, live origins or a
-   remote Cloudflare resource. It runs while the publication opt-in is false.
-2. The serialized `deploy` job requires `verify` to pass. It can run only for
-   `refs/heads/develop` when repository variable `CLOUDFLARE_STAGING_ENABLED`
-   equals `true`; only this job uses the GitHub `staging` environment,
-   nonproduction origins and API token. `main`, feature branches and pull-request
-   refs cannot deploy. The deploy script independently checks the develop ref,
-   discovered account ID and token before building or uploading.
+   ```powershell
+   $env:SITE_DEPLOYMENT_ENV = 'staging'
+   $env:EVENT_DEPLOYMENT_ENV = 'preview'
+   $env:EVENTS_INCLUDE_DRAFTS = 'false'
+   $env:CLOUDFLARE_ACCOUNT_ID = '622900d9297cd7c09cad966aaae64617'
+   $env:CLOUDFLARE_BOOTSTRAP_CONFIRMED = 'lilai-web-platform-staging'
+   $env:CLOUDFLARE_API_TOKEN = '<protected token>'
+   npm run cf:bootstrap-access
+   ```
 
-Before enabling it, the operator must supply/configure:
+   This creates `lilai-web-platform-staging` with `workers_dev: false`,
+   `preview_urls: false` and no zone routes or custom domain. It uploads the same
+   application to the single target Worker but exposes no public endpoint.
+4. In Cloudflare Dashboard, go to **Workers & Pages**, select
+   **lilai-web-platform-staging**, open **Access**, and select
+   **Protect this Worker behind Access**. Choose **All traffic**, not
+   **Previews only**. Attach an Allow policy limited to the intended reviewers
+   (for example, named Cloudflare account members or a verified organizational
+   email domain), set the required session duration, and select **Apply Access**.
+5. In Zero Trust > Access > Applications, confirm the application targets the
+   `lilai-web-platform-staging` Worker and uses reusable policies. Verify there is
+   no `Everyone` Allow or Bypass policy. Record the Access application/policy IDs
+   in the private release record, not in this repository.
+6. Confirm the Worker still has no Worker URL, Preview URL, custom domain or zone
+   route. Do not enable the URL manually.
 
-1. A verified nonproduction CMS/service endpoint set. None was found in the
-   repository or CI configuration. Add GitHub `staging` environment variables
-   `STAGING_WORDPRESS_ORIGIN`, `STAGING_WORDPRESS_API_BASE`, and
-   `STAGING_WOOCOMMERCE_STORE_API_BASE`. Do not reuse the production CMS defaults.
-2. `CLOUDFLARE_ACCOUNT_ID=622900d9297cd7c09cad966aaae64617` as a staging environment
-   variable, and a dedicated account-scoped `CLOUDFLARE_API_TOKEN` environment
-   secret with Workers Scripts edit permission for deployment. No DNS edit or
-   Workers Routes edit permission is needed. Keep token values out of this repo
-   and chat; the existing personal OAuth login is not a CI token.
-3. Run the credential-free `verify` job on this PR and resolve or explicitly
-   accept the documented cache/missing-route diagnostics. This supplies the
-   required Linux evidence without enabling deployment or configuring secrets.
-4. GitHub `staging` environment branch restrictions/review protection and
-   Cloudflare Access protecting the provider hostname. Review environments are
-   public without Access; noindex is not authentication. Access was not provisioned
-   or verified in this change. Configure it before enabling publication.
-5. After Linux verification, environment/Access/token setup and manual review,
-   enable the repository opt-in. A subsequent `develop` push or manual dispatch
-   runs `verify` again; only after it passes can `deploy` publish staging.
-   Record the issued URL, Worker/version ID, Git SHA and operator in the release
-   record. Run authenticated read-only smoke checks on the actual URL, including
-   the underlying provider URL. Never attach to `lilaiireland.com` in this step.
+These steps are based on Cloudflare's current Worker-level Access flow, which
+protects the Worker's routes, custom domains, `workers.dev` URL and previews.
+See [Cloudflare Access for Workers](https://developers.cloudflare.com/workers/configuration/cloudflare-access/).
 
-Live provisioning stops at these missing inputs. No fabricated credentials,
-origins, Worker IDs or successful live deployment are implied. Existing production
-DNS/routes/traffic and signup ownership remain unchanged.
+The task must stop here until a reviewer verifies the Access configuration. Do
+not set either deployment gate merely because the bootstrap command succeeded.
 
-## Remaining QA
+## GitHub staging environment and live deployment
 
-- Require the PR's credential-free Ubuntu `verify` job to pass. Its local
-  packaging does not establish remote runtime success.
-- Resolve or explicitly accept the documented read-only-cache diagnostics and
-  investigate missing-route `NoFallbackError` before enabling publication.
-- Verify live noindex on HTML, RSC, assets, origin rewrites, redirects, errors,
-  Access responses and the underlying workers.dev URL; verify public canonicals,
-  disallow-all robots and empty staging sitemap.
-- Browser checks at 375px and 1440px: shell, overflow, focus-visible/keyboard,
-  event images/CTA destinations, dynamic images, console/hydration errors and
-  client navigation. No browser verification is claimed here.
-- ISR/revalidation, sandbox interactions and the routing plan's complete
-  production conflict/rollback matrix remain separate release gates. Roll back
-  staging by redeploying a known-good `develop` commit with the same staging-only
-  pipeline; never edit production routes as a staging rollback.
+After the manual Access review, configure the GitHub `staging` environment:
+
+- required reviewers and deployment branch restricted to `develop`
+- variable `CLOUDFLARE_ACCOUNT_ID=622900d9297cd7c09cad966aaae64617`
+- variable `CLOUDFLARE_ACCESS_CONFIRMED=true`, set only after the review above
+- secret `CLOUDFLARE_API_TOKEN` with Workers Scripts edit only
+- repository variable `CLOUDFLARE_STAGING_ENABLED=true`, set last
+
+Do not configure WordPress/WooCommerce origins. The `verify` job runs for PRs,
+pushes to `develop`, and manual dispatches without credentials or the GitHub
+environment. The serialized `deploy` job runs only after `verify`, only on
+`refs/heads/develop`, and only when `CLOUDFLARE_STAGING_ENABLED` is exactly
+`true`. The deployment script also checks the account, existing Worker and Access
+attestation before building or uploading.
+
+The approved live procedure is:
+
+1. Record the approved Git SHA and current placeholder deployment/version ID.
+2. Recheck Worker-level Access and the absence of routes/custom domains.
+3. Enable `CLOUDFLARE_STAGING_ENABLED`, then manually dispatch **Cloudflare
+   staging** on `develop` (or use the next approved `develop` push).
+4. Confirm `verify` passes before `deploy` starts. The deploy changes only the
+   existing `lilai-web-platform-staging` script, assets, vars and its default
+   `workers.dev` setting.
+5. Record the exact URL issued by Cloudflare, deployment/version ID, Git SHA,
+   workflow URL, operator and timestamp. The expected hostname form is
+   `lilai-web-platform-staging.<account-subdomain>.workers.dev`; the emitted URL
+   is authoritative.
+6. Before sharing the URL, use an unauthenticated private/incognito request and
+   confirm Access blocks or redirects it before the Worker response is visible.
+   Then sign in as an allowed reviewer and confirm the app loads. Also test a
+   reviewer who is not allowed.
+
+If Access is absent, bypassed, mis-scoped or not testable, immediately disable
+the Worker URL or roll back to the bootstrap state and stop. Noindex is not an
+authentication control.
+
+## Live smoke tests
+
+After Access passes the negative and positive checks, run the read-only smoke
+test through an authenticated browser session or a narrowly scoped Access service
+token. For a service token, export both values only in the protected shell:
+
+```powershell
+$env:CHECK_BASE_URL = '<recorded workers.dev origin>'
+$env:CHECK_DEPLOYMENT_ENV = 'staging'
+$env:CF_ACCESS_CLIENT_ID = '<service-token client id>'
+$env:CF_ACCESS_CLIENT_SECRET = '<service-token secret>'
+npx tsx scripts/check-deployment-smoke.ts
+```
+
+The checker sends only GET/HEAD requests and validates:
+
+- homepage, canonical, robots and empty sitemap
+- event index, Daydream page and a real event image
+- unknown event `404`
+- WordPress REST, product and generic CMS path `503` responses
+- noindex on all Worker responses
+
+Also perform browser QA at 375px and 1440px for the shared shell, sticky header,
+overflow, keyboard/focus-visible behavior, event navigation/assets/CTAs, and
+console or hydration errors. Do not submit forms. Check Workers logs for outbound
+requests; there must be no request to `lilaiireland.com`, `cms.lilaiireland.com`,
+WordPress, WooCommerce or the signup Worker.
+
+## Rollback
+
+For an application regression while Access remains correct:
+
+1. Disable `CLOUDFLARE_STAGING_ENABLED` to stop further CI publication.
+2. Record the failing deployment/version ID and logs.
+3. Use Cloudflare's deployment rollback to restore the recorded known-good
+   staging version, or check out the known-good `develop` SHA and run the same
+   reviewed deploy workflow.
+4. Repeat Access and read-only smoke checks. Worker rollback does not restore
+   external configuration, so separately recheck Access and the Worker URL.
+
+For any Access failure or unintended public exposure:
+
+1. Disable the Worker's `workers.dev` URL immediately. Do not add a custom domain,
+   production route or temporary public bypass.
+2. Keep the Worker and Access records for incident review; do not delete the
+   signup Worker or alter production DNS/routes.
+3. Repair and independently verify Worker-level Access while the URL is disabled.
+4. Re-enable publication only through the approved gated workflow.
+
+To return to the pre-public bootstrap state, deploy the approved configuration
+with `workers_dev: false` using the explicitly authorized bootstrap procedure.
+No production traffic rollback is involved because staging owns no production
+route or domain.
+
+## Remaining limitations
+
+- CMS-backed pages, posts, product pages, cart, checkout, account, REST and media
+  are intentionally unavailable in standalone staging.
+- WordPress fallback/status/redirect fidelity, Woo sessions and dynamic CMS image
+  optimization cannot be validated until a separate nonproduction integration is
+  approved.
+- ISR and on-demand revalidation remain unprovisioned; staging uses the build's
+  read-only Static Assets cache.
+- Local workerd cannot prove Cloudflare Access, provider-edge failures or the live
+  provider URL. The manual gate and live checks above remain mandatory.
+- Production routing, event collision inventory, signup dependencies and the
+  production cutover/rollback matrix remain later Issue #3 release gates.

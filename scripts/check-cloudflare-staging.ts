@@ -4,36 +4,13 @@ import { once } from "node:events";
 import { createServer } from "node:http";
 import { readFileSync, writeFileSync } from "node:fs";
 
-// Integration test: build and run the real adapter in local workerd, using only
-// loopback CMS fixtures. Never load credentials or submit a production request.
+// Integration test: build and run the real standalone adapter in local workerd.
+// It never loads credentials, contacts the CMS or submits a production request.
 async function main() {
-  const originRequests: string[] = [];
-  const origin = createServer((request, response) => {
-    const url = new URL(request.url ?? "/", "http://fixture");
-    originRequests.push(`${request.method} ${url.pathname}`);
-    if (url.pathname.endsWith("/redirect")) {
-      response.writeHead(302, { Location: "/fixture-target", "Set-Cookie": "fixture=1; HttpOnly" });
-      response.end();
-    } else if (url.pathname.endsWith("/error")) {
-      response.writeHead(503);
-      response.end("Fixture origin unavailable");
-    } else {
-      response.setHeader("Content-Type", "application/json");
-      response.end(JSON.stringify(url.pathname.startsWith("/wp-json/wp/v2/") ? [] : { fixture: true }));
-    }
-  });
   const reuseBuild = process.argv.includes("--skip-build");
-  const fixturePort = reuseBuild ? Number(new URL(JSON.parse(readFileSync(".cloudflare/wrangler-staging.json", "utf8")).vars.WORDPRESS_ORIGIN).port) : 0;
-  origin.listen(fixturePort, "127.0.0.1");
-  await once(origin, "listening");
-  const address = origin.address();
-  assert(address && typeof address !== "string");
-  const fixture = `http://127.0.0.1:${address.port}`;
   const env = {
     ...process.env, SITE_DEPLOYMENT_ENV: "staging", EVENT_DEPLOYMENT_ENV: "preview",
-    EVENTS_INCLUDE_DRAFTS: "false", WORDPRESS_ORIGIN: fixture,
-    WORDPRESS_API_BASE: `${fixture}/wp-json/wp/v2`,
-    WOOCOMMERCE_STORE_API_BASE: `${fixture}/wp-json/wc/store/v1`,
+    EVENTS_INCLUDE_DRAFTS: "false",
     WRANGLER_LOG_PATH: ".wrangler/logs", WRANGLER_SEND_METRICS: "false", NEXT_TELEMETRY_DISABLED: "1",
   };
   const run = async (args: string[]) => {
@@ -79,26 +56,28 @@ async function main() {
       ["/events/missing-fixture", 404], ["/events/missing.png", 404],
       ["/events/daydream-adventure-2027/arsha.webp?smoke=1", 200],
       ["/assets/lilai-logo.png", 200], [brandFontPath, 200],
-      ["/wp-json/probe", 200], ["/wp-content/probe", 200], ["/wp-admin/probe", 200],
-      ["/cart/probe", 200], ["/checkout/probe", 200], ["/my-account/probe", 200],
-      ["/wp-json/redirect", 302], ["/wp-json/error", 503], ["/missing-fixture", 404],
+      ["/_next/image?url=https%3A%2F%2Fcms.lilaiireland.com%2Fprobe.jpg&w=640&q=75", 503],
+      ["/wp-json/probe", 503], ["/wp-content/probe", 503], ["/wp-admin/probe", 503],
+      ["/cart/probe", 503], ["/checkout/probe", 503], ["/my-account/probe", 503],
+      ["/product/probe", 503], ["/about/", 503], ["/events-other", 503],
     ] as const) {
       const response = await get(path);
-      if (response.status !== status) console.error({ path, body: await response.text(), originRequests });
+      if (response.status !== status) console.error({ path, body: await response.text() });
       assert.equal(response.status, status, `${path}\n${logs}`);
       assert.equal(response.headers.get("x-robots-tag"), "noindex, nofollow", path);
-      if (status === 302) {
-        assert.equal(response.headers.get("location"), "/fixture-target");
-        assert.equal(response.headers.get("set-cookie"), "fixture=1; HttpOnly");
+      if (status === 503) {
+        assert.equal(response.headers.get("x-lilai-staging-limitation"), "wordpress-woocommerce-unavailable");
+        assert.match(await response.text(), /unavailable in standalone staging/);
+      } else {
+        await response.arrayBuffer();
       }
-      await response.arrayBuffer();
       console.log(`PASS workerd ${status} + noindex: ${path}`);
     }
     const denied = await get("/wp-json/write-probe", "POST");
     assert.equal(denied.status, 405);
     assert.equal(denied.headers.get("x-robots-tag"), "noindex, nofollow");
-    assert(!originRequests.includes("POST /wp-json/write-probe"));
-    console.log("PASS staging write rejected before reaching fixture origin");
+    assert.equal(denied.headers.get("allow"), "GET, HEAD");
+    console.log("PASS staging write rejected before route handling");
     if (/NoFallbackError|Failed to set to read-only cache/.test(logs)) {
       console.warn("KNOWN LIMITATION: HTTP checks passed, but adapter cache/missing-route diagnostics remain; see .cloudflare/workerd-smoke.log and docs/cloudflare-staging.md");
     }
@@ -112,7 +91,6 @@ async function main() {
       await exited;
     }
     writeFileSync(".cloudflare/workerd-smoke.log", logs);
-    await new Promise<void>(resolve => origin.close(() => resolve()));
   }
 }
 

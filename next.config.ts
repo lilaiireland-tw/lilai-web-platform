@@ -20,6 +20,7 @@ const nextConfig: NextConfig = {
     ]
   },
   async rewrites() {
+    if (process.env.SITE_DEPLOYMENT_ENV === "staging") return [];
     return wordpressRewritePrefixes.map(prefix => ({
       source: `${prefix}/:path*`,
       destination: `${WP_ORIGIN}${prefix}/:path*`,

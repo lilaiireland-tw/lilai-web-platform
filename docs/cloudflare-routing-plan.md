@@ -15,18 +15,19 @@ This is the phase-one ownership plan; the broader migration ideas in
 | `main` | Production | `https://lilaiireland.com`; release artifact only until a separately approved cutover | production policy |
 
 Read-only account/zone/subdomain discovery is recorded in the staging runbook.
-There is still no provisioned or verified staging URL. Provisioning remains
-blocked on nonproduction origins, CI credentials and Access setup. Use the
-dedicated staging Worker's issued `workers.dev` URL initially; any custom staging
-hostname must be outside the production hostname's route patterns. Record the
-exact staging URL, account/zone IDs, Worker IDs, and Git SHA in the release record.
+There is still no provisioned or verified staging URL. The first deployment now
+uses a standalone frontend preview, so it is not blocked on nonproduction CMS
+origins. Provisioning remains blocked on CI credentials, the Access bootstrap and
+manual Access verification. Use only the dedicated staging Worker's issued
+`workers.dev` URL; do not create a custom staging hostname. Record the exact
+staging URL, account/zone IDs, Worker IDs, and Git SHA in the release record.
 Staging does not attach to `lilaiireland.com` or `www.lilaiireland.com`.
 
 Use separate Workers, environment bindings, build variables, and secrets for
-preview/staging/production. Staging must use a nonproduction CMS or read-only
-fixture and sandbox service integrations. Never reuse production form/email,
-Queue, database, payment, or signup credentials. Protect review environments with
-Access when provisioned; retain noindex on the underlying provider URL too.
+preview/staging/production. Standalone staging has no CMS/service integration and
+must fail those routes closed. Never reuse production form/email, Queue, database,
+payment, WordPress, WooCommerce, or signup credentials. Protect the staging Worker
+with Access before enabling its provider URL; retain noindex behind Access too.
 
 The staging follow-up adds Wrangler, OpenNext and a gated `develop` workflow;
 see the staging runbook for its build and runtime verification. The Next.js App
@@ -146,7 +147,7 @@ fallback can be considered later after its origin behavior is demonstrated.
 | `NEXT_PUBLIC_SITE_URL` | Compatibility entry fixed to `https://lilaiireland.com`; application canonical source is pinned to that public URL, never the serving hostname |
 | `EVENT_DEPLOYMENT_ENV` | Existing event build policy; set preview for nonproduction and production only with a production site build |
 | `EVENTS_INCLUDE_DRAFTS` | false by default; production must remain false |
-| `WORDPRESS_ORIGIN`, `WORDPRESS_API_BASE`, `WOOCOMMERCE_STORE_API_BASE` | Server-only per-environment nonsecret URLs; staging uses fixture/nonproduction origins |
+| `WORDPRESS_ORIGIN`, `WORDPRESS_API_BASE`, `WOOCOMMERCE_STORE_API_BASE` | Server-only production/integration URLs; absent from standalone staging, whose CMS/Woo routes return explicit `503` responses |
 | `REVALIDATE_SECRET` | Distinct secret per environment; never `NEXT_PUBLIC_*`, committed values, or build log output |
 | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_ZONE_ID` | Operator/CI configuration; token secret with minimal permissions for the task; IDs are not secrets |
 
@@ -249,8 +250,8 @@ accepts any 2xx/3xx, so it is not sufficient cutover evidence.
 - Provisioned and verified staging URL/Worker (account and zone were discovered).
 - Live route/rule/DNS export, signup dependency inventory and verified CMS origin.
 - Legacy WordPress event URL/asset inventory and approved collision resolutions.
-- Provisioned isolated staging runtime and nonproduction integration credentials.
-- Configure the gated staging CI environment with nonproduction origins and credentials.
+- Provisioned isolated staging runtime with Worker-level Access verified before its URL is enabled.
+- Configure the gated staging CI environment with the scoped Workers token and Access attestation; no CMS origins.
 - Edge-wide noindex verification, route-winner evidence and full smoke/browser QA.
 - Separately reviewed implementation of the router/adapter and explicit production
   cutover authorization. Readiness migration has its own acceptance gate.

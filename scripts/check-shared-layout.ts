@@ -30,7 +30,9 @@ const origin = createServer((request, response) => {
 });
 
 async function main() {
-  const deploymentEnv = process.env.CHECK_DEPLOYMENT_ENV === "production" ? "production" : "staging";
+  // This test intentionally exercises the integrated WordPress fallback with a
+  // loopback fixture. Standalone Cloudflare staging is covered by workerd tests.
+  const deploymentEnv = process.env.CHECK_DEPLOYMENT_ENV === "production" ? "production" : "preview";
   origin.listen(0, "127.0.0.1");
   await once(origin, "listening");
   const address = origin.address();

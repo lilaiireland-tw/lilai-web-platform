@@ -3,6 +3,9 @@ import type { WordPressContentItem, WordPressMedia, WordPressTerm } from "@/type
 const WP_API_BASE = process.env.WORDPRESS_API_BASE || "https://cms.lilaiireland.com/wp-json/wp/v2";
 
 async function wpFetch<T>(path: string, revalidate = 300): Promise<T> {
+  if (process.env.SITE_DEPLOYMENT_ENV === "staging") {
+    throw new Error("WordPress is unavailable in standalone staging");
+  }
   const res = await fetch(`${WP_API_BASE}${path}`, {
     next: { revalidate }
   });
