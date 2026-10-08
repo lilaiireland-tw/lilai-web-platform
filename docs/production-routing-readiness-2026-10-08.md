@@ -286,6 +286,9 @@ Use GET/HEAD unless an explicitly approved nonproduction transactional test says
 otherwise. Record owner evidence from logs in addition to status/header output.
 
 - `/` with no query, UTM query, and `_rsc` query: platform `200`, public canonical.
+- `/consult`, `/consult/`, `/consult?utm_source=google`,
+  `/consult/?gclid=...`: platform owner with query preserved. WordPress/Woo query
+  keys on `/consult` remain origin-owned.
 - Root WordPress/Woo query endpoints: WordPress behavior, never platform.
 - `/events`, slash form, Daydream, all real images/fonts, query variants: platform.
 - unknown event slug and missing event asset: platform `404`.
@@ -302,8 +305,8 @@ otherwise. Record owner evidence from logs in addition to status/header output.
 - `www` variants: retain the current apex redirect and never attach wildcard host
   routing accidentally.
 
-Browser QA remains required at 375px and 1440px for the new homepage/events and
-the existing signup/WordPress/Woo flows: overflow, sticky shell, focus-visible,
+Browser QA remains required at 375px and 1440px for the new homepage/consult/events
+and the existing signup/WordPress/Woo flows: overflow, sticky shell, focus-visible,
 assets, navigation, console/hydration errors, redirects, cookies and cache status.
 
 ## Rollback
