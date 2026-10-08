@@ -6,10 +6,32 @@ has current evidence and the release owner explicitly approves Phase D.
 The production Platform and Router configurations are prepared with
 `workers_dev: false`, `preview_urls: false`, and `routes: []`. Router calls the
 Platform through the `PLATFORM` Service Binding. No step in the workflow attaches
-a route. Validation runs on pull requests and pushes to `develop`; the production
-deployment job can run only from `workflow_dispatch` on `develop` with explicit
-confirmation.
-The existing staging workflow is unchanged.
+a route. Production validation runs on pull requests and pushes to `develop`.
+Private production deployment is available only by manually dispatching from
+`main`, selecting `deploy_private_workers=true`, and receiving approval from the
+GitHub `production` environment. Configure required reviewers on that environment
+so the approval gate is active. The workflow must first be merged to the default
+branch (`main`) before GitHub exposes its manual dispatch there. Staging remains
+on `develop` and retains its existing `CLOUDFLARE_STAGING_ENABLED` safeguard.
+
+## Release branch sequence
+
+1. Feature branches merge into `develop` through reviewed pull requests.
+2. `develop` runs validation and, when the existing staging safeguards pass,
+   deploys to staging.
+3. After staging review, open a reviewed release pull request from `develop` to
+   `main`. Do not merge it automatically.
+4. After that release PR is approved and merged, `main` contains the
+   `workflow_dispatch` workflow and can manually start the private production
+   deployment. Select `deploy_private_workers=true` and approve the `production`
+   environment.
+5. Public route cutover is a separate, explicitly approved Cloudflare operation
+   after the evidence gates below. The deployment workflow never attaches public
+   traffic.
+
+For the current workflow correction, first review and merge its focused PR into
+`develop`; then open the `develop` to `main` release PR containing this reviewed
+workflow. Do not dispatch the production workflow before it exists on `main`.
 
 ## Ready now
 
@@ -23,10 +45,10 @@ The existing staging workflow is unchanged.
 - New isolated mock harness exercises homepage/events, JavaScript, CSS, images,
   fonts, 404 boundaries, origin fallthrough, one-call behavior, failure detection,
   and route-removal rollback semantics. It does not call production services.
-- Manual workflow builds production-marked artifacts. Its optional private-deploy
-  job runs only from `workflow_dispatch` after the operator sets
-  `deploy_private_workers=true`; the GitHub `production` environment can add an
-  approval gate. Both deployment configs still have no public route or URL.
+- Manual workflow builds production-marked artifacts. Its private-deploy job
+  requires `workflow_dispatch` from `main`, `deploy_private_workers=true`, and
+  approval by required reviewers on the GitHub `production` environment. Both
+  deployment configs still have no public route or URL.
 - Rollback procedure below removes only the newly attached Router Route.
 
 ## Can be completed automatically
@@ -59,10 +81,10 @@ not run. This audit cannot enumerate the WordPress origin.
 
 GitHub Actions: PRs and pushes to `develop` run validation only. To manually run
 validation without deploying, run **Production private Workers (manual only)**
-with `deploy_private_workers=false`. To deploy private Workers, dispatch this
-workflow on `develop`, then select `true` only after a separately recorded
-deployment approval and after confirming
-the `production` environment reviewers (if configured),
+with `deploy_private_workers=false` from `main`. To deploy private Workers,
+dispatch this workflow on `main`, then select `true` only after a separately
+recorded deployment approval and after confirming the required reviewers on the
+`production` environment,
 `CLOUDFLARE_API_TOKEN` secret, and `CLOUDFLARE_ACCOUNT_ID` variable. Both Worker
 configs and the variable must target the approved production account
 `622900d9297cd7c09cad966aaae64617`; a mismatch fails before either deploy. The
@@ -111,8 +133,8 @@ asset inventory output. `npm run build` must run with
 
 **Phase B — Deploy both Workers privately.** Only after a separate written
 operator approval, manually run **Production private Workers (manual only)** on
-`develop`, choose `deploy_private_workers=true`, and approve the `production`
-environment if it has reviewers. The deployment command is:
+`main`, choose `deploy_private_workers=true`, and approve the `production`
+environment. The deployment command is:
 
 ```bash
 npm ci
