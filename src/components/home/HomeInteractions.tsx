@@ -51,8 +51,6 @@ const levelContent = [
 
 const schoolDetails: Record<string, string> = {
   "NED College": "適合想先把總預算壓穩、保留住宿與落地緩衝的人，可以作為小資出發的比較選項。",
-  "ICOT College": "適合重視預算彈性、希望先確認課程和生活成本比例的人。",
-  "Erin College": "適合想降低出發門檻、先用務實方式開始愛爾蘭生活的人。",
   "ISI Dublin": "適合想要課程、活動與城市生活一起建立節奏的人。",
   "Atlas Language School": "適合重視學習環境、課程設計與英文進步感的人。",
   "ELI Schools": "適合想邊讀邊適應生活，也希望保留社交與活動彈性的人。",
@@ -67,8 +65,6 @@ const schoolDetails: Record<string, string> = {
 
 const schoolLogos: Record<string, string> = {
   "NED College": "/assets/logo-ned-college.png",
-  "ICOT College": "/assets/logo-icot-college.png",
-  "Erin College": "/assets/logo-erin-college.png",
   "ISI Dublin": "/assets/logo-isi-learning.png",
   "Atlas Language School": "/assets/logo-atlas-language-school.png",
   "ELI Schools": "/assets/logo-eli-schools.png",
