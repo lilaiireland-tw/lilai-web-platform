@@ -10,6 +10,7 @@
     "check:urls": "tsx scripts/check-important-urls.ts",
     "check:consult": "tsx scripts/check-consult.ts",
     "check:production-routing": "tsx scripts/check-production-routing.ts",
+    "check:production-router": "tsx scripts/check-production-router.ts",
     "update:fonts": "tsx scripts/update-brand-fonts.ts",
     "cf:build": "tsx scripts/cloudflare-staging.ts build",
     "cf:dry-run": "tsx scripts/cloudflare-staging.ts dry-run",

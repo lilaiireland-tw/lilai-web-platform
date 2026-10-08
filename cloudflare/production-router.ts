@@ -1,8 +1,8 @@
 import { productionRouteOwner } from "./production-routing-policy";
 
 export interface ProductionRouterServices {
-  platform: Pick<Fetcher, "fetch">;
-  originFetch?: typeof fetch;
+  platform: { fetch(request: Request): Promise<Response> };
+  originFetch?: (request: Request) => Promise<Response>;
 }
 
 /**
