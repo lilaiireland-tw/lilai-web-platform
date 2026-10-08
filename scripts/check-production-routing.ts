@@ -123,6 +123,17 @@ function main() {
   assert.deepEqual(wrangler.routes, []);
   assert.equal(wrangler.workers_dev, true);
   console.log("PASS production contract does not mutate isolated staging configuration");
+
+  const productionPlatform = JSON.parse(readFileSync("cloudflare/production-platform.jsonc", "utf8"));
+  assert.equal(productionPlatform.name, "lilai-web-platform-production");
+  assert.equal(productionPlatform.workers_dev, false);
+  assert.equal(productionPlatform.preview_urls, false);
+  assert.deepEqual(productionPlatform.routes, []);
+  assert.equal(productionPlatform.vars.SITE_DEPLOYMENT_ENV, "production");
+  assert.equal(productionPlatform.vars.EVENT_DEPLOYMENT_ENV, "production");
+  assert.equal(productionPlatform.vars.NEXT_PUBLIC_SITE_URL, PUBLIC_SITE_URL);
+  assert(!JSON.stringify(productionPlatform).includes("cms.lilaiireland.com"));
+  console.log("PASS private production platform config has no public route or URL");
 }
 
 main();

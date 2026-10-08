@@ -13,6 +13,7 @@
     "check:production-router": "tsx scripts/check-production-router.ts",
     "update:fonts": "tsx scripts/update-brand-fonts.ts",
     "cf:build": "tsx scripts/cloudflare-staging.ts build",
+    "cf:build:production-platform": "tsx scripts/cloudflare-production.ts build",
     "cf:dry-run": "tsx scripts/cloudflare-staging.ts dry-run",
     "cf:bootstrap-access": "tsx scripts/cloudflare-staging.ts bootstrap-access",
     "cf:deploy": "tsx scripts/cloudflare-staging.ts deploy",
