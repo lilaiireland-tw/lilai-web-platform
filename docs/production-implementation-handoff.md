@@ -59,15 +59,13 @@ Status: implementation candidate in progress; no production release or cutover.
 - `git diff --check`: PASS; Git printed expected LF-to-CRLF conversion warnings.
 - `npm.cmd run cf:build:production-platform`: FAILED on this Windows host while
   OpenNext started; child process exited `3221226505`. OpenNext reported that
-  Windows is not fully supported. Only Node.js v24 is installed locally, while
-  the GitHub workflow uses Node.js 22. Re-run the build in Linux CI before
-  treating the production artifact as validated.
+  Windows is not fully supported. Only Node.js v24 is installed locally.
+- GitHub Actions run [37851912169](https://github.com/lilaiireland-tw/lilai-web-platform/actions/runs/37851912169): PASS on `ubuntu-latest` in 2m17s, including Node 22 install, both Wrangler typegen steps, both TypeScript checks, routing and Router tests, the production OpenNext build, shared-layout/design-system checks, and the staging Worker check. The CI build clears the local Windows-only build blocker.
 - An initial `npm run` call was blocked by PowerShell execution policy. Use
   `npm.cmd` on this host.
 
 ## Unfinished work and blockers
 
-- Verify the production OpenNext build on the existing Linux/Node 22 CI runner.
 - Sol review of the Router, Service Binding target, origin passthrough, and
   account-specific Cloudflare route precedence is still required before any
   deployment. Current official docs describe the APIs, but the zone's actual DNS
@@ -76,8 +74,8 @@ Status: implementation candidate in progress; no production release or cutover.
   WordPress.com approval, WooCommerce session/cache evidence, and full asset/event
   collision inventory remain production release blockers.
 - Draft PR #28 is open against `develop` and references the work as `Part of #3`.
-- The complete regression/type checks should run in CI; inspect PR #28 checks and
-  resolve any failures before requesting Sol review.
+- CI run 37851912169 passed; rerun the workflow for any later code changes before
+  requesting Sol review.
 
 ## Resume commands
 
