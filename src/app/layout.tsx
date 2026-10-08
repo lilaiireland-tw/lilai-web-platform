@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { isProductionDeployment } from "@/lib/deployment";
+import { GoogleAdsTag } from "@/components/analytics/GoogleAdsTag";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { TopStrip } from "@/components/layout/TopStrip";
@@ -47,6 +48,7 @@ export default function RootLayout({
   return (
     <html lang="zh-Hant">
       <body>
+        <GoogleAdsTag productionDeployment={isProductionDeployment()} />
         <a className={styles.skipLink} href="#site-content">跳至主要內容</a>
         <TopStrip />
         <Header />

@@ -1,5 +1,6 @@
 export const IMPORTANT_URLS = [
   "/",
+  "/consult/",
   "/about/",
   "/ireland-study-consultation/",
   "/ireland-bank-account-ppsn-tax-guide/",
@@ -17,6 +18,7 @@ export const IMPORTANT_URLS = [
 
 export const STATIC_SITEMAP_URLS = [
   "/",
+  "/consult/",
   "/about/",
   "/ireland-study-consultation/",
   "/free-departure-assessment/",

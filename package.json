@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "check:urls": "tsx scripts/check-important-urls.ts",
+    "check:consult": "tsx scripts/check-consult.ts",
     "check:production-routing": "tsx scripts/check-production-routing.ts",
     "update:fonts": "tsx scripts/update-brand-fonts.ts",
     "cf:build": "tsx scripts/cloudflare-staging.ts build",
