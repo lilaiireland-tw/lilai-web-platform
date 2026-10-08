@@ -71,11 +71,14 @@ async function main() {
       env: { ...env, CHECK_BASE_URL: base, CHECK_DEPLOYMENT_ENV: "staging" }, stdio: "inherit",
     });
     assert.equal((await once(smoke, "exit"))[0], 0, logs);
+    const brandFontPath = readFileSync("src/styles/fonts.css", "utf8")
+      .match(/\/fonts\/noto-sans-tc\/[^)]+\.woff2/)?.[0];
+    assert(brandFontPath);
     for (const [path, status] of [
       ["/events", 200], ["/events/daydream-adventure-2027", 200],
       ["/events/missing-fixture", 404], ["/events/missing.png", 404],
       ["/events/daydream-adventure-2027/arsha.webp?smoke=1", 200],
-      ["/assets/lilai-logo.png", 200], ["/fonts/NotoSansTC-Regular.woff2", 200],
+      ["/assets/lilai-logo.png", 200], [brandFontPath, 200],
       ["/wp-json/probe", 200], ["/wp-content/probe", 200], ["/wp-admin/probe", 200],
       ["/cart/probe", 200], ["/checkout/probe", 200], ["/my-account/probe", 200],
       ["/wp-json/redirect", 302], ["/wp-json/error", 503], ["/missing-fixture", 404],

@@ -19,7 +19,7 @@
 .desktopNavigation .navLink:hover,
 .desktopNavigation .navItem:focus-within > .navLink { color: var(--color-primary); }
 .desktopNavigation .subLinks { position: absolute; top: 100%; left: -16px; min-width: 190px; padding: 10px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface); box-shadow: var(--shadow-floating); opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(6px); transition: opacity .16s ease, transform .16s ease, visibility .16s ease; }
-.desktopNavigation .subLinks a { display: block; padding: 9px 10px; border-radius: var(--radius-medium); color: var(--color-text-main); font-weight: 600; }
+.desktopNavigation .subLinks a { display: block; padding: 9px 10px; border-radius: var(--radius-medium); color: var(--color-text-main); font-weight: var(--font-weight-bold); }
 .desktopNavigation .subLinks a:hover,
 .desktopNavigation .subLinks a:focus-visible { background: var(--color-primary-light); color: var(--color-primary); }
 .desktopNavigation .navItemWithChildren:hover .subLinks,

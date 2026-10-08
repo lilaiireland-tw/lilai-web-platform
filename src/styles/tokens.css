@@ -1,26 +1,4 @@
 /* Canonical brand values. Reference: language-school-signup-page a7d0fbd. */
-@font-face {
-  font-family: "Noto Sans TC";
-  src: url("/fonts/NotoSansTC-Regular.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Noto Sans TC";
-  src: url("/fonts/NotoSansTC-Bold.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Noto Serif TC";
-  src: url("/fonts/NotoSerifTC-Bold.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-}
-
 :root {
   --color-background: #faf8ef;
   --color-surface: #fffff6;

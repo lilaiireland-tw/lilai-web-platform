@@ -150,8 +150,11 @@ async function main() {
     }
     const logo = await get("/assets/lilai-logo.png");
     assert.equal(logo.status, 200);
-    for (const font of ["NotoSansTC-Regular", "NotoSansTC-Bold", "NotoSerifTC-Bold"]) {
-      assert.equal((await get(`/fonts/${font}.woff2`)).status, 200);
+    const fontCss = readFileSync("src/styles/fonts.css", "utf8");
+    for (const directory of ["noto-sans-tc", "noto-serif-tc"]) {
+      const fontPath = fontCss.match(new RegExp(`/fonts/${directory}/[^)]+\\.woff2`))?.[0];
+      assert(fontPath, directory);
+      assert.equal((await get(fontPath)).status, 200);
     }
     console.log("PASS local logo and brand font assets");
   } finally {
