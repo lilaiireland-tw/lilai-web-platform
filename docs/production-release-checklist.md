@@ -6,8 +6,9 @@ has current evidence and the release owner explicitly approves Phase D.
 The production Platform and Router configurations are prepared with
 `workers_dev: false`, `preview_urls: false`, and `routes: []`. Router calls the
 Platform through the `PLATFORM` Service Binding. No step in the workflow attaches
-a route, and the workflow does not run on push, pull request, or merge. The
-existing staging workflow is unchanged.
+a route. Validation runs on pull requests and pushes to `develop`; the production
+deployment job can run only from `workflow_dispatch` with explicit confirmation.
+The existing staging workflow is unchanged.
 
 ## Ready now
 
@@ -55,8 +56,9 @@ asset tree against the route policy. The production build is expected to produce
 `.open-next/assets`; a missing directory means that portion of the inventory did
 not run. This audit cannot enumerate the WordPress origin.
 
-GitHub Actions: run **Production private Workers (manual only)** with
-`deploy_private_workers=false` for validation. To deploy private Workers, select
+GitHub Actions: PRs and pushes to `develop` run validation only. To manually run
+validation without deploying, run **Production private Workers (manual only)**
+with `deploy_private_workers=false`. To deploy private Workers, select
 `true` only after a separately recorded deployment approval and after confirming
 the `production` environment reviewers (if configured),
 `CLOUDFLARE_API_TOKEN` secret, and `CLOUDFLARE_ACCOUNT_ID` variable. The token
