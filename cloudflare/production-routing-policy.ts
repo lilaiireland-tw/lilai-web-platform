@@ -44,7 +44,13 @@ export function productionRouteOwner(input: string | URL): ProductionRouteOwner 
   if (url.hostname !== PRODUCTION_HOSTNAME) return "wordpress";
   if (isSignupPath(url.pathname)) return "signup";
   if (hasWordPressQueryEndpoint(url)) return "wordpress";
-  if (url.pathname === "/" || url.pathname === "/events" || url.pathname.startsWith("/events/")) {
+  if (
+    url.pathname === "/" ||
+    url.pathname === "/consult" ||
+    url.pathname === "/consult/" ||
+    url.pathname === "/events" ||
+    url.pathname.startsWith("/events/")
+  ) {
     return "platform";
   }
   if (platformAssetPrefixes.some(prefix => url.pathname.startsWith(prefix))) return "platform";

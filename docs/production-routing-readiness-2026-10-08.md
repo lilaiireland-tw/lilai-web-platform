@@ -9,9 +9,11 @@ route, WordPress, WooCommerce, custom-domain, or production deployment change.
 The current WordPress.com site can coexist with the new platform under the public
 hostname by using a Cloudflare **Workers Route**, not an apex Worker Custom Domain.
 The recommended front door is one small router on `lilaiireland.com/*`. It sends
-only `/`, `/events`, `/events/*`, and the platform's audited static namespaces to
-a private production platform Worker through a Service Binding. Every other
-request is passed through to the existing DNS origin with `fetch(request)`.
+only `/`, exact `/consult` and `/consult/`, `/events`, `/events/*`, and the
+platform's audited static namespaces to a private production platform Worker
+through a Service Binding. Ordinary query strings preserve those path owners;
+WordPress/WooCommerce query endpoints remain origin-owned. Every other request is
+passed through to the existing DNS origin with `fetch(request)`.
 
 A separate WordPress hostname is not required for this route-based pass-through:
 Cloudflare Workers Routes are designed to sit in front of an existing origin, and
@@ -65,13 +67,14 @@ WordPress and WooCommerce query endpoints before the platform allowlist is teste
 | Public request | Intended owner after phase-one cutover | Required handling |
 | --- | --- | --- |
 | `/`, `/?utm_...` | platform | router -> platform Service Binding |
+| `/consult`, `/consult/`, `/consult?utm_source=google`, `/consult/?gclid=...` | platform | router -> platform Service Binding; preserve query strings |
 | `/events`, `/events/`, `/events/*` | platform | router -> platform; unknown slugs/assets stay platform `404` |
 | `/_next/*`, `/assets/*`, `/fonts/*` | platform | router -> same platform deployment; only after complete collision inventory |
 | `/language-school-signup` | existing signup Worker | existing exact route, unchanged |
 | `/language-school-signup/`, descendants, and their queries | existing signup Worker | existing wildcard route, unchanged |
 | `/language-school-signup?query` | signup flow via current WordPress slash redirect | exact route does not match a query; router must origin-pass-through and preserve the current `301` to the slash URL, which then reaches signup |
 | `/language-school-signup-other` | WordPress | prefix boundary; never signup or platform |
-| `/?wc-ajax=`, `/?wc-api=`, `/?add-to-cart=` | WordPress/WooCommerce | origin pass-through; do not cache or replay |
+| `/?wc-ajax=`, `/?wc-api=`, `/?add-to-cart=` and the same keys on `/consult` | WordPress/WooCommerce | origin pass-through; do not cache or replay |
 | `/?rest_route=`, `/?p=`, `/?page_id=`, `/?preview=`, `/?s=`, `/?feed=` | WordPress | origin pass-through |
 | `/wp-admin`, `/wp-login.php`, `/wp-json`, `/wp-content`, `/wp-includes` and descendants | WordPress | origin pass-through with original method/body/query/cookies |
 | `/shop`, `/cart`, `/checkout`, `/my-account`, `/product`, product categories, `/wc-api` and descendants | WordPress/WooCommerce | origin pass-through, never edge-cache dynamic/session responses |
