@@ -75,7 +75,9 @@ function main() {
   console.log("PASS verified route snapshot and proposed route preserve both signup mappings");
 
   assertOwner("platform", [
-    "/", "/?utm_source=smoke", "/events", "/events/", "/events?source=smoke",
+    "/", "/?utm_source=smoke",
+    "/consult", "/consult/", "/consult?utm_source=google", "/consult/?gclid=test-click-id",
+    "/events", "/events/", "/events?source=smoke",
     "/events/daydream-adventure-2027/", "/events/unknown", "/events/missing.png?cache=1",
     "/_next/static/chunk.js?v=1", "/assets/lilai-logo.png", "/fonts/example.woff2",
   ]);
@@ -88,6 +90,7 @@ function main() {
     "/?wc-ajax=get_refreshed_fragments", "/?wc-api=payment-callback", "/?add-to-cart=1",
     "/?rest_route=/wp/v2/posts", "/?p=123", "/?page_id=123", "/?preview=true",
     "/?s=ireland", "/events/?add-to-cart=1",
+    "/consult?wc-ajax=checkout", "/consult/?rest_route=/wp/v2/posts",
   ]);
   console.log("PASS platform allowlist boundaries and WordPress/WooCommerce fallback");
 
@@ -120,6 +123,28 @@ function main() {
   assert.deepEqual(wrangler.routes, []);
   assert.equal(wrangler.workers_dev, true);
   console.log("PASS production contract does not mutate isolated staging configuration");
+
+  const productionPlatform = JSON.parse(readFileSync("cloudflare/production-platform.jsonc", "utf8"));
+  assert.equal(productionPlatform.name, "lilai-web-platform-production");
+  assert.equal(productionPlatform.workers_dev, false);
+  assert.equal(productionPlatform.preview_urls, false);
+  assert.deepEqual(productionPlatform.routes, []);
+  assert.equal(productionPlatform.vars.SITE_DEPLOYMENT_ENV, "production");
+  assert.equal(productionPlatform.vars.EVENT_DEPLOYMENT_ENV, "production");
+  assert.equal(productionPlatform.vars.NEXT_PUBLIC_SITE_URL, PUBLIC_SITE_URL);
+  assert(!JSON.stringify(productionPlatform).includes("cms.lilaiireland.com"));
+  console.log("PASS private production platform config has no public route or URL");
+
+  const productionRouter = JSON.parse(readFileSync("cloudflare/production-router.jsonc", "utf8"));
+  assert.equal(productionRouter.name, PROPOSED_PRODUCTION_WORKER_ROUTE.script);
+  assert.equal(productionRouter.workers_dev, false);
+  assert.equal(productionRouter.preview_urls, false);
+  assert.deepEqual(productionRouter.routes, [], "production router config must not install a route");
+  assert.deepEqual(productionRouter.services, [{
+    binding: "PLATFORM",
+    service: productionPlatform.name,
+  }]);
+  console.log("PASS production router has a private Service Binding and no public route");
 }
 
 main();

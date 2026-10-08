@@ -10,13 +10,17 @@
     "check:urls": "tsx scripts/check-important-urls.ts",
     "check:consult": "tsx scripts/check-consult.ts",
     "check:production-routing": "tsx scripts/check-production-routing.ts",
+    "check:production-router": "tsx scripts/check-production-router.ts",
+    "check:production-packaging": "tsx scripts/check-production-packaging.ts",
     "update:fonts": "tsx scripts/update-brand-fonts.ts",
     "cf:build": "tsx scripts/cloudflare-staging.ts build",
+    "cf:build:production-platform": "tsx scripts/cloudflare-production.ts build",
     "cf:dry-run": "tsx scripts/cloudflare-staging.ts dry-run",
     "cf:bootstrap-access": "tsx scripts/cloudflare-staging.ts bootstrap-access",
     "cf:deploy": "tsx scripts/cloudflare-staging.ts deploy",
     "precf:typegen": "node -e \"require('node:fs').mkdirSync('.cloudflare', { recursive: true })\"",
     "cf:typegen": "wrangler types .cloudflare/cloudflare-env.d.ts --env-interface CloudflareEnv --strict-vars false",
+    "cf:typegen:router": "wrangler types --config cloudflare/production-router.jsonc --env-interface ProductionRouterEnv --strict-vars false --include-runtime=false .cloudflare/production-router-env.d.ts",
     "check:staging": "tsx scripts/check-staging.ts"
   },
   "dependencies": {

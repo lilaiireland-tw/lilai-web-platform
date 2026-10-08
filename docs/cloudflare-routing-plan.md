@@ -47,7 +47,8 @@ the CMS hostname. Only an explicit migrated-path allowlist may reach Next.js.
 | `/language-school-signup`, `/language-school-signup/*` | Current signup app | Current signup app; preserve route/script IDs and API/asset paths |
 | `/readiness`, `/readiness/*` | Existing WordPress embedded form | WordPress until readiness migration approval, then new web platform |
 | `/_next/*`, homepage-owned `/assets/*`, `/fonts/*` | Existing owner | New web platform only after asset namespace conflict audit |
-| `/about/`, `/consult/`, all other existing pages and flat article permalinks | WordPress | WordPress |
+| `/consult`, `/consult/` (ordinary query strings preserved) | Current owner | `lilai-web-platform` through the router; WordPress/WooCommerce query endpoints remain origin-owned |
+| `/about/`, all other existing pages and flat article permalinks | WordPress | WordPress |
 | `/category/*`, `/tag/*`, existing pagination/feed/search URLs | WordPress | WordPress |
 | `/shop`, `/cart`, `/checkout`, `/my-account` and descendants; `/product/*`, product categories, Woo query endpoints | WordPress/WooCommerce | WordPress/WooCommerce |
 | `/wp-admin` and descendants, `/wp-login.php`, `/wp-json` and descendants | WordPress | WordPress |
@@ -84,9 +85,11 @@ case sensitive. A no-script route can negate a broader route. See
 For a future root and events cutover, a routing Worker may need
 `lilaiireland.com/*` to catch root queries. Such a route is **not to be installed
 now**. Its handler must parse
-the pathname and allow `/`, exact `/events`, every pathname starting with
-`/events/` (including static assets), and audited shared platform asset paths;
-query strings must not change ownership. Do not match `/events-other` as an event.
+the pathname and allow `/`, exact `/consult` and `/consult/`, exact `/events`,
+every pathname starting with `/events/` (including static assets), and audited
+shared platform asset paths; ordinary query strings must not change ownership.
+WordPress/WooCommerce query endpoints remain exclusions. Do not match
+`/events-other` as an event or `/consult/child` as the consultation page.
 Forward these allowed requests to the same `lilai-web-platform` deployment;
 all other requests pass through to the original WordPress origin. Existing signup
 routes must remain more specific and mapped to the current signup Worker. Verify

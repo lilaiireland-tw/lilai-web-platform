@@ -9,5 +9,9 @@
     "noEmit": true,
     "types": []
   },
-  "include": ["*.ts", "../.cloudflare/cloudflare-env.d.ts"]
+  "include": [
+    "*.ts",
+    "../.cloudflare/cloudflare-env.d.ts",
+    "../.cloudflare/production-router-env.d.ts"
+  ]
 }
