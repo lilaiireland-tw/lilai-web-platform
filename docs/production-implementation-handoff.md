@@ -22,8 +22,10 @@ Status: implementation candidate in progress; no production release or cutover.
 3. Implemented the Router dispatch helper. It forwards the original request to
    the private platform service for platform-owned paths and returns the origin
    response directly for all other paths.
-4. Added router tests for consultation dispatch, signup query behavior, WordPress
-   REST/WooCommerce query endpoints, unknown paths, response headers/status, and
+4. Extended deterministic Router tests for homepage, consultation, event, and
+   audited static dispatch; WordPress 404/503 preservation; HEAD behavior;
+   readable unbuffered streams; propagated Service Binding failures; no retries
+   for failed POSTs; redirect status/Location; multiple Set-Cookie headers; and
    original POST body/cookie forwarding.
 5. Prepared a private production OpenNext Worker config and a build-only script.
 6. Configured a private Router Worker with a `PLATFORM` Service Binding to
@@ -31,6 +33,10 @@ Status: implementation candidate in progress; no production release or cutover.
 7. Added type generation, tests, and a non-deploying production build to the
    existing verification workflow.
 8. Added the integration description in `docs/production-dual-worker.md`.
+9. Added non-deploying Wrangler `deploy --dry-run` packaging for both actual
+   production configs after the OpenNext build. The dry run inspects the Router
+   Service Binding declaration and the generated private Platform Worker/static
+   asset bundle; it cannot validate live Cloudflare runtime integration.
 
 ## Files created or modified
 
@@ -43,14 +49,23 @@ Status: implementation candidate in progress; no production release or cutover.
   `cloudflare/production-router.jsonc`, `cloudflare/production-router.ts`,
   `docs/production-dual-worker.md`, `scripts/check-production-router.ts`,
   `scripts/cloudflare-production.ts`.
+- Updated: `.github/workflows/staging.yml`, `package.json`,
+  `scripts/check-production-router.ts`, `docs/production-dual-worker.md`.
+- Created: `scripts/check-production-packaging.ts`.
 - Generated locally and ignored: `.cloudflare/production-router-env.d.ts` and
   `.cloudflare/wrangler-production-platform.json`.
 - Unrelated pre-existing untracked file `index-with-wp-note.md` was left untouched.
 
 ## Checks and actual results
 
+- `npm.cmd run check:production-router`: PASS with the expanded regression
+  coverage listed above; no live services are called.
 - `npm.cmd run check:production-routing`: PASS.
-- `npm.cmd run check:production-router`: PASS.
+- `npm.cmd run check:production-packaging`: Router dry-run PASS, including its
+  `PLATFORM` Service Binding declaration. Platform dry-run BLOCKED locally
+  because this Windows checkout has no `.open-next/assets`; the preceding
+  OpenNext build is known to fail on this Windows host. Linux CI must produce
+  real assets and pass both Wrangler packaging dry runs to satisfy merge gate A.
 - `npx.cmd tsc --noEmit --incremental false`: PASS.
 - `npx.cmd tsc -p cloudflare/tsconfig.json`: PASS.
 - `npm.cmd run cf:typegen:router`: exit 0 and generated the binding type. Wrangler
@@ -60,22 +75,30 @@ Status: implementation candidate in progress; no production release or cutover.
 - `npm.cmd run cf:build:production-platform`: FAILED on this Windows host while
   OpenNext started; child process exited `3221226505`. OpenNext reported that
   Windows is not fully supported. Only Node.js v24 is installed locally.
-- GitHub Actions run [37851912169](https://github.com/lilaiireland-tw/lilai-web-platform/actions/runs/37851912169): PASS on `ubuntu-latest` in 2m17s, including Node 22 install, both Wrangler typegen steps, both TypeScript checks, routing and Router tests, the production OpenNext build, shared-layout/design-system checks, and the staging Worker check. The CI build clears the local Windows-only build blocker.
+- Prior GitHub Actions run [37851912169](https://github.com/lilaiireland-tw/lilai-web-platform/actions/runs/37851912169): PASS on `ubuntu-latest` before the new packaging coverage was added. A new run must pass after this update.
 - An initial `npm run` call was blocked by PowerShell execution policy. Use
   `npm.cmd` on this host.
 
 ## Unfinished work and blockers
 
-- Sol review of the Router, Service Binding target, origin passthrough, and
-  account-specific Cloudflare route precedence is still required before any
-  deployment. Current official docs describe the APIs, but the zone's actual DNS
-  origin and route/rules state remain incomplete.
-- Live DNS target, SSL mode, route/rules export, signup dependency inventory,
-  WordPress.com approval, WooCommerce session/cache evidence, and full asset/event
-  collision inventory remain production release blockers.
+- **A. Merge blockers:** the updated CI must pass on Node 22, including packaging
+  both production Wrangler configs after a real OpenNext build. The Platform
+  dry-run was not completed locally because the required generated asset
+  directory is absent after the Windows OpenNext build failure. Cloudflare
+  Service Binding and route runtime integration require an isolated deployed
+  environment and are not claimed by these local mocks/dry runs.
+- **B. Deployment blockers:** live DNS target, SSL/TLS mode and certificate/SNI,
+  route/rules export, signup dependency and precedence audit, verified WordPress
+  origin and any required WordPress.com approval, WooCommerce session/cache
+  evidence, and full static asset/event collision inventory remain unresolved.
+- **C. Before attaching `lilaiireland.com/*`:** re-export and verify DNS, SSL,
+  origin/rules, and route precedence; resolve B; confirm signup ownership and
+  platform root/event/assets behavior; and record the approved rollback snapshot
+  plus smoke-test/monitoring procedure. See `docs/production-dual-worker.md` for
+  the complete gates.
 - Draft PR #28 is open against `develop` and references the work as `Part of #3`.
-- CI run 37851912169 passed; rerun the workflow for any later code changes before
-  requesting Sol review.
+- Rerun the PR workflow after these changes. Keep PR #28 Draft while any A gate
+  remains incomplete.
 
 ## Resume commands
 
@@ -88,6 +111,7 @@ npx tsc --noEmit --incremental false
 npm run check:production-routing
 npm run check:production-router
 npm run cf:build:production-platform
+npm run check:production-packaging
 git diff --check
 ```
 

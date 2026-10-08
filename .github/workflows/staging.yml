@@ -35,6 +35,7 @@ jobs:
       - run: npm run check:production-routing
       - run: npm run check:production-router
       - run: npm run cf:build:production-platform
+      - run: npm run check:production-packaging
       - run: npx tsx scripts/check-shared-layout.ts
       - run: npx tsx scripts/check-design-system.ts
       - run: npx tsx scripts/check-cloudflare-staging.ts

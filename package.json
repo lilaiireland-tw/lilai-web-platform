@@ -11,6 +11,7 @@
     "check:consult": "tsx scripts/check-consult.ts",
     "check:production-routing": "tsx scripts/check-production-routing.ts",
     "check:production-router": "tsx scripts/check-production-router.ts",
+    "check:production-packaging": "tsx scripts/check-production-packaging.ts",
     "update:fonts": "tsx scripts/update-brand-fonts.ts",
     "cf:build": "tsx scripts/cloudflare-staging.ts build",
     "cf:build:production-platform": "tsx scripts/cloudflare-production.ts build",
