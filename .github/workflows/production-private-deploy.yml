@@ -51,7 +51,7 @@ jobs:
 
   deploy-private:
     needs: validate
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy_private_workers == true
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/develop' && inputs.deploy_private_workers == true
     runs-on: ubuntu-latest
     environment: production
     concurrency:

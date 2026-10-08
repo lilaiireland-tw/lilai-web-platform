@@ -7,7 +7,8 @@ The production Platform and Router configurations are prepared with
 `workers_dev: false`, `preview_urls: false`, and `routes: []`. Router calls the
 Platform through the `PLATFORM` Service Binding. No step in the workflow attaches
 a route. Validation runs on pull requests and pushes to `develop`; the production
-deployment job can run only from `workflow_dispatch` with explicit confirmation.
+deployment job can run only from `workflow_dispatch` on `develop` with explicit
+confirmation.
 The existing staging workflow is unchanged.
 
 ## Ready now
@@ -58,8 +59,9 @@ not run. This audit cannot enumerate the WordPress origin.
 
 GitHub Actions: PRs and pushes to `develop` run validation only. To manually run
 validation without deploying, run **Production private Workers (manual only)**
-with `deploy_private_workers=false`. To deploy private Workers, select
-`true` only after a separately recorded deployment approval and after confirming
+with `deploy_private_workers=false`. To deploy private Workers, dispatch this
+workflow on `develop`, then select `true` only after a separately recorded
+deployment approval and after confirming
 the `production` environment reviewers (if configured),
 `CLOUDFLARE_API_TOKEN` secret, and `CLOUDFLARE_ACCOUNT_ID` variable. The token
 needs permission to deploy Workers and manage the Service Binding for the target
@@ -106,9 +108,9 @@ asset inventory output. `npm run build` must run with
 `EVENTS_INCLUDE_DRAFTS=false`.
 
 **Phase B — Deploy both Workers privately.** Only after a separate written
-operator approval, manually run **Production private Workers (manual only)**,
-choose `deploy_private_workers=true`, and approve the `production` environment if
-it has reviewers. The deployment command is:
+operator approval, manually run **Production private Workers (manual only)** on
+`develop`, choose `deploy_private_workers=true`, and approve the `production`
+environment if it has reviewers. The deployment command is:
 
 ```bash
 npm ci
