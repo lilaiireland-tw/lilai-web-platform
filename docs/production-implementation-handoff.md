@@ -5,10 +5,10 @@ Status: implementation candidate in progress; no production release or cutover.
 ## Repository checkpoint
 
 - Branch: `feat/issue-3-production-dual-worker`
-- Latest implementation commit before this handoff update: `520192f` (router Service Binding)
+- Latest implementation commit at handoff: `f823d09` (CI verification and implementation docs)
 - Related issue: [Issue #3](https://github.com/lilaiireland-tw/lilai-web-platform/issues/3)
 - Related prior PR: [PR #24](https://github.com/lilaiireland-tw/lilai-web-platform/pull/24), merged routing-readiness audit
-- Current implementation PR: not created yet; create as Draft after pushing this branch
+- Current implementation PR: [Draft PR #28](https://github.com/lilaiireland-tw/lilai-web-platform/pull/28), base `develop`
 - Resolve the exact current checkout SHA with `git rev-parse HEAD` after this handoff is committed.
 
 ## Completed milestones
@@ -75,9 +75,9 @@ Status: implementation candidate in progress; no production release or cutover.
 - Live DNS target, SSL mode, route/rules export, signup dependency inventory,
   WordPress.com approval, WooCommerce session/cache evidence, and full asset/event
   collision inventory remain production release blockers.
-- No PR exists for this branch yet. Push it and open a Draft PR against `develop`
-  referencing Issue #3 as `Part of #3`.
-- The complete regression/type checks should run in CI after the branch is pushed.
+- Draft PR #28 is open against `develop` and references the work as `Part of #3`.
+- The complete regression/type checks should run in CI; inspect PR #28 checks and
+  resolve any failures before requesting Sol review.
 
 ## Resume commands
 
@@ -94,7 +94,7 @@ git diff --check
 ```
 
 After successful CI, ask Sol to review the implementation and the unresolved
-Cloudflare account evidence. Do not add the future `lilaiireland.com/*` route,
+Cloudflare account evidence on Draft PR #28. Do not add the future `lilaiireland.com/*` route,
 deploy either production Worker, merge to `develop`/`main`, or cut traffic over
 without the separate release review and authorization.
 
