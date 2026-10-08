@@ -75,7 +75,9 @@ function main() {
   console.log("PASS verified route snapshot and proposed route preserve both signup mappings");
 
   assertOwner("platform", [
-    "/", "/?utm_source=smoke", "/events", "/events/", "/events?source=smoke",
+    "/", "/?utm_source=smoke",
+    "/consult", "/consult/", "/consult?utm_source=google", "/consult/?gclid=test-click-id",
+    "/events", "/events/", "/events?source=smoke",
     "/events/daydream-adventure-2027/", "/events/unknown", "/events/missing.png?cache=1",
     "/_next/static/chunk.js?v=1", "/assets/lilai-logo.png", "/fonts/example.woff2",
   ]);
@@ -88,6 +90,7 @@ function main() {
     "/?wc-ajax=get_refreshed_fragments", "/?wc-api=payment-callback", "/?add-to-cart=1",
     "/?rest_route=/wp/v2/posts", "/?p=123", "/?page_id=123", "/?preview=true",
     "/?s=ireland", "/events/?add-to-cart=1",
+    "/consult?wc-ajax=checkout", "/consult/?rest_route=/wp/v2/posts",
   ]);
   console.log("PASS platform allowlist boundaries and WordPress/WooCommerce fallback");
 
