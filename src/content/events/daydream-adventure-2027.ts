@@ -1,4 +1,4 @@
-import type { EventContent } from "@/lib/events/event-types";
+import type { EventContent } from "../../lib/events/event-types";
 import { daydreamCopy as copy } from "./daydream-copy";
 
 const title = `${copy.hero.title}｜${copy.event.title}`;

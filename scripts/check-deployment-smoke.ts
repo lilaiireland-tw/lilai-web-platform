@@ -10,10 +10,19 @@ async function main() {
   assert(["http:", "https:"].includes(base.protocol));
   assert(!base.username && !base.password && base.pathname === "/" && !base.search && !base.hash,
     "CHECK_BASE_URL must be an origin without credentials/path/query");
+  const accessClientId = process.env.CF_ACCESS_CLIENT_ID;
+  const accessClientSecret = process.env.CF_ACCESS_CLIENT_SECRET;
+  assert.equal(Boolean(accessClientId), Boolean(accessClientSecret),
+    "Set both CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET, or neither");
+  const headers: Record<string, string> = { "User-Agent": "LilaiDeploymentSmoke/1.0" };
+  if (accessClientId && accessClientSecret) {
+    headers["CF-Access-Client-Id"] = accessClientId;
+    headers["CF-Access-Client-Secret"] = accessClientSecret;
+  }
   for (const path of ["/", "/?utm_source=smoke", "/robots.txt", "/sitemap.xml"]) {
     const response = await fetch(new URL(path, base), {
       method: "GET", redirect: "manual", signal: AbortSignal.timeout(15000),
-      headers: { "User-Agent": "LilaiDeploymentSmoke/1.0" }
+      headers,
     });
     assert.equal(response.status, 200, `${path}: expected 200`);
     const text = await response.text();
@@ -39,6 +48,38 @@ async function main() {
       }
     }
     console.log(`PASS ${environment} ${path}`);
+  }
+  if (environment === "staging") {
+    for (const [path, status] of [
+      ["/events", 200],
+      ["/events/daydream-adventure-2027", 200],
+      ["/events/daydream-adventure-2027/arsha.webp", 200],
+      ["/events/missing-staging-smoke", 404],
+      ["/wp-json/", 503],
+      ["/product/staging-smoke", 503],
+      ["/about/", 503],
+    ] as const) {
+      const response = await fetch(new URL(path, base), {
+        method: "GET", redirect: "manual", signal: AbortSignal.timeout(15000), headers,
+      });
+      assert.equal(response.status, status, `${path}: expected ${status}`);
+      assert.equal(response.headers.get("x-robots-tag"), "noindex, nofollow", path);
+      if (status === 503) {
+        assert.equal(response.headers.get("x-lilai-staging-limitation"),
+          "wordpress-woocommerce-unavailable", path);
+        assert.match(await response.text(), /unavailable in standalone staging/, path);
+      } else {
+        await response.arrayBuffer();
+      }
+      console.log(`PASS standalone staging ${status} ${path}`);
+    }
+    const head = await fetch(new URL("/wp-json/", base), {
+      method: "HEAD", redirect: "manual", signal: AbortSignal.timeout(15000), headers,
+    });
+    assert.equal(head.status, 503);
+    assert.equal(head.headers.get("x-lilai-staging-limitation"), "wordpress-woocommerce-unavailable");
+    assert.equal(await head.text(), "");
+    console.log("PASS standalone staging HEAD fails closed without a response body");
   }
 }
 

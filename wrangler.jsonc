@@ -18,10 +18,7 @@
     "SITE_DEPLOYMENT_ENV": "staging",
     "EVENT_DEPLOYMENT_ENV": "preview",
     "EVENTS_INCLUDE_DRAFTS": "false",
-    "NEXT_PUBLIC_SITE_URL": "https://lilaiireland.com",
-    "WORDPRESS_ORIGIN": "",
-    "WORDPRESS_API_BASE": "",
-    "WOOCOMMERCE_STORE_API_BASE": ""
+    "NEXT_PUBLIC_SITE_URL": "https://lilaiireland.com"
   },
   "observability": {
     "enabled": true,

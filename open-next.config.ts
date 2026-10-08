@@ -9,5 +9,7 @@ const config = defineCloudflareConfig({
 
 // The Windows Turbopack bundle missed runtime SSR chunks in workerd.
 // Keep the ordinary Next build unchanged; use webpack only for the Worker build.
-config.buildCommand = "npm run build -- --webpack";
+// Invoke Next through the active Node runtime so a supported Node 22 runner is
+// not silently replaced by a separately installed system Node from npm.cmd.
+config.buildCommand = "node node_modules/next/dist/bin/next build --webpack";
 export default config;

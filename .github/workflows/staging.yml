@@ -36,7 +36,8 @@ jobs:
       - run: npx tsx scripts/check-cloudflare-staging.ts
 
   deploy:
-    # Publication stays off until origins, token, Access and runtime QA are ready.
+    # Publication stays off until the placeholder Worker is Access-protected,
+    # the token is configured and runtime QA is approved.
     needs: verify
     if: github.ref == 'refs/heads/develop' && vars.CLOUDFLARE_STAGING_ENABLED == 'true'
     runs-on: ubuntu-latest
@@ -48,10 +49,8 @@ jobs:
       SITE_DEPLOYMENT_ENV: staging
       EVENT_DEPLOYMENT_ENV: preview
       EVENTS_INCLUDE_DRAFTS: 'false'
-      WORDPRESS_ORIGIN: ${{ vars.STAGING_WORDPRESS_ORIGIN }}
-      WORDPRESS_API_BASE: ${{ vars.STAGING_WORDPRESS_API_BASE }}
-      WOOCOMMERCE_STORE_API_BASE: ${{ vars.STAGING_WOOCOMMERCE_STORE_API_BASE }}
       CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_ACCESS_CONFIRMED: ${{ vars.CLOUDFLARE_ACCESS_CONFIRMED }}
       NEXT_TELEMETRY_DISABLED: '1'
       WRANGLER_SEND_METRICS: 'false'
     steps:

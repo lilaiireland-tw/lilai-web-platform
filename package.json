@@ -11,6 +11,7 @@
     "update:fonts": "tsx scripts/update-brand-fonts.ts",
     "cf:build": "tsx scripts/cloudflare-staging.ts build",
     "cf:dry-run": "tsx scripts/cloudflare-staging.ts dry-run",
+    "cf:bootstrap-access": "tsx scripts/cloudflare-staging.ts bootstrap-access",
     "cf:deploy": "tsx scripts/cloudflare-staging.ts deploy",
     "precf:typegen": "node -e \"require('node:fs').mkdirSync('.cloudflare', { recursive: true })\"",
     "cf:typegen": "wrangler types .cloudflare/cloudflare-env.d.ts --env-interface CloudflareEnv --strict-vars false",
