@@ -43,12 +43,9 @@ of the intentionally different site shell and its resulting vertical offset.
   only the registration-card CTA opens the external Google Form in a new tab.
 - On mobile, bottom CTA appears after scrolling 60% of viewport height and hides
   when register or closing intersects the viewport. Verify safe-area padding.
-- `?reg=embed` reproduces the source's alternate iframe mode (640px desktop,
-  560px mobile). It uses the supplied URL as-is; the short Google Forms URL's
-  actual embedding support must be checked. Do not submit a production form.
 - Verify reduced motion, console/hydration errors, image/font network failures
   and that the shared shell still matches other pages.
-- Recheck archived status: no registration link, QR, embed or sticky CTA.
+- Recheck archived status: no registration link, QR or sticky CTA.
 
 ## Automated checks
 
