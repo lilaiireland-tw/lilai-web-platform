@@ -39,6 +39,8 @@ jobs:
       - run: npm run check:staging
       - run: npx tsx scripts/check-production-release-strategy.ts
       - run: npx tsx scripts/check-deployment-policy.ts
+      - run: npm run check:seo-url-consistency
+      - run: npm run check:consult
       - run: npm run check:production-routing
       - run: npm run check:production-router
       - run: npm run check:production-integration

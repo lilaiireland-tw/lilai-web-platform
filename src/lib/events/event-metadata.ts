@@ -22,7 +22,7 @@ export function buildEventMetadata(event: EventContent, policy: EventPolicy = ge
 export function buildEventsIndexMetadata(policy: EventPolicy = getEventPolicy()): Metadata {
   const title = "活動｜哩來愛爾蘭";
   const description = "哩來愛爾蘭活動與說明會，查看即將舉辦及已結束的活動。";
-  const canonical = eventAbsoluteUrl("/events/");
+  const canonical = eventAbsoluteUrl("/events");
   return {
     title: { absolute: title }, description, alternates: { canonical },
     robots: { index: policy.production, follow: true },

@@ -9,7 +9,7 @@ export interface NavigationLink {
 // public URLs so Cloudflare can route each path to its current owner.
 export const primaryCta = {
   label: "免費出發評估",
-  href: "/consult/"
+  href: "/consult"
 } as const satisfies NavigationLink;
 
 export const schoolSignupLink = {

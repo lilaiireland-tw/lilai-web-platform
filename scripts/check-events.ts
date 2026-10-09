@@ -32,7 +32,7 @@ async function main() {
   assert.equal(getEventPolicy().production, process.env.EVENT_DEPLOYMENT_ENV === "production");
   const metadata = buildEventMetadata(active, production);
   assert.deepEqual(metadata.robots, { index: true, follow: true });
-  assert.equal(metadata.alternates?.canonical, "https://lilaiireland.com/events/fixture-active/");
+  assert.equal(metadata.alternates?.canonical, "https://lilaiireland.com/events/fixture-active");
   assert.equal(metadata.openGraph?.url, metadata.alternates?.canonical);
   assert.deepEqual(metadata.title, { absolute: active.seo.title });
   assert.equal(metadata.description, active.seo.description);
@@ -56,7 +56,7 @@ async function main() {
   const archiveHtml = render(archived);
   assert(archiveHtml.includes("活動已結束"));
   assert(!archiveHtml.includes(active.registrationUrl));
-  assert(archiveHtml.includes('href="/events/"') && archiveHtml.includes('href="/events/fixture-active/"'));
+  assert(archiveHtml.includes('href="/events"') && archiveHtml.includes('href="/events/fixture-active"'));
   assert(!render(draft).includes(active.registrationUrl));
   const index = renderToStaticMarkup(createElement(EventsIndex, { active: registry.list("active"), archived: registry.list("archived") }));
   assert(index.includes("Active fixture") && index.includes("Archived fixture") && !index.includes("Fixture draft"));
@@ -67,20 +67,25 @@ async function main() {
   const sourcePath = "src/content/events/index.ts";
   const originalSource = readFileSync(sourcePath);
   const originalNextEnv = readFileSync("next-env.d.ts");
-  const probe = createServer();
-  probe.listen(0, "127.0.0.1"); await once(probe, "listening");
-  const address = probe.address(); assert(address && typeof address !== "string");
-  await new Promise<void>(resolve => probe.close(() => resolve()));
+  let port = 0;
+  for (let attempt = 0; attempt < 10 && port < 5000; attempt++) {
+    const probe = createServer();
+    probe.listen(0, "127.0.0.1"); await once(probe, "listening");
+    const address = probe.address(); assert(address && typeof address !== "string");
+    port = address.port;
+    await new Promise<void>(resolve => probe.close(() => resolve()));
+  }
+  assert(port >= 5000, `Unable to select an unreserved test port: ${port}`);
   let app: ReturnType<typeof spawn> | undefined;
   let logs = "";
   try {
     // Temporary fixture registration is always restored, never committed.
     writeFileSync(sourcePath, 'export { registrations as eventRegistrations } from "../../../scripts/fixtures/events";\n');
-    app = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "--hostname", "127.0.0.1", "--port", String(address.port)], {
+    app = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "--hostname", "127.0.0.1", "--port", String(port)], {
       env: { ...process.env, EVENT_DEPLOYMENT_ENV: "preview", EVENTS_INCLUDE_DRAFTS: "true" }, stdio: ["ignore", "pipe", "pipe"],
     });
     app.stdout?.on("data", data => { logs += data; }); app.stderr?.on("data", data => { logs += data; });
-    const get = (path: string) => fetch(`http://127.0.0.1:${address.port}${path}`, { headers: { "User-Agent": "Googlebot" }, signal: AbortSignal.timeout(30000) });
+    const get = (path: string) => fetch(`http://127.0.0.1:${port}${path}`, { headers: { "User-Agent": "Googlebot" }, redirect: "manual", signal: AbortSignal.timeout(30000) });
     let ready = false;
     for (let i = 0; i < 60; i++) {
       if (app.exitCode !== null) throw new Error(logs);
@@ -93,15 +98,22 @@ async function main() {
       const body = await response.text();
       assert(body.includes(event.title));
       assert(body.includes('content="noindex'));
-      assert(body.includes(`href="https://lilaiireland.com/events/${event.slug}/"`));
+      assert(body.includes(`href="https://lilaiireland.com/events/${event.slug}"`));
       assert.equal((body.match(/<header\b/g) || []).length, 1);
       assert.equal((body.match(/<footer\b/g) || []).length, 1);
       assert.equal((body.match(/<main\b/g) || []).length, 1);
+      const alias = await get(`/events/${event.slug}/`);
+      assert.equal(alias.status, 308, `${event.slug} slash alias should redirect`);
+      assert.equal(new URL(alias.headers.get("location")!, `http://127.0.0.1:${port}`).pathname, `/events/${event.slug}`);
+      const queryAlias = await get(`/events/${event.slug}/?utm_source=event-regression`);
+      assert.equal(queryAlias.status, 308);
+      const queryLocation: URL = new URL(queryAlias.headers.get("location")!, `http://127.0.0.1:${port}`);
+      assert.equal(queryLocation.search, "?utm_source=event-regression");
     }
     assert.equal((await get("/events/fixture-missing")).status, 404);
     const indexResponse = await get("/events"); const indexHtml = await indexResponse.text();
     assert(indexHtml.includes("Active fixture") && indexHtml.includes("Archived fixture"));
-    assert(!indexHtml.includes('href="/events/fixture-draft/"'));
+    assert(!indexHtml.includes('href="/events/fixture-draft"'));
     console.log("PASS local HTTP routes: active/archived/draft, invalid slug 404, noindex, canonical, shared shell and index");
   } finally {
     if (app && app.exitCode === null) { const exited = once(app, "exit"); app.kill(); await exited; }
