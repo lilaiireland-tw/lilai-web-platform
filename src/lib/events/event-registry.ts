@@ -28,4 +28,4 @@ export function createEventRegistry(entries: readonly EventRegistration[], polic
 }
 
 export const eventRegistry = createEventRegistry(eventRegistrations, getEventPolicy());
-export function eventPath(slug: string) { return `/events/${slug}/`; }
+export function eventPath(slug: string) { return `/events/${slug}`; }

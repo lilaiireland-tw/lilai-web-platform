@@ -32,7 +32,7 @@ async function main() {
   assert.equal(getEventPolicy().production, process.env.EVENT_DEPLOYMENT_ENV === "production");
   const metadata = buildEventMetadata(active, production);
   assert.deepEqual(metadata.robots, { index: true, follow: true });
-  assert.equal(metadata.alternates?.canonical, "https://lilaiireland.com/events/fixture-active/");
+  assert.equal(metadata.alternates?.canonical, "https://lilaiireland.com/events/fixture-active");
   assert.equal(metadata.openGraph?.url, metadata.alternates?.canonical);
   assert.deepEqual(metadata.title, { absolute: active.seo.title });
   assert.equal(metadata.description, active.seo.description);
@@ -56,7 +56,7 @@ async function main() {
   const archiveHtml = render(archived);
   assert(archiveHtml.includes("活動已結束"));
   assert(!archiveHtml.includes(active.registrationUrl));
-  assert(archiveHtml.includes('href="/events/"') && archiveHtml.includes('href="/events/fixture-active/"'));
+  assert(archiveHtml.includes('href="/events"') && archiveHtml.includes('href="/events/fixture-active"'));
   assert(!render(draft).includes(active.registrationUrl));
   const index = renderToStaticMarkup(createElement(EventsIndex, { active: registry.list("active"), archived: registry.list("archived") }));
   assert(index.includes("Active fixture") && index.includes("Archived fixture") && !index.includes("Fixture draft"));
@@ -93,7 +93,7 @@ async function main() {
       const body = await response.text();
       assert(body.includes(event.title));
       assert(body.includes('content="noindex'));
-      assert(body.includes(`href="https://lilaiireland.com/events/${event.slug}/"`));
+      assert(body.includes(`href="https://lilaiireland.com/events/${event.slug}"`));
       assert.equal((body.match(/<header\b/g) || []).length, 1);
       assert.equal((body.match(/<footer\b/g) || []).length, 1);
       assert.equal((body.match(/<main\b/g) || []).length, 1);
@@ -101,7 +101,7 @@ async function main() {
     assert.equal((await get("/events/fixture-missing")).status, 404);
     const indexResponse = await get("/events"); const indexHtml = await indexResponse.text();
     assert(indexHtml.includes("Active fixture") && indexHtml.includes("Archived fixture"));
-    assert(!indexHtml.includes('href="/events/fixture-draft/"'));
+    assert(!indexHtml.includes('href="/events/fixture-draft"'));
     console.log("PASS local HTTP routes: active/archived/draft, invalid slug 404, noindex, canonical, shared shell and index");
   } finally {
     if (app && app.exitCode === null) { const exited = once(app, "exit"); app.kill(); await exited; }

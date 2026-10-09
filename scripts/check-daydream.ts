@@ -20,7 +20,7 @@ async function main() {
   assert.equal(daydreamEvent.registrationUrl, "https://forms.gle/isPDKepgK9BsPpg86");
   assert.equal(eventRegistry.list("active").includes(daydreamEvent), true);
   const metadata = buildEventMetadata(daydreamEvent, { production: true, includeDrafts: false });
-  assert.equal(metadata.alternates?.canonical, "https://lilaiireland.com/events/daydream-adventure-2027/");
+  assert.equal(metadata.alternates?.canonical, "https://lilaiireland.com/events/daydream-adventure-2027");
   assert.deepEqual(metadata.robots, { index: false, follow: true });
   assert(metadata.openGraph?.images);
 
@@ -114,7 +114,7 @@ async function main() {
   assert(archived.includes("活動已結束"));
   assert(!archived.includes(daydreamEvent.registrationUrl) && !archived.includes("qr-register.png"));
   assert(!archived.includes('href="#register"') && !archived.includes("data-cta-location="));
-  assert(archived.includes('href="/events/"'));
+  assert(archived.includes('href="/events"'));
   console.log("PASS registry, dates, CTA flow, canonical/noindex/OG, ten-section order, complete copy/line breaks, speakers, initially collapsed FAQ, image dimensions/loading, font/icon assets and archived registration removal");
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

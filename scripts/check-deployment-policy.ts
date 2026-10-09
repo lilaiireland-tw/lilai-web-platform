@@ -25,7 +25,11 @@ async function main() {
         // Must return before making any CMS network calls.
         assert.deepEqual(await sitemap(), []);
       } else {
-        assert.equal(policy.sitemap, "https://lilaiireland.com/sitemap.xml");
+        assert.deepEqual(policy.sitemap, [
+          "https://lilaiireland.com/sitemap_index.xml",
+          "https://lilaiireland.com/sitemap.xml",
+          "https://lilaiireland.com/events-sitemap.xml"
+        ]);
       }
       assert(headers.some(rule => rule.source === "/checkout/:path*"));
       console.log(`PASS deployment policy: ${env ?? "unset"}`);
