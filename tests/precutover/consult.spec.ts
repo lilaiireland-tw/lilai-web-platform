@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { ADS_HOST_FRAGMENTS, GAS_HOSTS, attachDiagnostics, installDiagnostics } from "./helpers";
+import { ADS_HOST_FRAGMENTS, GAS_HOSTS, attachDiagnostics, attachWriteRequestDiagnostics, blockUnexpectedWrites, expectNoUnexpectedWrites, installDiagnostics } from "./helpers";
 
 test.use({ viewport: { width: 375, height: 812 } });
 
@@ -66,6 +66,7 @@ async function completeFormToStepFive(page: Page) {
 
 async function interceptGas(page: Page, mode: "success" | "failure") {
   const intercepted: string[] = [];
+  const unexpectedWrites: string[] = [];
   let releaseResponse: () => void = () => {};
   const responseGate = new Promise<void>(resolve => { releaseResponse = resolve; });
   await page.route("**/*", async route => {
@@ -80,13 +81,18 @@ async function interceptGas(page: Page, mode: "success" | "failure") {
       else await route.abort("failed");
       return;
     }
-    if (!["GET", "HEAD"].includes(request.method())) throw new Error(`Unsafe unmatched request: ${request.method()} ${request.url()}`);
+    if (!["GET", "HEAD"].includes(request.method())) {
+      unexpectedWrites.push(`${request.method()} ${request.url()}`);
+      await route.abort("blockedbyclient");
+      return;
+    }
     await route.continue();
   });
-  return { intercepted, releaseResponse };
+  return { intercepted, unexpectedWrites: { unexpected: unexpectedWrites, intentionallyBlockedExternal: [] }, releaseResponse };
 }
 
-test("consult validation, optional fields, state retention, selection limits and FAQ", async ({ page }) => {
+test("consult validation, optional fields, state retention, selection limits and FAQ", async ({ page }, testInfo) => {
+  const unexpectedWrites = await blockUnexpectedWrites(page);
   await page.goto("/consult");
   await waitForConsultHydration(page);
   await page.getByRole("button", { name: /繼續/ }).click();
@@ -108,10 +114,12 @@ test("consult validation, optional fields, state retention, selection limits and
   await faq.scrollIntoViewIfNeeded();
   await faq.click();
   await expect(faq).toHaveAttribute("aria-expanded", "true");
+  await attachWriteRequestDiagnostics(testInfo, unexpectedWrites);
+  expectNoUnexpectedWrites(unexpectedWrites);
 });
 
 test("mocked successful submission renders result once with no Ads traffic", async ({ page }, testInfo) => {
-  const { intercepted, releaseResponse } = await interceptGas(page, "success");
+  const { intercepted, unexpectedWrites, releaseResponse } = await interceptGas(page, "success");
   const diagnostics = installDiagnostics(page);
   await page.goto("/consult");
   await waitForConsultHydration(page);
@@ -134,10 +142,12 @@ test("mocked successful submission renders result once with no Ads traffic", asy
   const resultLinks = await page.locator('a[href^="https://"]').evaluateAll(links => links.map(link => (link as HTMLAnchorElement).href));
   expect(resultLinks.some(url => url.includes("language-school-signup") || url.includes("portaly.cc"))).toBe(true);
   await attachDiagnostics(testInfo, diagnostics);
+  await attachWriteRequestDiagnostics(testInfo, unexpectedWrites);
+  expectNoUnexpectedWrites(unexpectedWrites);
 });
 
-test("mocked failed submission remains retryable and never emits Ads traffic", async ({ page }) => {
-  const { intercepted } = await interceptGas(page, "failure");
+test("mocked failed submission remains retryable and never emits Ads traffic", async ({ page }, testInfo) => {
+  const { intercepted, unexpectedWrites } = await interceptGas(page, "failure");
   const adsRequests: string[] = [];
   page.on("request", request => {
     if (ADS_HOST_FRAGMENTS.some(host => request.url().includes(host))) adsRequests.push(request.url());
@@ -155,9 +165,12 @@ test("mocked failed submission remains retryable and never emits Ads traffic", a
   await expect.poll(() => intercepted.length).toBe(2);
   expect(adsRequests).toEqual([]);
   await expect(page.getByRole("heading", { name: "你的出發評估來了" })).toHaveCount(0);
+  await attachWriteRequestDiagnostics(testInfo, unexpectedWrites);
+  expectNoUnexpectedWrites(unexpectedWrites);
 });
 
-test("validation and navigation never contact GAS or Google Ads", async ({ page }) => {
+test("validation and navigation never contact GAS or Google Ads", async ({ page }, testInfo) => {
+  const unexpectedWrites = await blockUnexpectedWrites(page);
   const gas: string[] = [];
   const ads: string[] = [];
   page.on("request", request => {
@@ -173,4 +186,6 @@ test("validation and navigation never contact GAS or Google Ads", async ({ page 
   expect(gas).toEqual([]);
   expect(ads).toEqual([]);
   expect(await page.evaluate(() => ({ configured: window.__lilaiGoogleAdsConfigured, dataLayer: window.dataLayer }))).toEqual({ configured: undefined, dataLayer: undefined });
+  await attachWriteRequestDiagnostics(testInfo, unexpectedWrites);
+  expectNoUnexpectedWrites(unexpectedWrites);
 });

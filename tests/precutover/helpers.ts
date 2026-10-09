@@ -13,6 +13,24 @@ export type Diagnostics = {
   unmatchedGasRequests: string[];
 };
 
+export type WriteRequestDiagnostics = {
+  unexpected: string[];
+  intentionallyBlockedExternal: string[];
+};
+
+function isKnownExternalPlayerWrite(method: string, url: string) {
+  const parsed = new URL(url);
+  return method === "POST" && (
+    (parsed.hostname === "jnn-pa.googleapis.com" && parsed.pathname === "/$rpc/google.internal.waa.v1.Waa/GenerateIT") ||
+    (parsed.hostname === "www.youtube.com" && ["/youtubei/v1/log_event", "/api/stats/atr"].includes(parsed.pathname))
+  );
+}
+
+function isKnownBlockedPlayerConsoleError(message: string) {
+  return message.includes("Cross-Origin Request Blocked") &&
+    message.includes("https://jnn-pa.googleapis.com/$rpc/google.internal.waa.v1.Waa/GenerateIT");
+}
+
 export function installDiagnostics(page: Page): Diagnostics {
   const result: Diagnostics = {
     consoleErrors: [], pageErrors: [], failedRequests: [], badResponses: [], adsRequests: [], unmatchedGasRequests: [],
@@ -43,7 +61,12 @@ export async function attachDiagnostics(testInfo: TestInfo, diagnostics: Diagnos
   });
 }
 
-export async function expectCleanPage(page: Page, diagnostics: Diagnostics, expectedStatuses: number[] = []) {
+export async function expectCleanPage(
+  page: Page,
+  diagnostics: Diagnostics,
+  expectedStatuses: number[] = [],
+  intentionallyBlockedExternalWrites: string[] = [],
+) {
   await page.waitForTimeout(500);
   await page.evaluate(() => document.fonts.ready);
   const layout = await page.evaluate(() => {
@@ -69,10 +92,14 @@ export async function expectCleanPage(page: Page, diagnostics: Diagnostics, expe
   const unexpectedConsoleErrors = diagnostics.consoleErrors.filter(message =>
     !message.includes("Failed to load resource") &&
     !message.includes("Permissions policy violation: compute-pressure is not allowed in this document") &&
-    !(message.includes("Cookie “__Secure-") && message.includes("youtube.com/embed/")),
+    !(message.includes("Cookie “__Secure-") && message.includes("youtube.com/embed/")) &&
+    !isKnownBlockedPlayerConsoleError(message),
   );
   expect(unexpectedConsoleErrors, "unexpected application console errors").toEqual([]);
-  expect(diagnostics.failedRequests, "failed network requests").toEqual([]);
+  const unexpectedFailedRequests = diagnostics.failedRequests.filter(failure =>
+    !intentionallyBlockedExternalWrites.some(request => failure.startsWith(`${request} ::`)),
+  );
+  expect(unexpectedFailedRequests, "failed network requests excluding intentionally blocked third-party player telemetry").toEqual([]);
   expect(diagnostics.badResponses.filter(line => !expectedStatuses.some(status => line.startsWith(`${status} `))), "unexpected HTTP errors").toEqual([]);
 }
 
@@ -153,12 +180,28 @@ export async function expectMobileMenu(page: Page) {
 }
 
 export async function blockUnexpectedWrites(page: Page) {
+  const writes: WriteRequestDiagnostics = { unexpected: [], intentionallyBlockedExternal: [] };
   await page.route("**/*", async route => {
     const request = route.request();
     if (!["GET", "HEAD"].includes(request.method())) {
-      await route.fulfill({ status: 204, body: "" });
+      const record = `${request.method()} ${request.url()}`;
+      if (isKnownExternalPlayerWrite(request.method(), request.url())) writes.intentionallyBlockedExternal.push(record);
+      else writes.unexpected.push(record);
+      await route.abort("blockedbyclient");
       return;
     }
     await route.continue();
+  });
+  return writes;
+}
+
+export function expectNoUnexpectedWrites(writes: WriteRequestDiagnostics) {
+  expect(writes.unexpected, `Unexpected unsafe request(s): ${writes.unexpected.join(", ")}`).toEqual([]);
+}
+
+export async function attachWriteRequestDiagnostics(testInfo: TestInfo, writes: WriteRequestDiagnostics) {
+  await testInfo.attach("write-request-diagnostics", {
+    body: JSON.stringify(writes, null, 2),
+    contentType: "application/json",
   });
 }

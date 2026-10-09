@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
-  attachDiagnostics, blockUnexpectedWrites, expectCleanPage, expectKeyboardFocus,
-  expectMobileMenu, expectShell, expectStickyShell, installDiagnostics, scrollThroughPage,
+  attachDiagnostics, attachWriteRequestDiagnostics, blockUnexpectedWrites, expectCleanPage, expectKeyboardFocus,
+  expectMobileMenu, expectNoUnexpectedWrites, expectShell, expectStickyShell, installDiagnostics, scrollThroughPage,
 } from "./helpers";
 
 const viewports = [
@@ -27,14 +27,13 @@ for (const viewport of viewports) {
     test.use({ viewport: { width: viewport.width, height: viewport.height } });
     for (const target of pages) {
       test(`${target.name} renders cleanly at ${viewport.name}`, async ({ page }, testInfo) => {
-      await blockUnexpectedWrites(page);
+      const unexpectedWrites = await blockUnexpectedWrites(page);
       const diagnostics = installDiagnostics(page);
       const response = await page.goto(target.path, { waitUntil: "domcontentloaded" });
       expect(response?.status()).toBe(200);
       expect(response?.headers()["x-lilai-runtime-probe-upstream"]).toBe("remote-service-binding:lilai-web-platform-router");
       await expectShell(page);
       await scrollThroughPage(page);
-      await expectCleanPage(page, diagnostics);
       const webkitLinkOnlyKeyboardBlock = testInfo.project.name === "webkit" && viewport.name === "desktop" && ["events", "events-slash"].includes(target.name);
       if (webkitLinkOnlyKeyboardBlock) {
         testInfo.annotations.push({
@@ -57,12 +56,16 @@ for (const viewport of viewports) {
         });
       }
       await attachDiagnostics(testInfo, diagnostics);
+      await attachWriteRequestDiagnostics(testInfo, unexpectedWrites);
+      expectNoUnexpectedWrites(unexpectedWrites);
+      await expectCleanPage(page, diagnostics, [], unexpectedWrites.intentionallyBlockedExternal);
       });
     }
   });
 }
 
-test("homepage internal navigation reaches events and consult", async ({ page }) => {
+test("homepage internal navigation reaches events and consult", async ({ page }, testInfo) => {
+  const unexpectedWrites = await blockUnexpectedWrites(page);
   await page.goto("/");
   const consultLink = page.locator('a[href="/consult"]').first();
   await expect(consultLink).toBeVisible();
@@ -70,9 +73,12 @@ test("homepage internal navigation reaches events and consult", async ({ page })
   await expect(page).toHaveURL(/\/consult$/);
   await page.goto("/events");
   await expect(page).toHaveURL(/\/events$/);
+  await attachWriteRequestDiagnostics(testInfo, unexpectedWrites);
+  expectNoUnexpectedWrites(unexpectedWrites);
 });
 
-test("slash redirects are canonical and preserve consultation attribution", async ({ page, request }) => {
+test("slash redirects are canonical and preserve consultation attribution", async ({ page, request }, testInfo) => {
+  const unexpectedWrites = await blockUnexpectedWrites(page);
   for (const [source, destination] of [
     ["/events/", "/events"],
     ["/events/daydream-adventure-2027/", "/events/daydream-adventure-2027"],
@@ -87,9 +93,12 @@ test("slash redirects are canonical and preserve consultation attribution", asyn
   expect(new URL(page.url()).searchParams.get("gclid")).toBe("playwright-qa");
   expect(new URL(page.url()).searchParams.get("utm_source")).toBe("test");
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://lilaiireland.com/consult");
+  await attachWriteRequestDiagnostics(testInfo, unexpectedWrites);
+  expectNoUnexpectedWrites(unexpectedWrites);
 });
 
-test("events metadata, sitemap, listing, registration target and FAQ", async ({ page, request }) => {
+test("events metadata, sitemap, listing, registration target and FAQ", async ({ page, request }, testInfo) => {
+  const unexpectedWrites = await blockUnexpectedWrites(page);
   await page.goto("/events");
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://lilaiireland.com/events");
   await page.getByRole("link", { name: /白日夢冒險王/ }).first().click();
@@ -110,12 +119,18 @@ test("events metadata, sitemap, listing, registration target and FAQ", async ({ 
   const xml = await sitemapResponse.text();
   expect(xml).toMatch(/^<\?xml/);
   expect(xml).not.toContain("daydream-adventure-2027");
+  await attachWriteRequestDiagnostics(testInfo, unexpectedWrites);
+  expectNoUnexpectedWrites(unexpectedWrites);
 });
 
-test("unknown event returns expected 404", async ({ page }) => {
+test("unknown event returns expected 404", async ({ page }, testInfo) => {
+  const unexpectedWrites = await blockUnexpectedWrites(page);
   const diagnostics = installDiagnostics(page);
   const response = await page.goto("/events/definitely-not-a-real-event", { waitUntil: "domcontentloaded" });
   expect(response?.status()).toBe(404);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await attachDiagnostics(testInfo, diagnostics);
+  await attachWriteRequestDiagnostics(testInfo, unexpectedWrites);
+  expectNoUnexpectedWrites(unexpectedWrites);
   await expectCleanPage(page, diagnostics, [404]);
 });
