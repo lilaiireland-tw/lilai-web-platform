@@ -2,28 +2,46 @@
 
 ## Executive summary
 
-**Recommendation: CONDITIONAL GO.**
+**Browser QA: CONDITIONAL PASS.** The reported 111 Playwright tests passed.
 
-The complete available browser suite passed: **111/111 tests**, with no failed,
-skipped, or flaky tests. Chromium, Firefox, and WebKit exercised the production
-Router and Platform through the existing local Wrangler remote Service Binding
-probe. The tested pages rendered and remained usable at mobile, tablet, and
-desktop sizes. No application page errors, failed requests, unexpected HTTP
+**Overall production cutover: NO-GO** until the release gates below are verified
+and the owner explicitly approves public route attachment. See the
+[production release checklist](../production-release-checklist.md), especially
+its pre-cutover evidence gate and Phases D–F.
+
+Chromium, Firefox, and WebKit exercised the production Router and Platform
+through the existing local Wrangler remote Service Binding probe. The tested
+pages rendered and remained usable at mobile, tablet, and desktop sizes. The
+suite reported no unexpected writes, application page errors, unexpected HTTP
 errors, broken rendered images, missing fonts, hydration errors, or horizontal
-overflow were found.
+overflow.
 
-The recommendation remains conditional because three checks cannot be proved by
-this private-host test:
+The browser suite does **not** prove account-level Cloudflare configuration,
+public route ownership, WordPress.com origin compatibility, WooCommerce behavior,
+live payment callbacks, or production-host Google Ads behavior. These release
+gates remain open:
 
-1. Public apex Cloudflare route precedence must be verified during the cutover
-   window after the apex catch-all is attached.
-2. Real Google Tag Assistant verification requires a separately approved test on
-   `lilaiireland.com` after cutover. The hostname guard was intentionally left in
-   place during this run.
-3. Headless WebKit on Windows did not advance plain-Tab focus from the skip link
-   on the link-only Events index at desktop width. Chromium and Firefox passed;
-   Safari on Apple hardware remains required to distinguish a Windows WebKit
-   harness limitation from a Safari behavior issue.
+1. Obtain WordPress.com confirmation for reverse-proxy compatibility and verify
+   original Host/origin behavior.
+2. Verify Cloudflare DNS, TLS/SNI, Cache, Redirect, Origin, and Security Rules
+   against the approved release baseline.
+3. Verify WooCommerce login, cart, checkout, sessions/cookies, cache bypass, and
+   payment callbacks in an approved nonproduction plan. No live transaction was
+   performed by this suite.
+4. Verify public apex Worker Route precedence and preservation of both signup
+   routes immediately before cutover.
+5. Verify Google Tag Assistant on the actual production hostname in a separately
+   approved session, without submitting the live form.
+6. Verify Safari keyboard focus on Apple hardware; headless WebKit on Windows did
+   not advance plain-Tab focus from the skip link on the link-only Events index at
+   desktop width.
+7. Confirm rollback readiness and record explicit owner approval before attaching
+   the public route.
+
+The private probe cannot provide the account evidence above. Public apex route
+precedence, Cloudflare rules, origin support, WooCommerce transaction/session
+behavior, and production Tag Assistant remain release blockers under the
+checklist.
 
 No production submission, lead, email, queue job, payment, booking, deployment,
 route change, WordPress write, or GAS write was performed.
@@ -32,12 +50,13 @@ route change, WordPress write, or GAS write was performed.
 
 | Evidence | Result |
 | --- | --- |
-| QA branch base / tested source SHA | `1191bfe215f085bf8629030719ccc84fc251b2a0` (`origin/develop`) |
+| QA branch base | `1191bfe215f085bf8629030719ccc84fc251b2a0` (`origin/develop`) |
+| Tested QA commit | `189270423f40ea5c815b6adee769aee53faf4f82` |
 | Production release reference | PR #35 merge SHA `149184d6aae39273c5f981405ece3a684a532244` |
 | Test target | `http://127.0.0.1:8791` |
 | Probe upstream header | `x-lilai-runtime-probe-upstream: remote-service-binding:lilai-web-platform-router` |
-| Run start | `2026-10-09T08:54:40.929Z` |
-| Run duration | 465.2 seconds (7.8 minutes) |
+| Run start | `2026-10-09T09:42:00.509Z` |
+| Run duration | 508.8 seconds (8.5 minutes) |
 | Host | Windows x64, Node.js `v24.13.1` |
 
 The probe header proves that browser requests were forwarded through the remote
@@ -56,7 +75,7 @@ to PR #35's merge SHA. The source SHA above is captured automatically in
 
 Playwright version: `1.64.0`. Tests used real browser processes, one worker, no
 retries, and traces retained on failure. There were no failures, so no failure
-trace was produced.
+trace was produced for this run.
 
 ## Page-by-page results
 
@@ -112,6 +131,7 @@ Events index variants carry the BLOCKED annotation described above.
 | Unexpected first-party 4xx/5xx | PASS | None |
 | Broken images or fonts | PASS | None |
 | Expected redirect/404 handling | PASS | 308 slash redirects and the deliberate unknown-event 404 were classified as expected |
+| Unexpected write requests | PASS | No unmatched unsafe request was observed; all non-GET/HEAD requests were blocked before network access |
 
 Firefox reported third-party YouTube cookie rejection messages for
 `__Secure-BUCKET` and `__Secure-YEC` in the embedded player. These were retained
@@ -123,6 +143,23 @@ and `static.doubleclick.net/instream/ad_status.js`. These are player-originated
 third-party requests, not the site's Google Ads tag or consultation conversion.
 No request for conversion label
 `AW-17610996814/Ynp6CPHkhe4cEM74yc1B` was observed.
+
+The write guard records method and URL, aborts non-GET/HEAD requests, and fails
+the corresponding test with those details. Three exact POST endpoint patterns
+from the homepage's embedded YouTube player are classified as intentionally
+blocked external telemetry and remain recorded in Playwright's
+`write-request-diagnostics` attachments:
+
+- `POST https://jnn-pa.googleapis.com/$rpc/google.internal.waa.v1.Waa/GenerateIT`
+- `POST https://www.youtube.com/youtubei/v1/log_event`
+- `POST https://www.youtube.com/api/stats/atr`
+
+The full run recorded 82 such player telemetry requests (66 to
+`jnn-pa.googleapis.com` and 16 to `www.youtube.com`), aborted by Playwright.
+Firefox's CORS console messages for the first endpoint were caused by that
+intentional abort and remain visible in raw diagnostics. Any other unsafe
+request, including an unmatched unsafe request in a consultation test, is
+aborted and fails its test with method and URL.
 
 ## Consultation form
 
@@ -148,6 +185,10 @@ The interception counts proved one request for success, no duplicate while
 submitting, and two explicitly initiated mocked attempts for the retry test.
 **Requests reaching the real GAS endpoint: zero.** Only synthetic data using the
 reserved `.test` email domain was used.
+
+Unmatched unsafe requests in either submission test were explicitly aborted and
+asserted empty. The deterministic GAS mocks remain limited to the success and
+failure lifecycle scenarios.
 
 ## Google Ads verification and limitations
 
@@ -187,6 +228,14 @@ the remote Router binding.
 precedence after attaching the apex catch-all. Verify that precedence during the
 cutover window before broad traffic is allowed.
 
+The broader WordPress.com proxy compatibility, Cloudflare DNS/TLS/Cache/
+Redirect/Origin/Security Rule review, WooCommerce login/cart/checkout/
+session/cookie/payment callback checks, signup route ownership, rollback
+readiness, and explicit owner approval are also outstanding under the
+[production release checklist](../production-release-checklist.md). The 200
+responses above prove only GET/HEAD reachability through the remote Router probe;
+they do not prove those release gates.
+
 ## Artifacts
 
 Artifacts are generated under the ignored directory
@@ -212,27 +261,51 @@ npm run qa:precutover
 | Command | Result |
 | --- | --- |
 | `npm ci` | PASS; 631 packages installed |
+| `npm run cf:typegen` and `npm run cf:typegen:router` | PASS; Wrangler generated types (Wrangler could not write its optional log under the restricted user profile; both commands exited 0) |
+| `npx tsc -p cloudflare/tsconfig.json` | PASS |
 | `npx tsc --noEmit --incremental false` | PASS |
+| `npm run check:staging` | PASS |
+| `npx tsx scripts/check-production-release-strategy.ts` | PASS |
+| `npx tsx scripts/check-deployment-policy.ts` | PASS |
+| `npm run check:seo-url-consistency` | PASS |
 | `npx tsx scripts/check-shared-layout.ts` | PASS |
 | `npx tsx scripts/check-design-system.ts` | PASS |
 | `npm run check:consult` | PASS |
+| `npm run check:production-routing` | PASS |
+| `npm run check:production-router` | PASS |
+| `npm run check:production-integration` | PASS |
 | `npm run build` | PASS; Next.js 16.2.10, 11 pages |
 | `git diff --check` | PASS |
+| `npx tsx scripts/check-cloudflare-staging.ts` | Local run BLOCKED on Windows: OpenNext child process exited `3221226505`; both Ubuntu workflow validations below passed |
 
 `npm ci` reported 16 existing audit findings (2 moderate, 13 high, 1 critical).
 No dependency audit remediation was attempted because it is outside this QA
 scope. Repository lint was not run because the documented `next lint` command is
 known to be invalid under Next.js 16.
 
+GitHub Actions for PR #36 completed on Ubuntu: staging `verify` **PASS** (2m13s)
+and production `validate` **PASS** (1m41s). Both deploy jobs were **skipped**;
+no Worker deployment or public route attachment ran. The local OpenNext failure
+is therefore recorded as a Windows-only check limitation, with the same workflow
+validation passing on its supported Linux CI runner.
+
 ## Outstanding blockers and next actions
 
-1. At the cutover window, verify actual public apex route precedence and repeat
-   a concise GET/HEAD route smoke test.
-2. After separately approving a public-hostname session, use Google Tag Assistant
-   to verify tag initialization without submitting the production form.
-3. Run plain-Tab focus checks on `/events` in Safari on Apple hardware. If focus
-   still stalls after the skip link, file an accessibility bug with the retained
+1. Complete the WordPress.com reverse-proxy compatibility evidence and verify
+   original Host/origin behavior.
+2. Capture and review Cloudflare DNS, TLS/SNI, Cache, Redirect, Origin, and
+   Security Rule configuration against the approved baseline.
+3. Verify WooCommerce login, cart, checkout, session/cookie, cache bypass, and
+   payment callback behavior in an approved nonproduction environment.
+4. Immediately before cutover, verify apex Worker Route precedence and both
+   signup mappings; then run the release checklist's read-only smoke matrix.
+5. Verify Google Tag Assistant on the actual production hostname in a separately
+   approved session without submitting the form.
+6. Run plain-Tab checks on `/events` in Safari on Apple hardware. If focus still
+   stalls after the skip link, file an accessibility issue with the retained
    WebKit annotation and reproduction steps.
+7. Confirm rollback owner/readiness and obtain explicit owner approval before
+   manually attaching `lilaiireland.com/*` to the Router Worker.
 
-With those checks scheduled, the observed production Router and Platform are
-ready for a controlled cutover.
+Until all gates are evidenced and the owner approves route attachment, production
+cutover remains **NO-GO**, regardless of the conditional browser QA pass.
