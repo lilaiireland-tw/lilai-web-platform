@@ -2,9 +2,9 @@ name: Production private Workers (manual only)
 
 on:
   pull_request:
-    branches: [develop]
+    branches: [develop, main]
   push:
-    branches: [develop]
+    branches: [develop, main]
   workflow_dispatch:
     inputs:
       deploy_private_workers:
@@ -37,6 +37,7 @@ jobs:
       - run: npx tsc -p cloudflare/tsconfig.json
       - run: npx tsc --noEmit --incremental false
       - run: npm run check:staging
+      - run: npx tsx scripts/check-production-release-strategy.ts
       - run: npx tsx scripts/check-deployment-policy.ts
       - run: npm run check:production-routing
       - run: npm run check:production-router
@@ -51,7 +52,7 @@ jobs:
 
   deploy-private:
     needs: validate
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/develop' && inputs.deploy_private_workers == true
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.deploy_private_workers == true
     runs-on: ubuntu-latest
     environment: production
     concurrency:

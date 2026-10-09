@@ -13,6 +13,7 @@
     "check:production-router": "tsx scripts/check-production-router.ts",
     "check:production-packaging": "tsx scripts/check-production-packaging.ts",
     "check:production-integration": "tsx scripts/check-production-integration.ts",
+    "check:production-release-strategy": "tsx scripts/check-production-release-strategy.ts",
     "audit:production-assets": "tsx scripts/audit-production-assets.ts",
     "update:fonts": "tsx scripts/update-brand-fonts.ts",
     "cf:build": "tsx scripts/cloudflare-staging.ts build",
