@@ -1,4 +1,6 @@
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lilaiireland.com";
+import { PUBLIC_SITE_URL } from "./deployment";
+
+export const SITE_URL = PUBLIC_SITE_URL;
 
 export const SITE_NAME = "哩來愛爾蘭｜Lilai Ireland";
 

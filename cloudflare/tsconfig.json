@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["esnext"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": []
+  },
+  "include": [
+    "*.ts",
+    "../.cloudflare/cloudflare-env.d.ts",
+    "../.cloudflare/production-router-env.d.ts"
+  ]
+}

@@ -7,7 +7,25 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "check:urls": "tsx scripts/check-important-urls.ts"
+    "check:urls": "tsx scripts/check-important-urls.ts",
+    "check:consult": "tsx scripts/check-consult.ts",
+    "check:production-routing": "tsx scripts/check-production-routing.ts",
+    "check:production-router": "tsx scripts/check-production-router.ts",
+    "check:production-packaging": "tsx scripts/check-production-packaging.ts",
+    "check:production-integration": "tsx scripts/check-production-integration.ts",
+    "check:production-release-strategy": "tsx scripts/check-production-release-strategy.ts",
+    "audit:production-assets": "tsx scripts/audit-production-assets.ts",
+    "update:fonts": "tsx scripts/update-brand-fonts.ts",
+    "cf:build": "tsx scripts/cloudflare-staging.ts build",
+    "cf:build:production-platform": "tsx scripts/cloudflare-production.ts build",
+    "cf:deploy:production-private": "tsx scripts/cloudflare-production.ts deploy-private",
+    "cf:dry-run": "tsx scripts/cloudflare-staging.ts dry-run",
+    "cf:bootstrap-access": "tsx scripts/cloudflare-staging.ts bootstrap-access",
+    "cf:deploy": "tsx scripts/cloudflare-staging.ts deploy",
+    "precf:typegen": "node -e \"require('node:fs').mkdirSync('.cloudflare', { recursive: true })\"",
+    "cf:typegen": "wrangler types .cloudflare/cloudflare-env.d.ts --env-interface CloudflareEnv --strict-vars false",
+    "cf:typegen:router": "wrangler types --config cloudflare/production-router.jsonc --env-interface ProductionRouterEnv --strict-vars false --include-runtime=false .cloudflare/production-router-env.d.ts",
+    "check:staging": "tsx scripts/check-staging.ts"
   },
   "dependencies": {
     "next": "^16.2.10",
@@ -15,13 +33,15 @@
     "react-dom": "19.1.0"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "1.20.1",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^16.2.10",
     "tsx": "^4.20.3",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "4.148.0"
   },
   "overrides": {
     "postcss": "8.5.20"

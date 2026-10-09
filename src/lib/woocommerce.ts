@@ -4,6 +4,9 @@ const STORE_API_BASE =
   process.env.WOOCOMMERCE_STORE_API_BASE || "https://cms.lilaiireland.com/wp-json/wc/store/v1";
 
 async function storeFetch<T>(path: string, revalidate = 300): Promise<T> {
+  if (process.env.SITE_DEPLOYMENT_ENV === "staging") {
+    throw new Error("WooCommerce is unavailable in standalone staging");
+  }
   const res = await fetch(`${STORE_API_BASE}${path}`, {
     next: { revalidate }
   });

@@ -1,8 +1,18 @@
 import type { Metadata } from "next";
+import { isProductionDeployment } from "@/lib/deployment";
+import { GoogleAdsTag } from "@/components/analytics/GoogleAdsTag";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { TopStrip } from "@/components/layout/TopStrip";
+import styles from "@/components/layout/layout.module.css";
 import { HOME_DESCRIPTION, HOME_TITLE, SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
+import "@/styles/fonts.css";
+import "@/styles/tokens.css";
 import "./globals.css";
+import "@/styles/primitives.css";
 
 export const metadata: Metadata = {
+  ...(!isProductionDeployment() ? { robots: { index: false, follow: false } } : {}),
   metadataBase: new URL(SITE_URL),
   title: {
     default: HOME_TITLE,
@@ -37,7 +47,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-Hant">
-      <body>{children}</body>
+      <body>
+        <GoogleAdsTag productionDeployment={isProductionDeployment()} />
+        <a className={styles.skipLink} href="#site-content">跳至主要內容</a>
+        <TopStrip />
+        <Header />
+        <div id="site-content" tabIndex={-1} className={styles.content}>{children}</div>
+        <Footer />
+      </body>
     </html>
   );
 }

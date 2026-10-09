@@ -1,0 +1,2 @@
+# The source asset audit compares exact bytes, including SVG line endings.
+icons/*.svg -text

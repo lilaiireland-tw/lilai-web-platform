@@ -6,3 +6,8 @@ out
 !.env.example
 vercel.json
 *.log
+.open-next/
+.wrangler/
+.cloudflare/
+.dev.vars*
+cloudflare-env.d.ts
