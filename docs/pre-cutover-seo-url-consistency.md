@@ -29,8 +29,11 @@ this change does not alter verification tokens or WordPress sitemap settings.
 
 ## Remaining launch checks
 
-- Run the production OpenNext build and packaging checks on the supported Node
-  22 CI runner.
+Both GitHub validation workflows passed on Node 22 Linux, including the
+production OpenNext build and packaging checks. The equivalent local
+OpenNext command fails on this Windows/Node 24 environment with child-process
+exit `3221226505`.
+
 - Complete desktop and mobile browser checks for overflow, sticky shell,
   focus-visible behavior, console errors, and hydration errors.
 - After the production hostname can safely reach the Platform, use Tag
