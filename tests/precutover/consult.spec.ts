@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "./local-test";
+import type { Page } from "@playwright/test";
 import { ADS_HOST_FRAGMENTS, GAS_HOSTS, attachDiagnostics, attachWriteRequestDiagnostics, blockUnexpectedWrites, expectNoUnexpectedWrites, installDiagnostics } from "./helpers";
 
 test.use({ viewport: { width: 375, height: 812 } });
@@ -71,6 +72,10 @@ async function interceptGas(page: Page, mode: "success" | "failure") {
   const responseGate = new Promise<void>(resolve => { releaseResponse = resolve; });
   await page.route("**/*", async route => {
     const request = route.request();
+    if (["127.0.0.1", "localhost"].includes(new URL(request.url()).hostname)) {
+      await route.fallback();
+      return;
+    }
     const url = new URL(request.url());
     if (GAS_HOSTS.has(url.hostname)) {
       intercepted.push(`${request.method()} ${request.url()}`);
@@ -86,7 +91,7 @@ async function interceptGas(page: Page, mode: "success" | "failure") {
       await route.abort("blockedbyclient");
       return;
     }
-    await route.continue();
+    await route.fallback();
   });
   return { intercepted, unexpectedWrites: { unexpected: unexpectedWrites, intentionallyBlockedExternal: [] }, releaseResponse };
 }

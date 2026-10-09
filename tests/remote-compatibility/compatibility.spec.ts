@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { EXPECTED_UPSTREAM } from "./helpers";
+import { EXPECTED_UPSTREAM } from "../precutover/helpers";
 
 const cases = [
   "/study-in-ireland-guide/",

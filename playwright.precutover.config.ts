@@ -1,6 +1,7 @@
 import { defineConfig } from "@playwright/test";
 
-const baseURL = process.env.PRECUTOVER_BASE_URL || "http://127.0.0.1:8791";
+// Fixed loopback target: production URLs cannot be selected through the environment.
+const baseURL = "http://127.0.0.1:3100";
 
 export default defineConfig({
   testDir: "./tests/precutover",
@@ -23,14 +24,6 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "off",
-  },
-  webServer: {
-    command: "npm run probe:production-runtime",
-    url: baseURL,
-    reuseExistingServer: true,
-    timeout: 120_000,
-    stdout: "ignore",
-    stderr: "pipe",
   },
   projects: [
     { name: "chromium", use: { browserName: "chromium" } },

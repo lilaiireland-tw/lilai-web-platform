@@ -2,6 +2,11 @@
 
 ## Executive summary
 
+> **Historical evidence:** the 111/111 result below was produced on 2026-10-09
+> using the remote Wrangler Service Binding probe described in this report. It
+> was not produced with the later local-only QA configuration. Keep this record
+> as historical evidence; routine QA now uses `npm run qa:precutover` locally.
+
 **Browser QA: CONDITIONAL PASS.** The reported 111 Playwright tests passed.
 
 **Overall production cutover: NO-GO** until the release gates below are verified
@@ -248,7 +253,11 @@ Artifacts are generated under the ignored directory
   Events, Daydream, and consultation × 375 px and 1440 px
 - `test-results/` — failure traces/screenshots when a future run fails
 
-Reproduce with:
+Historical reproduction note: at the tested commit, the following command used
+the old probe-backed configuration and produced the remote 111/111 result. The
+current `npm run qa:precutover` now runs local Chromium only and does not
+reproduce that historical remote result. Do not rerun the 111-test suite against
+deployed Workers for routine QA.
 
 ```bash
 npm ci

@@ -183,6 +183,10 @@ export async function blockUnexpectedWrites(page: Page) {
   const writes: WriteRequestDiagnostics = { unexpected: [], intentionallyBlockedExternal: [] };
   await page.route("**/*", async route => {
     const request = route.request();
+    if (["127.0.0.1", "localhost"].includes(new URL(request.url()).hostname)) {
+      await route.fallback();
+      return;
+    }
     if (!["GET", "HEAD"].includes(request.method())) {
       const record = `${request.method()} ${request.url()}`;
       if (isKnownExternalPlayerWrite(request.method(), request.url())) writes.intentionallyBlockedExternal.push(record);
@@ -190,7 +194,7 @@ export async function blockUnexpectedWrites(page: Page) {
       await route.abort("blockedbyclient");
       return;
     }
-    await route.continue();
+    await route.fallback();
   });
   return writes;
 }
