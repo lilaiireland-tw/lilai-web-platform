@@ -13,6 +13,8 @@
     "check:production-router": "tsx scripts/check-production-router.ts",
     "check:production-packaging": "tsx scripts/check-production-packaging.ts",
     "check:production-integration": "tsx scripts/check-production-integration.ts",
+    "probe:production-runtime": "wrangler dev --config cloudflare/runtime-probe.jsonc --ip 127.0.0.1 --port 8791 --inspector-ip 127.0.0.1 --inspector-port 9291 --show-interactive-dev-session=false",
+    "verify:production-runtime": "tsx scripts/verify-production-runtime.ts",
     "check:production-release-strategy": "tsx scripts/check-production-release-strategy.ts",
     "audit:production-assets": "tsx scripts/audit-production-assets.ts",
     "update:fonts": "tsx scripts/update-brand-fonts.ts",
