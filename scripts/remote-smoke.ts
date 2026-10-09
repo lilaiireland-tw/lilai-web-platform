@@ -1,4 +1,5 @@
 // Manual, bounded HTTP smoke test. Never invoked by routine local QA or CI.
+export {};
 const AUTHORIZATION = "I_UNDERSTAND_CLOUDFLARE_USAGE";
 const ORIGIN = "https://lilaiireland.com";
 const MAX_REQUESTS = 10;
