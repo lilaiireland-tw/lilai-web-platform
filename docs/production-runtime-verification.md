@@ -84,9 +84,16 @@ Official behavior used by the harness:
 Run it in two terminals:
 
 ```powershell
+$env:ALLOW_REMOTE_QA = 'I_UNDERSTAND_CLOUDFLARE_USAGE'
 npm run probe:production-runtime
 npm run verify:production-runtime
+Remove-Item Env:ALLOW_REMOTE_QA
 ```
+
+These commands are explicitly authorized remote diagnostics and can consume
+Cloudflare Worker request quota. Do not run them for routine QA. The verifier
+can initiate many HTTP requests, and Service Bindings can add downstream Worker
+invocations.
 
 The verifier writes the complete request-level JSON evidence to the ignored
 local file `.cloudflare/production-runtime-verification.json`. It exits nonzero

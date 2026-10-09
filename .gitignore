@@ -11,3 +11,4 @@ vercel.json
 .cloudflare/
 .dev.vars*
 cloudflare-env.d.ts
+artifacts/precutover-playwright/
