@@ -24,15 +24,30 @@ server and outbound request blocking as the default command.
 ## Remote release smoke check
 
 `npm run qa:remote-smoke` is disabled unless the operator explicitly sets
-`ALLOW_REMOTE_QA=I_UNDERSTAND_CLOUDFLARE_USAGE`. It makes at most five client-
-initiated `GET` calls to a fixed allowlist on `https://lilaiireland.com`: `/`,
-`/events`, `/events/daydream-adventure-2027`, `/consult`, and `/robots.txt`.
-Redirects are not followed. It uses no browser, retries, polling, asset crawling,
-screenshots, or font/image loading. The report prints the actual number of
-client-initiated HTTP calls. Service Bindings can cause additional downstream
-Worker invocations, so this count is not a total of all Worker executions.
+`ALLOW_REMOTE_QA=I_UNDERSTAND_CLOUDFLARE_USAGE`. After an **approved cutover**,
+it makes exactly eight client-initiated `GET` calls (or fewer if an assertion
+fails) to a fixed allowlist on `https://lilaiireland.com`:
 
-PowerShell example for an intentional pre-release check:
+- Platform: `/`, `/events`, `/events/daydream-adventure-2027`,
+  `/consult`, `/events-sitemap.xml`
+- WordPress: `/study-in-ireland-guide/`, `/sitemap_index.xml`
+- Signup: `/language-school-signup?utm_source=smoke`
+
+The smoke test checks 200 status and Content-Type, the deployed Platform's
+observed `x-opennext: 1` marker, expected XML content, and preservation of the
+signup query string on a redirect. It stops on the first failure. A valid signup
+redirect is only a partial check: it does not prove the redirect destination
+is served by the correct live Worker, so the operator must also open the signup
+page once during the approved cutover window.
+
+Redirects are not followed. There is no browser, retry, polling, asset crawl,
+screenshot, or font/image dependency loading. The hard cap is **10** client
+requests and the current allowlist uses **8**. Service Bindings can cause
+additional downstream Worker invocations, so this count is not a total of all
+Worker executions. No smoke test can certify Cloudflare route precedence before
+the public Route is actually attached.
+
+PowerShell example for an intentional post-cutover check:
 
 ```powershell
 $env:ALLOW_REMOTE_QA = 'I_UNDERSTAND_CLOUDFLARE_USAGE'
@@ -40,8 +55,8 @@ npm run qa:remote-smoke
 Remove-Item Env:ALLOW_REMOTE_QA
 ```
 
-Run this manually only before an important release. Do not schedule it or run
-it for ordinary UI edits.
+Run this manually only after an important approved release. Do not schedule
+it or run it for ordinary UI edits.
 
 ## Separate remote diagnostics
 
