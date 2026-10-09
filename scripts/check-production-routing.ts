@@ -78,15 +78,16 @@ function main() {
     "/", "/?utm_source=smoke",
     "/consult", "/consult/", "/consult?utm_source=google", "/consult/?gclid=test-click-id",
     "/events", "/events/", "/events?source=smoke",
+    "/events-sitemap.xml",
     "/events/daydream-adventure-2027/", "/events/unknown", "/events/missing.png?cache=1",
     "/_next/static/chunk.js?v=1", "/assets/lilai-logo.png", "/fonts/example.woff2",
   ]);
   assertOwner("wordpress", [
-    "/events-other", "/event", "/_next", "/assets", "/fonts",
+    "/events-other", "/event", "/events-sitemap.xml/", "/events-sitemap.xml.extra", "/_next", "/assets", "/fonts",
     "/wp-admin/", "/wp-login.php", "/wp-json/", "/wp-content/uploads/example.jpg",
     "/wp-includes/js/example.js", "/shop/", "/cart/", "/checkout/", "/my-account/",
     "/product/example/", "/product-category/example/", "/wc-api/example", "/about/",
-    "/robots.txt", "/sitemap.xml", "/sitemap_index.xml", "/unknown-route",
+    "/robots.txt", "/sitemap.xml", "/sitemap_index.xml", "/post-sitemap.xml", "/page-sitemap.xml", "/unknown-route",
     "/?wc-ajax=get_refreshed_fragments", "/?wc-api=payment-callback", "/?add-to-cart=1",
     "/?rest_route=/wp/v2/posts", "/?p=123", "/?page_id=123", "/?preview=true",
     "/?s=ireland", "/events/?add-to-cart=1",

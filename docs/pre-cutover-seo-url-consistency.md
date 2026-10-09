@@ -15,17 +15,18 @@ canonical metadata, robots directives, and sitemap membership.
 
 ## Sitemap discovery
 
-WordPress remains the owner of `/sitemap_index.xml`; it remains listed in the
-Platform `robots.txt` alongside the existing `/sitemap.xml` and the new,
-Platform-owned `/events-sitemap.xml`. The event sitemap lists `/events` and
-only event detail pages whose production event policy is indexable. Daydream
-continues to emit `noindex, follow` and is excluded from the sitemap.
+WordPress remains the owner of `/robots.txt`, `/sitemap_index.xml`, and
+`/sitemap.xml`. The exact `/events-sitemap.xml` path is owned by the Platform.
+The event sitemap lists `/events` and only event detail pages whose production
+event policy is indexable. Daydream continues to emit `noindex, follow` and is
+excluded from the sitemap.
 
 After an approved public cutover, manually submit
 `https://lilaiireland.com/events-sitemap.xml` in Google Search Console so its
 event discovery status is visible independently of the WordPress sitemap
-index. Keep the existing Search Console property and verification in place;
-this change does not alter verification tokens or WordPress sitemap settings.
+index because the WordPress-owned `robots.txt` and sitemap index remain
+unchanged. Keep the existing Search Console property and verification in place.
+This change does not alter verification tokens or WordPress sitemap settings.
 
 ## Remaining launch checks
 

@@ -13,6 +13,7 @@ async function main() {
     "/events",
     "/events/",
     "/events/summer-concert",
+    "/events-sitemap.xml",
     "/_next/static/test.js",
     "/assets/logo.svg",
     "/fonts/site.woff2",
@@ -42,6 +43,9 @@ async function main() {
 
   const originPaths = [
     "/about/",
+    "/robots.txt",
+    "/sitemap_index.xml",
+    "/sitemap.xml",
     "/wp-json/wp/v2/posts",
     "/?rest_route=/wp/v2/posts",
     "/?wc-api=payment-callback",
@@ -87,6 +91,55 @@ async function main() {
       "session=unchanged; Path=/",
       "preference=dark; Path=/; SameSite=Lax",
     ], "all Set-Cookie headers must remain separate and unchanged");
+  }
+
+  const wordpressSitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://lilaiireland.com/about/</loc></url></urlset>`;
+  const wordpressSitemapIndexXml = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><sitemap><loc>https://lilaiireland.com/page-sitemap.xml</loc></sitemap></sitemapindex>`;
+  const platformEventSitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://lilaiireland.com/events</loc></url></urlset>`;
+  const assertXmlResponse = async (response: Response, root: "urlset" | "sitemapindex", expectedBody: string, path: string) => {
+    assert.equal(response.status, 200, `${path} must return a successful sitemap response`);
+    assert.match(response.headers.get("content-type") ?? "", /(?:application|text)\/xml/i, `${path} must have an XML content type`);
+    const body = await response.text();
+    assert.equal(body, expectedBody, `${path} must return the selected owner's response unchanged`);
+    assert.match(body, new RegExp(`^<\\?xml version="1\\.0" encoding="UTF-8"\\?>\\s*<${root}\\b`), `${path} must have an XML declaration and ${root} root`);
+    assert.match(body, new RegExp(`</${root}>\\s*$`), `${path} must close its ${root} root`);
+    assert.equal((body.match(/<loc>/g) ?? []).length, (body.match(/<\/loc>/g) ?? []).length, `${path} must have balanced location elements`);
+  };
+
+  for (const [path, body, root] of [
+    ["/sitemap_index.xml", wordpressSitemapIndexXml, "sitemapindex"],
+    ["/sitemap.xml", wordpressSitemapXml, "urlset"],
+  ] as const) {
+    let originCalled = false;
+    let platformCalled = false;
+    const response = await routeProductionRequest(new Request(new URL(path, base)), {
+      platform: { async fetch() { platformCalled = true; return new Response("wrong owner"); } },
+      async originFetch() {
+        originCalled = true;
+        return new Response(body, { headers: { "Content-Type": "application/xml; charset=utf-8" } });
+      },
+    });
+    assert(originCalled, `${path} must be owned by WordPress`);
+    assert(!platformCalled, `${path} must not reach the Platform`);
+    await assertXmlResponse(response, root, body, path);
+  }
+
+  {
+    let platformCalled = false;
+    let originCalled = false;
+    const path = "/events-sitemap.xml";
+    const response = await routeProductionRequest(new Request(new URL(path, base)), {
+      platform: {
+        async fetch() {
+          platformCalled = true;
+          return new Response(platformEventSitemapXml, { headers: { "Content-Type": "application/xml; charset=utf-8" } });
+        },
+      },
+      async originFetch() { originCalled = true; return new Response("wrong owner"); },
+    });
+    assert(platformCalled, `${path} must be owned by the Platform`);
+    assert(!originCalled, `${path} must not reach WordPress`);
+    await assertXmlResponse(response, "urlset", platformEventSitemapXml, path);
   }
 
   for (const status of [404, 503]) {

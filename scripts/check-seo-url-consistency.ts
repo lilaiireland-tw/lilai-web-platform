@@ -113,7 +113,11 @@ async function main() {
 
     const eventSitemapResponse = await get("/events-sitemap.xml");
     assert.equal(eventSitemapResponse.status, 200);
+    assert.match(eventSitemapResponse.headers.get("content-type") ?? "", /(?:application|text)\/xml/i);
     const eventSitemap = await eventSitemapResponse.text();
+    assert.match(eventSitemap, /^<\?xml version="1\.0" encoding="UTF-8"\?>\s*<urlset\b/);
+    assert.match(eventSitemap, /<\/urlset>\s*$/);
+    assert.equal((eventSitemap.match(/<loc>/g) ?? []).length, (eventSitemap.match(/<\/loc>/g) ?? []).length);
     assert.deepEqual([...eventSitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]), buildEventSitemapUrls(eventRegistry.indexable()));
     assert(eventSitemap.includes("<loc>https://lilaiireland.com/events</loc>"));
     assert(!eventSitemap.includes("daydream-adventure-2027"), "noindex Daydream must not be submitted");
