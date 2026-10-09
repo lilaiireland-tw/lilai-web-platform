@@ -15,6 +15,7 @@
     "check:production-packaging": "tsx scripts/check-production-packaging.ts",
     "check:production-integration": "tsx scripts/check-production-integration.ts",
     "probe:production-runtime": "wrangler dev --config cloudflare/runtime-probe.jsonc --ip 127.0.0.1 --port 8791 --inspector-ip 127.0.0.1 --inspector-port 9291 --show-interactive-dev-session=false",
+    "qa:precutover": "playwright test --config playwright.precutover.config.ts",
     "verify:production-runtime": "tsx scripts/verify-production-runtime.ts",
     "check:production-release-strategy": "tsx scripts/check-production-release-strategy.ts",
     "audit:production-assets": "tsx scripts/audit-production-assets.ts",
@@ -37,6 +38,7 @@
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "1.20.1",
+    "@playwright/test": "^1.64.0",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
