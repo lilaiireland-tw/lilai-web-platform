@@ -44,6 +44,7 @@ export function productionRouteOwner(input: string | URL): ProductionRouteOwner 
   if (url.hostname !== PRODUCTION_HOSTNAME) return "wordpress";
   if (isSignupPath(url.pathname)) return "signup";
   if (hasWordPressQueryEndpoint(url)) return "wordpress";
+  if (url.pathname === "/events-sitemap.xml") return "platform";
   if (
     url.pathname === "/" ||
     url.pathname === "/consult" ||

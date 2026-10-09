@@ -14,7 +14,11 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/cart/", "/checkout/", "/my-account/"]
       }
     ],
-    sitemap: absoluteUrl("/sitemap.xml"),
+    sitemap: [
+      absoluteUrl("/sitemap_index.xml"),
+      absoluteUrl("/sitemap.xml"),
+      absoluteUrl("/events-sitemap.xml")
+    ],
     host: SITE_URL
   };
 }

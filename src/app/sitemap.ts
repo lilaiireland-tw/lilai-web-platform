@@ -17,7 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const eventUrls = getEventPolicy().production ? [
-    { url: eventAbsoluteUrl("/events/") },
+    { url: eventAbsoluteUrl("/events") },
     ...eventRegistry.indexable().map(event => ({ url: eventAbsoluteUrl(eventPath(event.slug)) }))
   ] : [];
 
