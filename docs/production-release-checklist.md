@@ -6,13 +6,14 @@ has current evidence and the release owner explicitly approves Phase D.
 The production Platform and Router configurations are prepared with
 `workers_dev: false`, `preview_urls: false`, and `routes: []`. Router calls the
 Platform through the `PLATFORM` Service Binding. No step in the workflow attaches
-a route. Production validation runs on pull requests and pushes to `develop`.
-Private production deployment is available only by manually dispatching from
-`main`, selecting `deploy_private_workers=true`, and receiving approval from the
-GitHub `production` environment. Configure required reviewers on that environment
-so the approval gate is active. The workflow must first be merged to the default
-branch (`main`) before GitHub exposes its manual dispatch there. Staging remains
-on `develop` and retains its existing `CLOUDFLARE_STAGING_ENABLED` safeguard.
+a route. Production validation runs on pull requests and pushes to both `develop`
+and `main`. Merging to `main` only runs validation; it does not deploy Production.
+Private production deployment is a separate manual action from `main` with
+`deploy_private_workers=true` and approval through the GitHub `production`
+environment. Configure required reviewers on that environment so the approval
+gate is active. The workflow must first be merged to the default branch (`main`)
+before GitHub exposes its manual dispatch there. Staging remains on `develop` and
+retains its existing `CLOUDFLARE_STAGING_ENABLED` safeguard.
 
 ## Release branch sequence
 
@@ -20,14 +21,15 @@ on `develop` and retains its existing `CLOUDFLARE_STAGING_ENABLED` safeguard.
 2. `develop` runs validation and, when the existing staging safeguards pass,
    deploys to staging.
 3. After staging review, open a reviewed release pull request from `develop` to
-   `main`. Do not merge it automatically.
-4. After that release PR is approved and merged, `main` contains the
-   `workflow_dispatch` workflow and can manually start the private production
-   deployment. Select `deploy_private_workers=true` and approve the `production`
-   environment.
-5. Public route cutover is a separate, explicitly approved Cloudflare operation
-   after the evidence gates below. The deployment workflow never attaches public
-   traffic.
+   `main`. The PR automatically runs production validation. Do not merge it
+   automatically.
+4. Merging that release PR only updates `main` and runs validation; it does not
+   deploy Production. Once the workflow is on `main`, private deployment requires
+   a separate manual dispatch with `deploy_private_workers=true` and approval
+   through the `production` environment.
+5. Public route cutover requires another explicit approval and is a separate
+   Cloudflare operation after the evidence gates below. The deployment workflow
+   never attaches public traffic.
 
 For the current workflow correction, first review and merge its focused PR into
 `develop`; then open the `develop` to `main` release PR containing this reviewed
@@ -79,12 +81,13 @@ asset tree against the route policy. The production build is expected to produce
 `.open-next/assets`; a missing directory means that portion of the inventory did
 not run. This audit cannot enumerate the WordPress origin.
 
-GitHub Actions: PRs and pushes to `develop` run validation only. To manually run
-validation without deploying, run **Production private Workers (manual only)**
-with `deploy_private_workers=false` from `main`. To deploy private Workers,
+GitHub Actions: PRs and pushes to `develop` and `main` run validation only.
+Merging to `main` does not deploy Production. To manually run validation without
+deploying, run **Production private Workers (manual only)** with
+`deploy_private_workers=false` from `main`. To deploy private Workers,
 dispatch this workflow on `main`, then select `true` only after a separately
-recorded deployment approval and after confirming the required reviewers on the
-`production` environment,
+recorded manual deployment approval and after confirming the required reviewers
+on the `production` environment,
 `CLOUDFLARE_API_TOKEN` secret, and `CLOUDFLARE_ACCOUNT_ID` variable. Both Worker
 configs and the variable must target the approved production account
 `622900d9297cd7c09cad966aaae64617`; a mismatch fails before either deploy. The

@@ -2,9 +2,9 @@ name: Production private Workers (manual only)
 
 on:
   pull_request:
-    branches: [develop]
+    branches: [develop, main]
   push:
-    branches: [develop]
+    branches: [develop, main]
   workflow_dispatch:
     inputs:
       deploy_private_workers:
