@@ -42,6 +42,23 @@ overflow. The existing external proxy drops configured `X-Robots-Tag` headers in
 fixture responses on develop too; this check verifies declarations separately.
 See [Issue #1 verification notes](docs/shared-layout-verification.md) for limitations.
 
+## Browser QA strategy
+
+`npm run qa:precutover` is the routine browser check. It starts Next.js on a fixed
+loopback address in staging mode, disables WordPress rewrites, blocks browser
+egress to external services, and runs Chromium at 375px and 1440px. Google Apps
+Script submissions are mocked in form tests; Ads and live submissions are not
+sent. `npm run qa:precutover:full` optionally runs the same local tests in
+Chromium, Firefox and WebKit, including the 768px tablet viewport.
+
+The older probe-based WordPress compatibility suite is kept separate and does
+not start its server automatically. It requires a manually started, explicitly
+authorized probe. `npm run qa:remote-smoke` is the small manual release check;
+see [the QA strategy and authorization details](docs/qa/testing-strategy.md).
+The production-runtime probe and verifier also require
+`ALLOW_REMOTE_QA=I_UNDERSTAND_CLOUDFLARE_USAGE` and may consume Worker request
+quota. Never use those diagnostics for routine frontend changes.
+
 ## Local Setup
 
 ```bash
