@@ -77,8 +77,7 @@ async function main() {
 
     const routes = [
       ["/consult", "/consult/"],
-      ["/events", "/events/"],
-      ["/events/daydream-adventure-2027", "/events/daydream-adventure-2027/"]
+      ["/events", "/events/"]
     ] as const;
     for (const [canonicalPath, aliasPath] of routes) {
       const canonicalResponse = await get(canonicalPath);
@@ -102,9 +101,6 @@ async function main() {
     assert.match(consult, /name="robots" content="index, follow"/);
     const events = await (await get("/events")).text();
     assert.match(events, /name="robots" content="index, follow"/);
-    const daydreamHtml = await (await get("/events/daydream-adventure-2027")).text();
-    assert.match(daydreamHtml, /name="robots" content="noindex, follow"/);
-
     const robotTxt = await (await get("/robots.txt")).text();
     assert(robotTxt.includes("Sitemap: https://lilaiireland.com/sitemap_index.xml"));
     assert(robotTxt.includes("Sitemap: https://lilaiireland.com/sitemap.xml"));

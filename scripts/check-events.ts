@@ -80,7 +80,7 @@ async function main() {
       env: { ...process.env, EVENT_DEPLOYMENT_ENV: "preview", EVENTS_INCLUDE_DRAFTS: "true" }, stdio: ["ignore", "pipe", "pipe"],
     });
     app.stdout?.on("data", data => { logs += data; }); app.stderr?.on("data", data => { logs += data; });
-    const get = (path: string) => fetch(`http://127.0.0.1:${address.port}${path}`, { headers: { "User-Agent": "Googlebot" }, signal: AbortSignal.timeout(30000) });
+    const get = (path: string) => fetch(`http://127.0.0.1:${address.port}${path}`, { headers: { "User-Agent": "Googlebot" }, redirect: "manual", signal: AbortSignal.timeout(30000) });
     let ready = false;
     for (let i = 0; i < 60; i++) {
       if (app.exitCode !== null) throw new Error(logs);
@@ -97,6 +97,13 @@ async function main() {
       assert.equal((body.match(/<header\b/g) || []).length, 1);
       assert.equal((body.match(/<footer\b/g) || []).length, 1);
       assert.equal((body.match(/<main\b/g) || []).length, 1);
+      const alias = await get(`/events/${event.slug}/`);
+      assert.equal(alias.status, 308, `${event.slug} slash alias should redirect`);
+      assert.equal(new URL(alias.headers.get("location")!, `http://127.0.0.1:${address.port}`).pathname, `/events/${event.slug}`);
+      const queryAlias = await get(`/events/${event.slug}/?utm_source=event-regression`);
+      const queryLocation = new URL(queryAlias.headers.get("location")!, `http://127.0.0.1:${address.port}`);
+      assert.equal(queryAlias.status, 308);
+      assert.equal(queryLocation.search, "?utm_source=event-regression");
     }
     assert.equal((await get("/events/fixture-missing")).status, 404);
     const indexResponse = await get("/events"); const indexHtml = await indexResponse.text();
