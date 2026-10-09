@@ -48,23 +48,28 @@ async function main() {
     "https://lilaiireland.com/events-sitemap.xml"
   ]);
 
-  const probe = createServer();
-  probe.listen(0, "127.0.0.1");
-  await once(probe, "listening");
-  const address = probe.address();
-  assert(address && typeof address !== "string");
-  await new Promise<void>(resolve => probe.close(() => resolve()));
+  let port = 0;
+  for (let attempt = 0; attempt < 10 && port < 5000; attempt++) {
+    const probe = createServer();
+    probe.listen(0, "127.0.0.1");
+    await once(probe, "listening");
+    const address = probe.address();
+    assert(address && typeof address !== "string");
+    port = address.port;
+    await new Promise<void>(resolve => probe.close(() => resolve()));
+  }
+  assert(port >= 5000, `Unable to select an unreserved test port: ${port}`);
 
   let app: ReturnType<typeof spawn> | undefined;
   let logs = "";
   try {
-    app = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "--hostname", "127.0.0.1", "--port", String(address.port)], {
+    app = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "--hostname", "127.0.0.1", "--port", String(port)], {
       env: { ...process.env, SITE_DEPLOYMENT_ENV: "production", EVENT_DEPLOYMENT_ENV: "production", EVENTS_INCLUDE_DRAFTS: "false" },
       stdio: ["ignore", "pipe", "pipe"]
     });
     app.stdout?.on("data", data => { logs += data; });
     app.stderr?.on("data", data => { logs += data; });
-    const origin = `http://127.0.0.1:${address.port}`;
+    const origin = `http://127.0.0.1:${port}`;
     const get = (path: string, redirect: RequestRedirect = "manual") => fetch(`${origin}${path}`, { redirect, signal: AbortSignal.timeout(30000) });
 
     let ready = false;
