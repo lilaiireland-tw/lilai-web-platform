@@ -28,14 +28,16 @@
     "update:fonts": "tsx scripts/update-brand-fonts.ts",
     "cf:build": "tsx scripts/cloudflare-staging.ts build",
     "cf:build:production-platform": "tsx scripts/cloudflare-production.ts build",
-    "cf:deploy:production-private": "tsx scripts/cloudflare-production.ts deploy-private",
     "cf:dry-run": "tsx scripts/cloudflare-staging.ts dry-run",
     "cf:bootstrap-access": "tsx scripts/cloudflare-staging.ts bootstrap-access",
     "cf:deploy": "tsx scripts/cloudflare-staging.ts deploy",
     "precf:typegen": "node -e \"require('node:fs').mkdirSync('.cloudflare', { recursive: true })\"",
     "cf:typegen": "wrangler types .cloudflare/cloudflare-env.d.ts --env-interface CloudflareEnv --strict-vars false",
     "cf:typegen:router": "wrangler types --config cloudflare/production-router.jsonc --env-interface ProductionRouterEnv --strict-vars false --include-runtime=false .cloudflare/production-router-env.d.ts",
-    "check:staging": "tsx scripts/check-staging.ts"
+    "check:staging": "tsx scripts/check-staging.ts",
+    "check:consent": "tsx scripts/check-consent.ts",
+    "cf:deploy:production-platform": "tsx scripts/cloudflare-production.ts deploy-platform",
+    "check:production-route-safety": "tsx scripts/check-production-route-safety.ts"
   },
   "dependencies": {
     "next": "^16.2.10",

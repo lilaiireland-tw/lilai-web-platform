@@ -1,0 +1,25 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { assertProductionRouteSafety, platformOnlyDeployArgs } from "./production-route-safety";
+
+const platform = JSON.parse(readFileSync("cloudflare/production-platform.jsonc", "utf8"));
+const router = JSON.parse(readFileSync("cloudflare/production-router.jsonc", "utf8"));
+assertProductionRouteSafety(platform, router);
+assert.deepEqual(platformOnlyDeployArgs(), ["deploy", "--config", "cloudflare/production-platform.jsonc"]);
+assert.throws(() => assertProductionRouteSafety(platform, { ...router, routes: [] }), /MUST OMIT/);
+assert.throws(() => assertProductionRouteSafety(platform, { ...router, route: "lilaiireland.com/*" }), /MUST OMIT/);
+assert.throws(() => assertProductionRouteSafety({ ...platform, routes: ["lilaiireland.com/*"] }, router), /must not attach public routes/);
+assert.throws(() => assertProductionRouteSafety({ ...platform, workers_dev: true }, router), /workers.dev must be disabled/);
+assert.throws(() => assertProductionRouteSafety(platform, { ...router, services: [] }), /Service Binding/);
+const cli = readFileSync("scripts/cloudflare-production.ts", "utf8");
+assert.match(cli, /run\(wrangler, platformOnlyDeployArgs\(\)\)/);
+assert.equal((cli.match(/run\(wrangler,/g) ?? []).length, 1);
+assert.doesNotMatch(cli, /deployPrivate\(|deploy-private|--route(?:s)?\b/);
+const workflow = readFileSync(".github/workflows/production-private-deploy.yml", "utf8");
+assert.match(workflow, /inputs\.deploy_platform_only == true/);
+assert.match(workflow, /github\.ref == 'refs\/heads\/main'/);
+assert.match(workflow, /npm run cf:deploy:production-platform -- --confirm-platform-only-deploy/);
+assert.doesNotMatch(workflow, /cf:deploy:production-private|deploy_private_workers/);
+assert.equal((workflow.match(/npm run cf:deploy:production-platform/g) ?? []).length, 1);
+console.log("PASS Router route keys omitted, private Platform, Service Binding and invalid config rejections");
+console.log("PASS Platform-only deployment CLI and manual workflow (no Cloudflare calls)");

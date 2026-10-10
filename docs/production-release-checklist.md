@@ -1,3 +1,10 @@
+# Historical pre-cutover release checklist
+
+> The public Router Route was attached in Cloudflare Dashboard on 2026-10-10.
+> This document records the original **pre-cutover plan**. For current
+> production updates, follow [Production Router route safety](production-route-safety.md).
+> Do not repeat the historical public route cutover or dual-Worker deploy.
+
 # Production release checklist
 
 Status: **NO-GO for public cutover** until every account and origin blocker below
