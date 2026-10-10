@@ -140,12 +140,14 @@ function main() {
   assert.equal(productionRouter.name, PROPOSED_PRODUCTION_WORKER_ROUTE.script);
   assert.equal(productionRouter.workers_dev, false);
   assert.equal(productionRouter.preview_urls, false);
-  assert.deepEqual(productionRouter.routes, [], "production router config must not install a route");
+  assert(!Object.prototype.hasOwnProperty.call(productionRouter, "route") &&
+    !Object.prototype.hasOwnProperty.call(productionRouter, "routes"),
+    "Dashboard manages live Router Routes; Wrangler must omit route and routes");
   assert.deepEqual(productionRouter.services, [{
     binding: "PLATFORM",
     service: productionPlatform.name,
   }]);
-  console.log("PASS production router has a private Service Binding and no public route");
+  console.log("PASS Dashboard owns Router Routes; Platform Service Binding preserved");
 }
 
 main();
