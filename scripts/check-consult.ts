@@ -9,11 +9,13 @@ import {
   getRouteRecommendation,
   getTimeAnchor,
 } from "../src/lib/consult/assessment";
+import { DENIED_CONSENT, readConsentCookie, toGoogleConsent, encodeConsent } from "../src/lib/analytics/consent";
 import {
   CONSULTATION_CONVERSION_SEND_TO,
   GOOGLE_ADS_SCRIPT_URL,
   GOOGLE_ADS_TAG_ID,
   initializeGoogleAds,
+  updateGoogleAdsConsent,
   trackConsultationConversion,
   type GoogleAdsWindow,
 } from "../src/lib/analytics/google-ads";
@@ -75,7 +77,14 @@ async function checkTrackingBehavior() {
   assert.equal(initializeGoogleAds({ productionDeployment: true, browserWindow: productionWindow }), true);
   assert.equal(configurationCalls.filter(call => call[0] === "js").length, 1);
   assert.deepEqual(configurationCalls.filter(call => call[0] === "config"), [["config", GOOGLE_ADS_TAG_ID]]);
+  assert.deepEqual(configurationCalls[0], ["consent", "default", { ...DENIED_CONSENT, wait_for_update: 500 }]);
+  assert.equal(configurationCalls.filter(call => call[0] === "consent" && call[1] === "default").length, 1);
+  assert.deepEqual(configurationCalls.map(call => call[0]), ["consent", "js", "config"]);
   assert.equal(productionWindow.__lilaiGoogleAdsConfigured, true);
+  const accepted = { analytics: true, advertising: true, personalization: true };
+  assert.equal(updateGoogleAdsConsent(accepted, { productionDeployment: true, browserWindow: productionWindow }), true);
+  assert.deepEqual(configurationCalls.at(-1), ["consent", "update", toGoogleConsent(accepted)]);
+  assert.equal(readConsentCookie("lilai_consent_v1=" + encodeConsent(accepted))?.advertising, true);
   console.log("PASS Google Tag configures once on the authorized production hostname");
 
   for (const runtime of [
@@ -164,7 +173,7 @@ async function checkTrackingBehavior() {
     productionDeployment: true,
     browserWindow: queuedWindow,
   }), true);
-  assert.deepEqual(queuedWindow.dataLayer?.map(entry => (entry as unknown[])[0]), ["js", "config", "event"]);
+  assert.deepEqual(queuedWindow.dataLayer?.map(entry => (entry as unknown[])[0]), ["consent", "js", "config", "event"]);
   console.log("PASS conversion queues when the remote Google script has not loaded yet");
 }
 
