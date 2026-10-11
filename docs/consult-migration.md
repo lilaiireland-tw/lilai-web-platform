@@ -44,12 +44,14 @@ values, calculations, GAS payloads and assessment results. Specifically:
   `AW-17610996814/MeKhCKz2-e0cEM74yc1B`, signup consultation uses
   `AW-17610996814/b4bzCNrO-u0cEM74yc1B`, and this Consultation Page retains
   `AW-17610996814/Ynp6CPHkhe4cEM74yc1B`.
-- The root layout owns one reusable Google Tag loader. On an explicitly marked
-  production build served from exactly `lilaiireland.com`, it initializes
-  `dataLayer`, queues `gtag('js', new Date())`, configures
-  `gtag('config', 'AW-17610996814')`, and loads Google's official script with
-  Next.js `afterInteractive`. Staging/preview/local builds and non-production
-  hostnames do not initialize `gtag` or load the remote script.
+- The root layout owns one reusable production Google Tag integration in the
+  document `<head>`. It synchronously establishes Consent Mode v2 defaults,
+  restores a saved consent choice when present, loads Google's official async
+  `gtag.js` for `AW-17610996814`, then queues `gtag('js', new Date())` and
+  `gtag('config', 'AW-17610996814')`. This replaces the former client-side
+  `afterInteractive` loader so the production HTML follows Google's manual
+  installation guidance more closely. Staging/preview/local builds do not
+  render the Google tag integration.
 - The consultation conversion remains event `conversion` with
   `send_to: AW-17610996814/Ynp6CPHkhe4cEM74yc1B`. It runs only after the main
   GAS `fetch` promise resolves. A synchronous in-flight/completed gate prevents
@@ -126,10 +128,9 @@ non-lead test plan; staging and localhost intentionally have no Google Tag.
 5. Repeat-click during submission and submit accuracy feedback; confirm neither
    creates another main conversion. Confirm neither signup label appears.
 
-No consent-management platform or Google Consent Mode integration was present
-in this repository or the referenced signup implementation during this review.
-The form's two existing consent controls are unchanged and remain required
-before submission, but they are not documented as cookie-consent controls.
-Production consent/banner behavior therefore remains unverified and must be
-checked in the real public shell before cutover; this PR does not bypass or
-invent a consent decision.
+The public shell uses a first-party consent banner and Consent Mode v2. The
+production head defaults `ad_storage`, `analytics_storage`, `ad_user_data`
+and `ad_personalization` to denied before `config`, restores a previously
+saved visitor choice synchronously when available, and sends an update when the
+visitor makes a new choice. The form's two submission consent controls remain
+separate from this cookie/advertising consent flow.
