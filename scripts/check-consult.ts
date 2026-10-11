@@ -58,13 +58,23 @@ assert.match(getTimeAnchor("3 個月內", "2–4 週短期遊學"), /預約諮�
 console.log("PASS 25+8 content override and time anchors");
 
 const client = readFileSync("src/components/consult/ConsultationPage.tsx", "utf8");
-const tagComponent = readFileSync("src/components/analytics/GoogleAdsTag.tsx", "utf8");
+const rootLayout = readFileSync("src/app/layout.tsx", "utf8");
+const headComponent = readFileSync("src/components/analytics/GoogleAdsHead.tsx", "utf8");
 assert(client.includes("AKfycbx8AxEZ_Dh1IFWqMvTLDGGvUyPyBKrgjzoSlW9wWgyTAAgYH3qUPtm6NBdZ5Mq6Mb0N/exec"));
 assert.equal(client.match(/mode: "no-cors"/g)?.length, 2);
 assert.equal(client.match(/"Content-Type": "text\/plain;charset=utf-8"/g)?.length, 2);
-assert.match(tagComponent, /strategy="afterInteractive"/);
+assert(rootLayout.indexOf("<head>") < rootLayout.indexOf("<body>"));
+assert.match(rootLayout, /<GoogleAdsHead \/>/);
+assert.match(rootLayout, /<CookieConsent productionDeployment={productionDeployment} \/>/);
+assert.doesNotMatch(headComponent, /afterInteractive/);
+const consentMarker = headComponent.indexOf("lilai-google-consent-default");
+const loaderMarker = headComponent.indexOf("lilai-google-ads-tag");
+const configMarker = headComponent.indexOf("lilai-google-ads-config");
+assert(consentMarker >= 0 && consentMarker < loaderMarker && loaderMarker < configMarker);
+assert.match(headComponent, /gtag\('consent', 'default'/);
+assert.match(headComponent, /async/);
 assert.equal(GOOGLE_ADS_SCRIPT_URL, "https://www.googletagmanager.com/gtag/js?id=AW-17610996814");
-console.log("PASS preserved GAS contract and official Google Tag loader markers");
+console.log("PASS preserved GAS contract and Google Ads tag is installed in head with consent-first ordering");
 
 function trackingWindow(hostname: string, gtag?: (...args: unknown[]) => void): GoogleAdsWindow {
   return { location: { hostname }, gtag };
