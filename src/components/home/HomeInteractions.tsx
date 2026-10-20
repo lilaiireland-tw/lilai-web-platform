@@ -2,10 +2,10 @@
 
 import { useEffect } from "react";
 
-const LILAI_ASSESSMENT_URL = "/free-departure-assessment";
+const LILAI_ASSESSMENT_URL = "/consult";
 const LILAI_SCHOOL_SIGNUP_URL = "/language-school-signup";
-const LILAI_STORY_URL = "/alex-arsha";
-const LILAI_COMMUNITY_URL = "/community";
+const LILAI_STORY_URL = "/about/";
+const LILAI_COMMUNITY_URL = "https://www.instagram.com/lilaiireland";
 const LILAI_GOOGLE_REVIEW_URL = "https://g.page/r/CWJ8OfbyjJMKEBE/review";
 
 const ctaLinks: Record<string, string> = {
