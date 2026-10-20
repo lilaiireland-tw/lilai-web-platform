@@ -34,19 +34,15 @@ export function MobileNavigation({ children }: { children: ReactNode }) {
 
   return (
     <details ref={menu} className={styles.mobileMenu} onBlur={event => {
-      if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false;
+      // Touch interactions may blur without identifying a new focus target.
+      if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false;
     }}>
       <summary aria-label="網站導覽選單" aria-controls="mobile-navigation">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
           <path d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </summary>
-      <div id="mobile-navigation" className={styles.menuPanel} onClick={event => {
-        if (event.target instanceof Element && event.target.closest("a") && menu.current) {
-          menu.current.open = false;
-          menu.current.querySelector("summary")?.focus();
-        }
-      }}>{children}</div>
+      <div id="mobile-navigation" className={styles.menuPanel}>{children}</div>
     </details>
   );
 }
