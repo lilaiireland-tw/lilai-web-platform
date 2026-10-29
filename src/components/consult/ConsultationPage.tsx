@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createConsultAnalytics } from "@/lib/analytics/consult";
 import {
   classifyLead,
   classifyStage,
@@ -173,6 +174,12 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
   const conversionGuard = useRef<GoogleAdsConversionGuard>({ sent: false });
   const submissionGate = useRef<ConsultationSubmissionGate>({ inFlight: false, completed: false });
   const formRef = useRef<HTMLElement>(null);
+  const analytics = useRef<ReturnType<typeof createConsultAnalytics> | null>(null);
+  analytics.current ??= createConsultAnalytics({
+    productionDeployment: googleAdsEnabled,
+    measurementId: process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID,
+  });
+  const track = analytics.current;
 
   useEffect(() => {
     const timer = window.setInterval(() => setSlide(current => (current + 1) % heroImages.length), 4500);
@@ -184,6 +191,9 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
   };
 
   const setChoice = (field: ChoiceName, option: string, multiple = false) => {
+    if (field === "barriers" && multiple && !values.barriers.includes(option) && values.barriers.length >= 3) {
+      track("consult_validation_error", 4);
+    }
     setValues(current => {
       if (!multiple) return { ...current, [field]: option };
       const selected = current[field] as string[];
@@ -235,7 +245,11 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
 
   const nextStep = () => {
     if (submitting || submitted) return;
-    if (validateFields(stepFields[step]).length) return scrollToFirstError();
+    if (validateFields(stepFields[step]).length) {
+      track("consult_validation_error", step);
+      return scrollToFirstError();
+    }
+    track("consult_step_complete", step);
     goToStep(step + 1);
   };
 
@@ -251,6 +265,8 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
   });
 
   const submit = async () => {
+    if (submissionGate.current.inFlight || submissionGate.current.completed) return;
+    track("consult_submit_attempt");
     const data = assessmentData();
     const stage = classifyStage(data);
     const leadQuality = classifyLead(data);
@@ -275,11 +291,13 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
         validate: () => {
           for (let target = 1; target <= 5; target += 1) {
             if (validateFields(stepFields[target]).length) {
+              track("consult_validation_error", target);
               goToStep(target);
               scrollToFirstError();
               return false;
             }
           }
+          track("consult_step_complete", 5);
           return true;
         },
         request: () => fetch(GAS_ENDPOINT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }),
@@ -287,6 +305,7 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
           trackConsultationConversion(conversionGuard.current, {
             productionDeployment: googleAdsEnabled,
           });
+          track("consult_submit_success");
           setResult({ data, stageInfo, stageName, leadQuality });
           setSubmitted(true);
           formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -358,6 +377,32 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
           {!submitted && <div className={styles.formProgress} aria-label={`表單進度：第 ${step} 步，共 5 步`}>{[1,2,3,4,5].map(item => <span key={item} className={cx(styles.progressDot, item === step && styles.active, item < step && styles.done)} />)}</div>}
           {!submitted && <div aria-live="polite" className={styles.srOnly}>{errors.size ? "請修正標示的欄位" : ""}</div>}
 
+          {!submitted && <form
+            id="consult-assessment"
+            name="consult-assessment"
+            aria-label="出發評估"
+            noValidate
+            onSubmit={event => {
+              event.preventDefault();
+              if (step === 5) void submit();
+            }}
+            onKeyDown={event => {
+              // Preserve existing text-input Enter behavior, including IME confirmation.
+              // Textareas and buttons retain their native keyboard behavior.
+              if (event.key === "Enter" && event.target instanceof HTMLInputElement) event.preventDefault();
+            }}
+            onChangeCapture={event => {
+              const target = event.target;
+              if ((target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) && target.value.trim()) {
+                track("consult_form_start");
+              }
+            }}
+            onClickCapture={event => {
+              if (event.target instanceof Element && event.target.closest('button[role="checkbox"]')) {
+                track("consult_form_start");
+              }
+            }}
+          >
           {!submitted && step === 1 && <div className={cx(styles.formStep, styles.active)}>
             <div className={styles.stepHeader}><p className={styles.stepNum}>SECTION 01 / 05</p><h2 className={styles.stepTitle}>先認識一下你</h2><p className={styles.stepDesc}>填寫評估結果會寄到你的 Email，請確認正確。</p></div>
             {textField("name", "姓名", true, "", "你的名字")}
@@ -403,8 +448,10 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
               <button type="button" className={cx(styles.consentItem, values.consent2 && styles.checked)} role="checkbox" aria-checked={values.consent2} onClick={() => setValues(current => ({ ...current, consent2: !current.consent2 }))}><span className={styles.consentCheck}><span className={styles.consentCheckMark}>✓</span></span><span className={styles.consentText}>我了解本表單資料僅供哩來愛爾蘭進行出發階段評估、後續聯繫與服務建議使用，不會任意公開或販售給第三方。</span></button>
               <FieldError field="consent" errors={errors} />
             </div>
-            <div className={styles.formNav}><button type="button" className={styles.btnBack} onClick={() => goToStep(4)}>← 返回</button><button type="button" className={styles.btnSubmit} disabled={submitting} onClick={submit}>{submitting && <span className={styles.spinner} />}{submitting ? "正在送出資料，請稍等……" : "取得我的出發評估 🍀"}</button></div>
+            <div className={styles.formNav}><button type="button" className={styles.btnBack} onClick={() => goToStep(4)}>← 返回</button><button type="submit" className={styles.btnSubmit} disabled={submitting}>{submitting && <span className={styles.spinner} />}{submitting ? "正在送出資料，請稍等……" : "取得我的出發評估 🍀"}</button></div>
           </div>}
+
+          </form>}
 
           {submitted && result && <div className={cx(styles.successScreen, styles.show)} aria-live="polite">
             <div className={styles.successIcon}>🍀</div><h2 className={styles.successTitle}>你的出發評估來了</h2>
