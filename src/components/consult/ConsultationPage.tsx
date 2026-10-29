@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createConsultAnalytics } from "@/lib/analytics/consult";
+import { CONSENT_CHANGE_EVENT } from "@/lib/analytics/consent";
 import {
   classifyLead,
   classifyStage,
@@ -180,6 +181,17 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
     measurementId: process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID,
   });
   const track = analytics.current;
+
+  useEffect(() => {
+    const view = () => {
+      if (!submitted) track("consult_step_view", step);
+    };
+    view();
+    // A visitor may grant analytics consent while already viewing this step.
+    // Record only the currently visible step, never replay earlier steps.
+    window.addEventListener(CONSENT_CHANGE_EVENT, view);
+    return () => window.removeEventListener(CONSENT_CHANGE_EVENT, view);
+  }, [step, submitted, track]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setSlide(current => (current + 1) % heroImages.length), 4500);

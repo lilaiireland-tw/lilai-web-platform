@@ -12,3 +12,4 @@ vercel.json
 .dev.vars*
 cloudflare-env.d.ts
 artifacts/precutover-playwright/
+artifacts/consult-analytics/
