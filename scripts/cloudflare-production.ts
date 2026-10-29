@@ -15,6 +15,8 @@ const commandEnv = {
   WRANGLER_SEND_METRICS: "false",
 };
 assertDeploymentEnvironment(commandEnv);
+assert.equal(commandEnv.NEXT_PUBLIC_GA4_MEASUREMENT_ID, "G-06M3GS0WS0",
+  "Production build must use the existing linked GA4 destination");
 
 config.main = resolve("cloudflare", config.main);
 config.assets.directory = resolve("cloudflare", config.assets.directory);

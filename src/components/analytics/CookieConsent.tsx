@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   ACCEPTED_PREFERENCES,
+  CONSENT_CHANGE_EVENT,
   REJECTED_PREFERENCES,
   readConsentCookie,
   saveConsentCookie,
@@ -34,6 +35,7 @@ export function CookieConsent({ productionDeployment }: { productionDeployment: 
     };
     saveConsentCookie(document, normalized);
     updateGoogleAdsConsent(normalized, { productionDeployment });
+    window.dispatchEvent(new Event(CONSENT_CHANGE_EVENT));
     setPreferences(normalized);
     setCustomize(false);
     setOpen(false);

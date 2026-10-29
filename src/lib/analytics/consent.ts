@@ -3,6 +3,7 @@
  * the cookie only after independently integrating their own consent handling.
  */
 export const CONSENT_COOKIE_NAME = "lilai_consent_v1";
+export const CONSENT_CHANGE_EVENT = "lilai:consent-change";
 export type ConsentPreferences = {
   analytics: boolean;
   advertising: boolean;

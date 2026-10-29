@@ -49,6 +49,10 @@ async function completeFormToStepFive(page: Page) {
   await choose(page, "goals");
   await choose(page, "englishGoal");
   await page.locator("#lifeChange").fill("這是只存在於自動化瀏覽器中的合成長文字，用來確認欄位可以正常換行並在返回前一步後保留內容。".repeat(3));
+  await page.locator("#lifeChange").press("End");
+  await page.locator("#lifeChange").press("Enter");
+  await expect(page.locator("#lifeChange")).toHaveValue(/\n/);
+  await expect(page.getByText("SECTION 03 / 05")).toBeVisible();
   await continueTo(page, 4);
   await choose(page, "barriers", 0);
   await choose(page, "barriers", 1);
@@ -100,6 +104,10 @@ test("consult validation, optional fields, state retention, selection limits and
   const unexpectedWrites = await blockUnexpectedWrites(page);
   await page.goto("/consult");
   await waitForConsultHydration(page);
+  await expect(page.locator("form#consult-assessment")).toHaveAttribute("novalidate", "");
+  await page.locator("#name").press("Enter");
+  await expect(page.getByText("SECTION 01 / 05")).toBeVisible();
+  await expect(page.locator("#name-error")).not.toBeVisible();
   await page.getByRole("button", { name: /繼續/ }).click();
   await expect(page.locator("#name-error")).toBeVisible();
   await page.locator("#name").fill("Playwright 測試");
@@ -109,6 +117,8 @@ test("consult validation, optional fields, state retention, selection limits and
   await page.getByRole("button", { name: /繼續/ }).click();
   await expect(page.locator("#email-error")).toBeVisible();
   await page.locator("#email").fill("playwright@example.test");
+  await page.locator("#email").press("Enter");
+  await expect(page.getByText("SECTION 01 / 05")).toBeVisible();
   await page.getByRole("button", { name: /繼續/ }).click();
   await expect(page.getByText("SECTION 02 / 05")).toBeVisible();
   await page.getByRole("button", { name: /返回/ }).click();
@@ -129,13 +139,14 @@ test("mocked successful submission renders result once with no Ads traffic", asy
   await page.goto("/consult");
   await waitForConsultHydration(page);
   await completeFormToStepFive(page);
-  const submit = page.locator('#form button[type="button"]').last();
+  const submit = page.locator('#form button[type="submit"]');
   await expect(submit).toHaveText(/取得我的出發評估/);
   await submit.click();
   await expect(page.locator("#consent-error")).toBeVisible();
   expect(intercepted).toHaveLength(0);
   await acceptConsents(page);
-  await submit.evaluate((element: HTMLButtonElement) => element.click());
+  await submit.focus();
+  await submit.press("Enter");
   await expect(submit).toBeDisabled();
   await expect.poll(() => intercepted.length).toBe(1);
   await submit.evaluate((element: HTMLButtonElement) => element.click());
@@ -161,7 +172,7 @@ test("mocked failed submission remains retryable and never emits Ads traffic", a
   await page.goto("/consult");
   await waitForConsultHydration(page);
   await completeFormToStepFive(page);
-  const submit = page.locator('#form button[type="button"]').last();
+  const submit = page.locator('#form button[type="submit"]');
   await expect(submit).toHaveText(/取得我的出發評估/);
   await acceptConsents(page);
   await submit.click();

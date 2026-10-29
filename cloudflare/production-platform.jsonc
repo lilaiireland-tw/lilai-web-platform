@@ -18,7 +18,8 @@
     "SITE_DEPLOYMENT_ENV": "production",
     "EVENT_DEPLOYMENT_ENV": "production",
     "EVENTS_INCLUDE_DRAFTS": "false",
-    "NEXT_PUBLIC_SITE_URL": "https://lilaiireland.com"
+    "NEXT_PUBLIC_SITE_URL": "https://lilaiireland.com",
+    "NEXT_PUBLIC_GA4_MEASUREMENT_ID": "G-06M3GS0WS0"
   },
   "observability": {
     "enabled": true,
