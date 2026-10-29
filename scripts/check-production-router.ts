@@ -9,6 +9,8 @@ async function main() {
     "/consult",
     "/consult/",
     "/consult?utm_source=google",
+    "/consult?utm_source=instagram&utm_medium=social&utm_campaign=consult&utm_content=ig_bio",
+    "/consult/?utm_source=instagram&utm_medium=social&utm_campaign=consult&utm_content=ig_bio",
     "/consult/?gclid=test-click-id",
     "/events",
     "/events/",
