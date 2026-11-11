@@ -40,7 +40,11 @@ async function main() {
   for (const copy of ["€2,520", "€3,520", "現省 €1,000", "滿 5 人以上", "兩人以上團報", "毋須諮詢直接報名", "NT$350／人", "次月底前發放"])
     assert(html.includes(copy), `Approved offer retained: ${copy}`);
   const anchors = html.match(/<a\b[^>]*>/g) || [];
-  for (const location of ["hero", "school_offers", "departure_bonus", "renewal", "footer"]) {
+  const nav = html.match(/<nav\b[^>]*>[\s\S]*?<\/nav>/)?.[0];
+  assert(nav);
+  assert.equal((nav.match(/<a\b/g) || []).length, 5);
+  for (const id of ["school-offers", "departure", "renewal", "faq"]) assert(nav.includes(`href="#${id}"`));
+  for (const location of ["nav", "hero", "school_offers", "departure_bonus", "renewal", "footer"]) {
     const links = anchors.filter(anchor => anchor.includes(`data-cta-location="${location}"`));
     assert.equal(links.length, 1);
     assert(links[0].includes(`href="${blackFridayEvent.registrationUrl}"`));

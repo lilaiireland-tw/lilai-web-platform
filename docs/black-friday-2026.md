@@ -13,6 +13,12 @@ The content-only event manifest registers the campaign for existing static
 routes, route ownership and the events index. The custom server component
 renders nine source sections. Root Layout supplies the only Top Strip,
 Header and Footer. Campaign anchors sit in a separate, non-sticky page nav.
+The nav includes a status-aware LINE link styled like its four section links.
+All five links transition to brand green/white on hover or keyboard focus,
+with motion reduced for users who request it. A campaign-only root scroll
+padding matches the existing strip/header/border (173px desktop, 123px at
+760px and below); section scroll margins do not add another offset. Recheck
+these dimensions if the shared header changes.
 No shared shell, WordPress, Worker, DNS or deployment configuration changes.
 Existing brand tokens, self-hosted fonts, Button and event status banner remain
 in use. Canonical/OG URLs use the public domain; the shared metadata builder
@@ -66,6 +72,11 @@ keyboard operation, mobile sticky visibility, and one hero image request.
 390px DPR 3 correctly selected the full-width hero. Simulated consent checks
 confirmed no event when denied, one event when granted, and sticky suppression
 when the cookie panel is present. Keyboard focus had a visible solid outline.
+Follow-up navigation QA at 1440/768/740/390/320px confirmed five uniformly
+styled links, green/white hover, reduced motion, and all four section anchors
+aligned within 1px of the shared header bottom. Other pages retain their
+existing root scroll padding. The same TypeScript, build, shared-layout,
+design-system, Black Friday and Daydream checks passed after this update.
 
 Remaining release QA: real iOS/Android LINE app handoff, Safari/Firefox layout,
 final-domain social sharing, and real analytics receiving configuration.

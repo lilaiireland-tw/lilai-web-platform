@@ -1,7 +1,8 @@
 .campaign { background: var(--color-background); color: var(--color-text-main); font-family: var(--font-body); }
 .campaign p, .campaign figure, .campaign ol { margin: 0; }
 .campaign h3 { margin: 0; color: var(--color-primary-dark); font-family: var(--font-heading); font-size: clamp(1.375rem, 2.4vw, 1.75rem); line-height: 1.35; font-weight: var(--font-weight-bold); }
-.campaign section { scroll-margin-top: 150px; }
+/* Match the shared strip + logo-height header + border, without adding a second offset. */
+:global(html):has(.campaign) { scroll-padding-top: calc(28px + 144px + 1px); }
 .campaign img { max-width: 100%; height: auto; }
 .section { padding: var(--space-9) 0; border-bottom: 1px solid var(--color-border); }
 .stack, .heading, .card { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
@@ -13,7 +14,8 @@
 .inverse :global(.ds-eyebrow), .inverse .gold { color: var(--color-accent-bright); }
 .inverse a:not(:global(.ds-button)) { color: var(--color-background); }
 .pageNav { display: flex; justify-content: center; gap: var(--space-5); flex-wrap: wrap; padding: var(--space-3) var(--space-5); border-bottom: 1px solid var(--color-border); }
-.pageNav a { display: inline-flex; align-items: center; min-height: 44px; font-weight: var(--font-weight-bold); }
+.pageNav a { display: inline-flex; align-items: center; min-height: 44px; padding: var(--space-2) var(--space-3); border-radius: var(--radius-medium); color: var(--color-primary); font-weight: var(--font-weight-bold); text-decoration: none; transition: background-color .2s ease, color .2s ease; }
+.pageNav a:hover, .pageNav a:focus-visible { background: var(--color-primary); color: var(--color-white); }
 .hero { position: relative; padding-top: var(--space-8); overflow: hidden; }
 .heroGrid { position: relative; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); gap: var(--space-8); align-items: center; }
 .badge { display: inline-block; width: fit-content; padding: var(--space-2) var(--space-4); border-radius: var(--radius-pill); background: var(--color-accent-bright); color: var(--color-primary-dark); font-size: var(--text-small); font-weight: var(--font-weight-bold); }
@@ -68,7 +70,7 @@
 }
 @media (max-width: 760px) {
   .campaign { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
-  .campaign section { scroll-margin-top: 130px; }
+  :global(html):has(.campaign) { scroll-padding-top: calc(26px + 96px + 1px); }
   .section { padding: var(--space-8) 0; }
   .hero { padding-top: var(--space-6); }
   .heroGrid { width: calc(100% - 40px); }
@@ -77,4 +79,7 @@
   .pageNav { gap: var(--space-3); }
   .sticky { position: fixed; z-index: 40; inset: auto 0 0; padding: var(--space-3) var(--space-5) calc(var(--space-3) + env(safe-area-inset-bottom)); background: var(--color-surface); border-top: 1px solid var(--color-border); box-shadow: var(--shadow-floating); display: grid; justify-items: center; gap: var(--space-1); }
   .sticky span { font-size: var(--text-caption); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pageNav a { transition: none; }
 }

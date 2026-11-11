@@ -38,6 +38,7 @@ export function BlackFridayCampaign({ event }: { event: EventContent }) {
     <div className={styles.campaign}>
       <nav className={styles.pageNav} aria-label="黑五活動頁內導覽">
         <a href="#school-offers">學校優惠</a><a href="#departure">出發加碼</a><a href="#renewal">續簽優惠</a><a href="#faq">常見問題</a>
+        {event.status === "active" && <a href={event.registrationUrl} data-event-slug={event.slug} data-campaign-name={event.campaignName} data-cta-location="nav">LINE 詢問優惠</a>}
       </nav>
       <section id="hero" className={`${styles.hero} ${styles.inverse}`} aria-labelledby="black-friday-title">
         <span className={styles.watermark} aria-hidden="true">BLACK FRIDAY</span>
