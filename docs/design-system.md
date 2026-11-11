@@ -204,6 +204,17 @@ Run `npx tsx scripts/check-daydream.ts "<path to Landing Page v3.html>"` for an
 optional SHA-256 comparison of every referenced image, logo, icon and font with
 the user's original bundle. The original HTML itself is not checked into Git.
 
+### Black Friday campaign reference-parity exception
+
+The user requires the supplied `handoff/site/index.html` design and fonts to
+match, retaining the accepted shared shell and campaign nav. As with Daydream,
+`src/components/events/black-friday/black-friday.module.css` scopes original
+tokens, defaults, typography, component styles and composition to `.design`.
+These values do not become new site defaults. Original Inter and Noto Sans/Serif
+TC weights, including 800/900, are recovered from standalone WOFF2 subsets under
+private Black Friday family names; the shared font manifest stays unchanged.
+See `docs/black-friday-2026.md` for provenance and browser reference checks.
+
 ## Responsive
 
 | Range | Convention |

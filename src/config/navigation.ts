@@ -4,6 +4,11 @@ export interface NavigationLink {
   readonly children?: readonly NavigationLink[];
 }
 
+export const topStripLink = {
+  label: "黑五活動優惠進行中！報名語言學校最多折扣30%！",
+  href: "/events/black-friday-2026"
+} as const satisfies NavigationLink;
+
 // Keep the public shell aligned with the current WordPress navigation while
 // route ownership is split between Next.js and WordPress. Use same-origin
 // public URLs so Cloudflare can route each path to its current owner.
