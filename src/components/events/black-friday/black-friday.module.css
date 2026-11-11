@@ -60,6 +60,16 @@
 .faq { border-bottom: 1px solid var(--color-border); padding: var(--space-5) 0; }
 .faq summary { cursor: pointer; font-weight: var(--font-weight-bold); min-height: 44px; align-content: center; }
 .faq p { padding-top: var(--space-4); }
+.faq[open] p { animation: faqReveal .25s ease-out; }
+@keyframes faqReveal {
+  from { opacity: 0; transform: translateY(calc(-1 * var(--space-2))); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@supports (interpolate-size: allow-keywords) and (transition-behavior: allow-discrete) and selector(details::details-content) {
+  .faq { interpolate-size: allow-keywords; }
+  .faq::details-content { block-size: 0; overflow: clip; transition: block-size .25s ease, content-visibility .25s allow-discrete; }
+  .faq[open]::details-content { block-size: auto; }
+}
 .closing { align-items: center; text-align: center; }
 .inverseButton { background: var(--color-accent-bright); color: var(--color-primary-dark); border-color: transparent; }
 .sticky { display: none; }
@@ -82,4 +92,6 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .pageNav a { transition: none; }
+  .faq[open] p { animation: none; }
+  .faq::details-content { transition: none; }
 }

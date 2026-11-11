@@ -26,10 +26,17 @@ now also supplies Twitter cards for event pages. Indexing remains disabled,
 matching Daydream, until an explicit indexing decision is supplied.
 
 All campaign CTA URLs derive from the event config. Only active campaigns
-show LINE links. The small client component handles mobile sticky visibility
+show LINE links. Every campaign LINE link, including nav and mobile sticky,
+uses `target="_blank"` and `rel="noopener noreferrer"` to retain the campaign
+tab without sharing its opener. The small client component handles mobile sticky visibility
 and consent-gated `line_cta_click` dataLayer/custom events. It loads no vendor
 and defines no conversion. Native single-open FAQ details start with the first
 answer open, matching the supplied source. No production form is submitted.
+FAQ answers fade/slide in over 250ms. Browsers supporting `::details-content`,
+intrinsic-size interpolation and discrete transitions also animate the answer
+height on opening/closing; other browsers retain the native disclosure plus
+the opening fade/slide. Reduced motion disables both effects. This follows
+the [native details animation approach](https://developer.chrome.com/blog/styling-details).
 
 ## Image delivery
 
@@ -77,6 +84,13 @@ styled links, green/white hover, reduced motion, and all four section anchors
 aligned within 1px of the shared header bottom. Other pages retain their
 existing root scroll padding. The same TypeScript, build, shared-layout,
 design-system, Black Friday and Daydream checks passed after this update.
+The LINE/FAQ follow-up passed Chromium at 1440/390px: all seven rendered LINE
+links (including the CSS-hidden desktop sticky link) use safe new tabs. A
+locally intercepted popup preserved the source page and had no opener; no
+request reached LINE. FAQ content height progressed through intermediate
+values, native single-open behavior and Space/Enter worked, reduced motion
+disabled effects, and no overflow/page errors occurred. Build, TypeScript,
+Black Friday, Daydream, design-system and shared-layout checks passed.
 
 Remaining release QA: real iOS/Android LINE app handoff, Safari/Firefox layout,
 final-domain social sharing, and real analytics receiving configuration.

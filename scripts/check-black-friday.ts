@@ -49,6 +49,13 @@ async function main() {
     assert.equal(links.length, 1);
     assert(links[0].includes(`href="${blackFridayEvent.registrationUrl}"`));
   }
+  for (const link of anchors.filter(anchor => anchor.includes(`href="${blackFridayEvent.registrationUrl}"`))) {
+    assert(link.includes('target="_blank"') && link.includes('rel="noopener noreferrer"'), "Every LINE CTA opens a safe new tab");
+  }
+  const stickyCta = renderToStaticMarkup(createElement(BlackFridayCta, {
+    event: blackFridayEvent, location: "sticky_mobile", label: blackFridayEvent.registrationLabel,
+  }));
+  assert(stickyCta.includes('target="_blank"') && stickyCta.includes('rel="noopener noreferrer"'));
   const images = html.match(/<img\b[^>]*>/g) || [];
   assert.equal(images.length, 6);
   assert.equal(images.filter(image => image.includes('loading="lazy"')).length, 5);
