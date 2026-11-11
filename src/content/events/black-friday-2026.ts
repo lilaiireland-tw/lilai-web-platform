@@ -18,7 +18,7 @@ export const blackFridayEvent: EventContent = {
   registrationLabel: "用 LINE 詢問我的優惠",
   status: "active",
   campaignName: "哩來黑五出發計畫 2026",
-  heroImage: { src: "/events/black-friday-2026/photo-street-group.webp", width: 896, height: 846, alt: "哩來學長姐與學生在都柏林街頭的自拍合照" },
+  heroImage: { src: "/events/black-friday-2026/photo-street-group.jpg", width: 896, height: 846, alt: "哩來學長姐與學生在都柏林街頭的自拍合照" },
   seo: {
     index: false, title, description,
     ogImage: { src: "/events/black-friday-2026/og-share.png", width: 1200, height: 630, alt: "哩來黑五出發計畫：指定語校課程最高 30% OFF，活動至 2026/11/30" },

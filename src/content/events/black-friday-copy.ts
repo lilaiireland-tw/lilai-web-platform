@@ -39,3 +39,18 @@ export const blackFridayTerms = [
   "頁面中的方案圖片與 ISIC 卡面為示意，實際以發放內容為準。",
   "報名前由哩來協助確認適用優惠與完整條件。"
 ] as const;
+
+export const blackFridaySchoolOffers = [
+  {
+    "school": "Atlas Language School",
+    "logo": "/events/black-friday-2026/atlas-logo.png",
+    "logoW": 829,
+    "logoH": 322,
+    "course": "報名 Atlas Language School",
+    "course2": "指定 8 週以上課程",
+    "group": "11 月透過哩來團報送件，滿 5 人以上",
+    "offer": "免註冊費",
+    "deadline": "2026/11/30 前送出申請",
+    "start": "明年出發亦有適用課程"
+  }
+] as const;

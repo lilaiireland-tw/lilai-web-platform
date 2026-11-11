@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { existsSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { gunzipSync } from "node:zlib";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { blackFridayEvent } from "../src/content/events/black-friday-2026";
@@ -25,7 +27,7 @@ async function main() {
   assert.equal(metadata.twitter.card, "summary_large_image");
   const html = renderToStaticMarkup(createElement(EventPage, { registration }));
   assert.equal((html.match(/<h1\b/g) || []).length, 1);
-  assert(!/<(?:header|footer)\b/.test(html), "Root Layout owns the site header and footer");
+  assert(!/<footer\b/.test(html) && !html.includes('aria-label="主要導覽"'), "Root Layout owns the site header and footer; section headers retain source semantics");
   assert(!html.includes("data:image") && !html.includes("support.js") && !html.includes("ds-bundle.js"));
   let previous = -1;
   for (const id of ["hero", "stack", "school-offers", "departure", "renewal", "about", "faq", "final", "terms"]) {
@@ -60,15 +62,39 @@ async function main() {
   assert.equal(images.length, 6);
   assert.equal(images.filter(image => image.includes('loading="lazy"')).length, 5);
   assert.equal(images.filter(image => image.includes('fetchPriority="high"')).length, 1);
-  assert(!html.includes('rel="preload"'), "Picture selection must not preload the full fallback as well");
   for (const image of images) {
     assert(/width="\d+" height="\d+"/.test(image));
     const src = image.match(/src="([^"]+)"/)?.[1];
     assert(src && existsSync(`public${src}`));
   }
   for (const name of ["photo-street-group", "photo-cafe-welcome"]) {
-    assert(existsSync(`public/events/black-friday-2026/${name}-640.webp`));
-    assert(html.includes(`${name}-640.webp 640w`));
+    assert(existsSync(`public/events/black-friday-2026/${name}.jpg`));
+    assert(html.includes(`${name}.jpg`));
+  }
+  const fonts = readFileSync("src/components/events/black-friday/black-friday-fonts.css", "utf8");
+  for (const family of ["Black Friday Inter", "Black Friday Sans", "Black Friday Serif"]) assert(fonts.includes(family));
+  assert.equal((fonts.match(/@font-face/g) || []).length, 13);
+  assert(fonts.includes("font-weight: 900"));
+  const fontPaths = new Set([...fonts.matchAll(/url\("([^"]+)"\)/g)].map(match => match[1]));
+  assert.equal(fontPaths.size, 3);
+  for (const path of fontPaths) assert.equal(readFileSync(`public${path}`).subarray(0, 4).toString(), "wOF2");
+  // Optional byte audit against the original, untracked handoff inputs.
+  if (process.argv[2]) {
+    const source = process.argv[2].replace(/[\\/]$/, "");
+    for (const name of ["photo-street-group.jpg", "photo-cafe-welcome.jpg"]) {
+      assert(readFileSync(`public/events/black-friday-2026/${name}`).equals(readFileSync(`${source}/site/assets/${name}`)), `${name} must retain original bytes`);
+    }
+    const standalone = readFileSync(`${source}/lilai-black-friday-standalone.html`, "utf8");
+    const manifest = JSON.parse(standalone.match(/<script type="__bundler\/manifest">([\s\S]*?)<\/script>/)![1]) as Record<string, { mime: string; compressed?: boolean; data: string }>;
+    for (const path of fontPaths) {
+      const id = path.split("/").pop()!.replace(/\.woff2$/, "");
+      const entry = manifest[id];
+      assert.equal(entry.mime, "font/woff2");
+      const data = Buffer.from(entry.data, "base64");
+      const original = entry.compressed ? gunzipSync(data) : data;
+      assert.equal(createHash("sha256").update(readFileSync(`public${path}`)).digest("hex"), createHash("sha256").update(original).digest("hex"));
+    }
+    console.log("PASS original JPEG bytes and all three original WOFF2 SHA-256 hashes");
   }
   for (const status of ["archived", "draft"] as const) {
     const event = { ...blackFridayEvent, status };
@@ -77,6 +103,6 @@ async function main() {
     assert.equal(renderToStaticMarkup(createElement(BlackFridayCta, { event, location: "sticky_mobile", label: event.registrationLabel })), "");
   }
   assert(readFileSync("src/app/layout.tsx", "utf8").includes("<Header />"));
-  console.log("PASS black Friday registry, source offers/FAQ/terms, shared shell ownership, SEO, responsive local images/loading, CTA destinations and archive guards");
+  console.log("PASS black Friday registry, source composition/offers/FAQ/terms, shared shell ownership, SEO, original fonts/local images/loading, CTA destinations and archive guards");
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

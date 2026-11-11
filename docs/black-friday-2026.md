@@ -1,103 +1,105 @@
-# Black Friday 2026 campaign
+# Black Friday 2026 source parity
 
-Route: `/events/black-friday-2026`. Source: local `handoff/site/index.html`
-and `handoff/README.md`. The standalone HTML is a reference input only.
-The user approved the supplied offers, including the maximum 30% discount,
-and November 1 as the internal start date. Visible copy remains “即日起”.
-The internal timestamp uses UTC+8, consistent with the Taiwan audience;
-the handoff does not specify a precise closing time or timezone.
+Route: `/events/black-friday-2026`. Source composition, copy and inline styles
+come directly from local `handoff/site/index.html`; component visuals come
+from `handoff/site/js/ds-bundle.js`. The standalone handoff provides the exact
+original font binaries and thirteen CSS weight declarations. Original handoff
+inputs stay untracked and are not deployed.
 
-## Integration
+## Appearance and intentional exceptions
 
-The content-only event manifest registers the campaign for existing static
-routes, route ownership and the events index. The custom server component
-renders nine source sections. Root Layout supplies the only Top Strip,
-Header and Footer. Campaign anchors sit in a separate, non-sticky page nav.
-The nav includes a status-aware LINE link styled like its four section links.
-All five links transition to brand green/white on hover or keyboard focus,
-with motion reduced for users who request it. A campaign-only root scroll
-padding matches the existing strip/header/border (173px desktop, 123px at
-760px and below); section scroll margins do not add another offset. Recheck
-these dimensions if the shared header changes.
-No shared shell, WordPress, Worker, DNS or deployment configuration changes.
-Existing brand tokens, self-hosted fonts, Button and event status banner remain
-in use. Canonical/OG URLs use the public domain; the shared metadata builder
-now also supplies Twitter cards for event pages. Indexing remains disabled,
-matching Daydream, until an explicit indexing decision is supplied.
+The user explicitly requested the original design and fonts instead of shared
+primitive styling. Like Daydream, this is a scoped source-parity exception.
+The campaign preserves all nine sections, 1160/940px containers, 1000/760px
+breakpoints, inline sizes/spacing/line breaks, ticket cutouts, photo shadows,
+rotated ribbon, discount typography, renewal/About grids and final watermark.
+FAQ restores seven white bordered boxes, 13px corners, 52px summaries and chevrons.
 
-All campaign CTA URLs derive from the event config. Only active campaigns
-show LINE links. Every campaign LINE link, including nav and mobile sticky,
-uses `target="_blank"` and `rel="noopener noreferrer"` to retain the campaign
-tab without sharing its opener. The small client component handles mobile sticky visibility
-and consent-gated `line_cta_click` dataLayer/custom events. It loads no vendor
-and defines no conversion. Native single-open FAQ details start with the first
-answer open, matching the supplied source. No production form is submitted.
-FAQ answers fade/slide in over 250ms. Browsers supporting `::details-content`,
-intrinsic-size interpolation and discrete transitions also animate the answer
-height on opening/closing; other browsers retain the native disclosure plus
-the opening fade/slide. Reduced motion disables both effects. This follows
-the [native details animation approach](https://developer.chrome.com/blog/styling-details).
+The `.design` subtree isolates source tokens/defaults from legacy homepage rules.
+Shared fonts, tokens, Header and Footer remain unchanged. Source Button/Icon/FAQ
+visuals are small native React implementations. No second React, editor runtime,
+iframe or global source CSS is deployed. School-offer data, FAQ and terms retain
+one content source.
 
-## Image delivery
+Requested exceptions remain:
 
-Like Daydream, images live under `public/events/<slug>/`, reserve intrinsic
-dimensions and use direct static delivery (`next/image` with `unoptimized`).
-Below-fold images lazy-load. The hero is eager with high fetch priority.
-The two photos additionally use native `picture`/`srcset` with 640px and
-original-width WebP files. Browser width and pixel density select the candidate.
-The hero deliberately has no separate preload, which could fetch the full
-fallback as well as the picture-selected candidate. It is discoverable in
-the initial server HTML. `sizes` alone does not create image variants when
-`unoptimized` is enabled.
+- Root Layout supplies the site-wide Top Strip, Header and Footer.
+- The accepted five-item page nav includes a plain LINE link and uniform brand
+  green/white hover/focus transitions.
+- Campaign-only scroll padding matches the shell: 173px desktop, 123px at
+  <=760px. Recheck if shared shell heights change.
+- All campaign LINE links open new tabs with `noopener noreferrer`, preserving
+  approved URLs and consent-gated click hooks. Clicks are not conversions.
+- FAQ retains 250ms opening fade/slide and native-height transitions where
+  supported, reduced motion and keyboard-visible focus.
+- The mobile sticky action retains visibility/consent suppression and restores
+  the original full-width button/note appearance.
+- Existing status guards, routing, canonical/OG/Twitter and conservative noindex
+  remain. Archived/draft campaigns expose no campaign LINE links.
 
-WebP encoding used the already installed Sharp, quality 82, without upscaling:
+The user approved the supplied offers and November 1 as the internal start date.
+Visible wording remains 即日起至 2026/11/30. Internal timezone is UTC+8; no precise
+closing time was supplied.
 
-| Photo | Original JPEG | Full-width WebP | 640px WebP |
-| --- | ---: | ---: | ---: |
-| Street group (896×846) | 143,968 B | 92,646 B | 60,750 B |
-| Cafe welcome (1080×452) | 100,785 B | 67,802 B | 34,686 B |
+## Original fonts and images
 
-The two full-width files total 160,448 B versus 244,753 B originally (34% less).
-The smaller files total 95,436 B (61% less). High-density phones may correctly
-choose the larger file. This is a byte comparison, not a measured LCP gain.
-Four supporting PNGs were recompressed with Sharp PNG compression level 9,
-with identical decoded pixel buffers checked: 252,637 B → 151,159 B.
-The original 1200×630 share PNG is retained separately and is not an inline
-page image. No base64 bundle, external font download or second React runtime
-is deployed. Low-resolution Three/ISIC source images are not upscaled.
+Three unmodified WOFF2 subsets were recovered from the standalone manifest:
 
-## Verification and release
+| Source family | Private CSS family | Size | Variable weight range |
+| --- | --- | ---: | --- |
+| Inter | Black Friday Inter | 30,152 B | 100-900 |
+| Noto Sans TC | Black Friday Sans | 114,644 B | 100-900 |
+| Noto Serif TC | Black Friday Serif | 154,028 B | 200-900 |
 
-`npx tsx scripts/check-black-friday.ts` checks registration, section order,
-approved offers/FAQ/terms, shell ownership, SEO, image variants/dimensions,
-eager/lazy loading and active/draft/archive CTA behavior. Run the standard
-shared-layout, design-system, events, Daydream, TypeScript and build checks too.
+All thirteen original font-face weight declarations and unicode ranges remain,
+including actual 800/900 weights. Private CSS aliases isolate the campaign from
+shared faces; no font binary was modified. Copyright notices and SIL OFL text
+accompany the files. These subsets cover supplied copy; audit when changing text.
 
-Local Chromium QA passed at 1440, 768, 390, 375 and 320px: one shared header
-and footer, no horizontal overflow or console/hydration errors, FAQ mouse and
-keyboard operation, mobile sticky visibility, and one hero image request.
-390px DPR 3 correctly selected the full-width hero. Simulated consent checks
-confirmed no event when denied, one event when granted, and sticky suppression
-when the cookie panel is present. Keyboard focus had a visible solid outline.
-Follow-up navigation QA at 1440/768/740/390/320px confirmed five uniformly
-styled links, green/white hover, reduced motion, and all four section anchors
-aligned within 1px of the shared header bottom. Other pages retain their
-existing root scroll padding. The same TypeScript, build, shared-layout,
-design-system, Black Friday and Daydream checks passed after this update.
-The LINE/FAQ follow-up passed Chromium at 1440/390px: all seven rendered LINE
-links (including the CSS-hidden desktop sticky link) use safe new tabs. A
-locally intercepted popup preserved the source page and had no opener; no
-request reached LINE. FAQ content height progressed through intermediate
-values, native single-open behavior and Space/Enter worked, reduced motion
-disabled effects, and no overflow/page errors occurred. Build, TypeScript,
-Black Friday, Daydream, design-system and shared-layout checks passed.
+Photos use original JPEG bytes (896x846 and 1080x452), with earlier lossy WebP
+variants removed. Supporting PNGs retain losslessly recompressed pixels; the
+share image and four icon SVGs retain source bytes. Assets are local under
+`public/events/black-friday-2026/`. Source image dimensions, lazy loading and
+hero high fetch priority remain. No upscaling, runtime transformation, base64
+or external font download. Exact photos take precedence over prior byte savings.
 
-Remaining release QA: real iOS/Android LINE app handoff, Safari/Firefox layout,
-final-domain social sharing, and real analytics receiving configuration.
-The supplied renewal proof submission format/deadline and payment method remain
-unspecified; this page does not invent them or implement subsidy processing.
+## Verification
 
-There is no automatic expiry in the existing static event architecture.
-On December 1, archive the event and rebuild to remove campaign LINE CTAs and
-show the existing ended banner. Review retained historical offers/FAQ, SEO and
-sharing artwork; stop related ads separately. This PR does not publish or merge.
+Run TypeScript, build, shared-layout, design-system, events, Daydream and diff
+checks. `npx tsx scripts/check-black-friday.ts` verifies content, SEO, source
+section order, fonts/assets, FAQ, safe new-tab CTAs and lifecycle guards.
+Passing `handoff` as an argument additionally verifies JPEG bytes and all three
+WOFF2 SHA-256 hashes against the original.
+
+For reference QA, start the built app on 127.0.0.1:3100, then in another terminal:
+
+```powershell
+python -m http.server 3101 --bind 127.0.0.1 --directory handoff/site
+node scripts/check-black-friday-reference.cjs
+```
+
+This Chromium check serves the source Google Fonts request the exact recovered
+fonts locally and blocks other external requests. At 1440/1024/760/759/390/320px,
+it compares visible content geometry and computed styles after normalizing
+private font names and editor-only wrappers. Intentional shell/nav differences
+and transient animation states are excluded. All nine section heights and
+compared styles match. Section screenshot checks allow <0.1% differing interior
+pixels, excluding the outer pixel and <=2-channel antialiasing rounding.
+Screenshots are also visually reviewed. JSON reports/screenshots live in ignored
+`artifacts/black-friday/parity/`.
+
+Interactive QA covers FAQ single-open/Space/Enter/animation/reduced motion,
+keyboard focus, safe new-tab links, mobile sticky visibility, anchors under the
+shared shell, overflow, console/hydration/font errors and duplicate hero requests.
+LINE popups are intercepted locally; no request or form reaches production.
+
+Remaining manual QA: iOS/Android LINE App handoff, Safari/Firefox appearance and
+animation, final-domain social cards and actual analytics receiving config.
+Existing `next lint` remains invalid and unchanged.
+
+## Activity close
+
+No automatic expiry exists. On December 1 archive/rebuild, review historical
+copy/FAQ/SEO/share artwork, and stop ads separately. No subsidy workflow is
+implemented: proof deadline/format and payment method remain unspecified.
+This PR does not merge, deploy or modify WordPress/Cloudflare configuration.
