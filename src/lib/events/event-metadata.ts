@@ -16,6 +16,8 @@ export function buildEventMetadata(event: EventContent, policy: EventPolicy = ge
       type: "website", title: event.seo.title, description: event.seo.description,
       url: canonical, images: [{ url: eventAbsoluteUrl(event.seo.ogImage.src), width: event.seo.ogImage.width, height: event.seo.ogImage.height, alt: event.seo.ogImage.alt }],
     },
+    twitter: { card: "summary_large_image", title: event.seo.title, description: event.seo.description,
+      images: [{ url: eventAbsoluteUrl(event.seo.ogImage.src), alt: event.seo.ogImage.alt }] },
   };
 }
 

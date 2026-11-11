@@ -13,3 +13,4 @@ vercel.json
 cloudflare-env.d.ts
 artifacts/precutover-playwright/
 artifacts/consult-analytics/
+artifacts/black-friday/
