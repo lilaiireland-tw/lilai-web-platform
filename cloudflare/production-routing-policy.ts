@@ -49,6 +49,8 @@ export function productionRouteOwner(input: string | URL): ProductionRouteOwner 
     url.pathname === "/" ||
     url.pathname === "/consult" ||
     url.pathname === "/consult/" ||
+    url.pathname === "/ireland-25-plus-8" ||
+    url.pathname === "/ireland-25-plus-8/" ||
     url.pathname === "/events" ||
     url.pathname.startsWith("/events/")
   ) {

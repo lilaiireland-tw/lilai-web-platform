@@ -41,6 +41,7 @@ jobs:
       - run: npx tsx scripts/check-deployment-policy.ts
       - run: npm run check:seo-url-consistency
       - run: npm run check:consult
+      - run: npx tsx scripts/check-25plus8.ts
       - run: npm run check:consent
       - run: npx tsx scripts/check-consult-analytics.ts
       - run: npm run check:production-route-safety
