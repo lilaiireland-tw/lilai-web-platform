@@ -34,14 +34,22 @@ editing copy. No packages were added.
 Free assessment links use the established `/consult` destination. Interaction
 events retain source names and require the shared analytics consent cookie;
 no new analytics vendor is installed and clicks are not conversions.
-Optional video and non-public Notion school links stay absent, as in the source's
-production configuration. No replay URL, permission gate or countdown is added.
+The owner enabled YouTube Short `fY5Qom7wTKE` and the three source Notion school
+detail URLs. School names open in a new tab. The highlight player loads only on
+click, retains consent-gated play/50%/complete events, and falls back to a privacy
+enhanced iframe after six seconds if the API is unavailable. Player timers,
+callbacks and instances are cleaned up on unmount. Video configuration and school
+URLs live in `src/content/ireland-25-plus-8-copy.ts`.
+No unverified caption, duration or VideoObject metadata is advertised. No replay
+URL, permission gate or countdown is added. Live YouTube playback and anonymous
+Notion access still require verification; automated network reads were unavailable.
 
 ## Editing the React page
 
 Following merged Black Friday PR #49, `page.tsx` now renders
 `Ireland25Plus8Campaign` directly. There is no HTML payload, HTML JSON import,
-`dangerouslySetInnerHTML`, iframe or runtime HTML fetch. Every section and its
+`dangerouslySetInnerHTML` or runtime HTML fetch. The video iframe is created only
+after a play click. Every section and its
 original inline declarations are editable in TSX. No runtime importer or new
 package was added. The original local HTML and handoff remain untracked references.
 
@@ -62,7 +70,7 @@ package was added. The original local HTML and handoff remain untracked referenc
   `ireland-25-plus-8.module.css`. Its local root isolates source styles; private
   font declarations remain in `fonts.css`, matching the Black Friday approach.
 - Interaction lifecycle: `Ireland25Plus8Interactions.tsx` owns the client effect
-  and calls the existing `native-interactions.js` initializer. The unchanged
+  and calls the existing `native-interactions.js` initializer. The
   initializer cleans up listeners, observers and timers on unmount. Tabs,
   carousel, progress rail, sticky CTA, anchors, consent and GA4 names are retained.
 - Existing structured SEO data now lives in `ireland25Plus8Schema` in the content

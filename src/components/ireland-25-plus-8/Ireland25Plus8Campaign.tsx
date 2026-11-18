@@ -1,4 +1,4 @@
-import { ireland25Plus8Schools, ireland25Plus8Tiers } from "@/content/ireland-25-plus-8-copy";
+import { ireland25Plus8Schools, ireland25Plus8Tiers, ireland25Plus8Video } from "@/content/ireland-25-plus-8-copy";
 import { Ireland25Plus8Interactions } from "./Ireland25Plus8Interactions";
 import { Ireland25Plus8Cta } from "./Ireland25Plus8Cta";
 import { Ireland25Plus8Faq } from "./Ireland25Plus8Faq";
@@ -333,7 +333,7 @@ export function Ireland25Plus8Campaign() {
       </section>
       <section className="l-sec" id="webinar" style={{"borderBottom": "1px solid rgb(207, 224, 211)", "padding": "96px 0px"}}>
         <div style={{"width": "min(1080px, 100% - 40px)", "margin": "0px auto", "display": "flex", "flexDirection": "column", "gap": "36px"}}>
-          <div hidden id="hv-block" style={{"display": "flex", "flexDirection": "column", "gap": "36px"}}>
+          <div id="hv-block" style={{"display": "flex", "flexDirection": "column", "gap": "36px"}}>
             <header style={{"display": "flex", "flexDirection": "column", "gap": "16px"}}>
               <p style={{"margin": "0", "fontSize": "12px", "fontWeight": "900", "letterSpacing": ".09em", "textTransform": "uppercase", "color": "#005230"}}>25+8 WEBINAR HIGHLIGHTS</p>
               <h2 style={{"margin": "0", "fontFamily": "'Ireland25 Noto Serif TC',serif", "fontSize": "clamp(27px,3.4vw,42px)", "fontWeight": "900", "lineHeight": "1.3", "letterSpacing": "-.012em", "color": "#0b3927", "textWrap": "balance"}}>先花幾分鐘，認識你可能的愛爾蘭生活。</h2>
@@ -342,8 +342,8 @@ export function Ireland25Plus8Campaign() {
             <div style={{"display": "flex", "flexDirection": "column", "gap": "14px"}}>
               <div className="l-player" id="hv-player" style={{"position": "relative", "aspectRatio": "16 / 9", "background": "#0b3927", "border": "1px solid #cfe0d3", "borderRadius": "4px", "overflow": "hidden", "boxShadow": "14px 14px 0 rgba(0,82,48,.08)"}}></div>
               <div style={{"display": "flex", "flexWrap": "wrap", "justifyContent": "space-between", "alignItems": "baseline", "gap": "6px 20px"}}>
-                <h3 id="hv-title" style={{"margin": "0", "fontFamily": "'Ireland25 Noto Serif TC',serif", "fontSize": "20px", "fontWeight": "900", "lineHeight": "1.4", "color": "#0b3927"}}></h3>
-                <p id="hv-meta" style={{"margin": "0", "fontSize": "13.5px", "lineHeight": "1.6", "color": "#5f675f"}}></p>
+                <h3 id="hv-title" style={{"margin": "0", "fontFamily": "'Ireland25 Noto Serif TC',serif", "fontSize": "20px", "fontWeight": "900", "lineHeight": "1.4", "color": "#0b3927"}}>{ireland25Plus8Video.title}</h3>
+                <p id="hv-meta" style={{"margin": "0", "fontSize": "13.5px", "lineHeight": "1.6", "color": "#5f675f"}}>公開免費觀看 · 點擊後才播放</p>
               </div>
               <details hidden id="hv-summary" style={{"background": "#fffff6", "border": "1px solid #cfe0d3", "borderRadius": "13px"}}>
                 <summary style={{"listStyle": "none", "cursor": "pointer", "minHeight": "52px", "display": "flex", "alignItems": "center", "justifyContent": "space-between", "gap": "12px", "padding": "12px 18px", "fontSize": "15px", "fontWeight": "800", "color": "#0b3927"}}>影片文字摘要<span className="l-chev" style={{"display": "flex", "color": "#005230", "transition": "transform 200ms ease"}}>
@@ -610,7 +610,7 @@ export function Ireland25Plus8Campaign() {
                       </div><span>{ireland25Plus8Schools[0].location}</span><p></p>
                 </div>
                 <div style={{"display": "flex", "flexDirection": "column", "gap": "4px"}}>
-                  <h3 style={{"margin": "0px", "fontFamily": "\"Ireland25 Noto Serif TC\", serif", "fontSize": "23px", "fontWeight": "900", "lineHeight": "1.35", "color": "rgb(11, 57, 39)"}}>{ireland25Plus8Schools[0].name}</h3>
+                  <h3 style={{"margin": "0px", "fontFamily": "\"Ireland25 Noto Serif TC\", serif", "fontSize": "23px", "fontWeight": "900", "lineHeight": "1.35", "color": "rgb(11, 57, 39)"}}><a className="l-sch-name" href={ireland25Plus8Schools[0].detailUrl} target="_blank" rel="noopener noreferrer" aria-label={`${ireland25Plus8Schools[0].name} 語校詳細介紹（另開新分頁）`} data-school-detail={ireland25Plus8Schools[0].name}>{ireland25Plus8Schools[0].name}<span className="l-ext" aria-hidden="true" style={{display: "inline-block", width: 16, height: 16, background: "currentColor", mask: "url(/assets/ireland-25-plus-8/icons/external-link.svg) center / contain no-repeat", WebkitMask: "url(/assets/ireland-25-plus-8/icons/external-link.svg) center / contain no-repeat"}} /></a></h3>
                   <p style={{"margin": "0px", "fontSize": "13.5px", "fontWeight": "800", "color": "rgb(0, 82, 48)"}}>{ireland25Plus8Schools[0].tagline}</p>
                 </div>
                 <p style={{"margin": "0px", "fontSize": "15px", "lineHeight": "1.7", "color": "rgb(63, 70, 63)"}}>{ireland25Plus8Schools[0].description}</p>
@@ -643,7 +643,7 @@ export function Ireland25Plus8Campaign() {
                       </div><span>{ireland25Plus8Schools[1].location}</span><p></p>
                 </div>
                 <div style={{"display": "flex", "flexDirection": "column", "gap": "4px"}}>
-                  <h3 style={{"margin": "0px", "fontFamily": "\"Ireland25 Noto Serif TC\", serif", "fontSize": "23px", "fontWeight": "900", "lineHeight": "1.35", "color": "rgb(11, 57, 39)"}}>{ireland25Plus8Schools[1].name}</h3>
+                  <h3 style={{"margin": "0px", "fontFamily": "\"Ireland25 Noto Serif TC\", serif", "fontSize": "23px", "fontWeight": "900", "lineHeight": "1.35", "color": "rgb(11, 57, 39)"}}><a className="l-sch-name" href={ireland25Plus8Schools[1].detailUrl} target="_blank" rel="noopener noreferrer" aria-label={`${ireland25Plus8Schools[1].name} 語校詳細介紹（另開新分頁）`} data-school-detail={ireland25Plus8Schools[1].name}>{ireland25Plus8Schools[1].name}<span className="l-ext" aria-hidden="true" style={{display: "inline-block", width: 16, height: 16, background: "currentColor", mask: "url(/assets/ireland-25-plus-8/icons/external-link.svg) center / contain no-repeat", WebkitMask: "url(/assets/ireland-25-plus-8/icons/external-link.svg) center / contain no-repeat"}} /></a></h3>
                   <p style={{"margin": "0px", "fontSize": "13.5px", "fontWeight": "800", "color": "rgb(0, 82, 48)"}}>{ireland25Plus8Schools[1].tagline}</p>
                 </div>
                 <p style={{"margin": "0px", "fontSize": "15px", "lineHeight": "1.7", "color": "rgb(63, 70, 63)"}}>{ireland25Plus8Schools[1].description}</p>
@@ -676,7 +676,7 @@ export function Ireland25Plus8Campaign() {
                       </div><span>{ireland25Plus8Schools[2].location}</span><p></p>
                 </div>
                 <div style={{"display": "flex", "flexDirection": "column", "gap": "4px"}}>
-                  <h3 style={{"margin": "0px", "fontFamily": "\"Ireland25 Noto Serif TC\", serif", "fontSize": "23px", "fontWeight": "900", "lineHeight": "1.35", "color": "rgb(11, 57, 39)"}}>{ireland25Plus8Schools[2].name}</h3>
+                  <h3 style={{"margin": "0px", "fontFamily": "\"Ireland25 Noto Serif TC\", serif", "fontSize": "23px", "fontWeight": "900", "lineHeight": "1.35", "color": "rgb(11, 57, 39)"}}><a className="l-sch-name" href={ireland25Plus8Schools[2].detailUrl} target="_blank" rel="noopener noreferrer" aria-label={`${ireland25Plus8Schools[2].name} 語校詳細介紹（另開新分頁）`} data-school-detail={ireland25Plus8Schools[2].name}>{ireland25Plus8Schools[2].name}<span className="l-ext" aria-hidden="true" style={{display: "inline-block", width: 16, height: 16, background: "currentColor", mask: "url(/assets/ireland-25-plus-8/icons/external-link.svg) center / contain no-repeat", WebkitMask: "url(/assets/ireland-25-plus-8/icons/external-link.svg) center / contain no-repeat"}} /></a></h3>
                   <p style={{"margin": "0px", "fontSize": "13.5px", "fontWeight": "800", "color": "rgb(0, 82, 48)"}}>{ireland25Plus8Schools[2].tagline}</p>
                 </div>
                 <p style={{"margin": "0px", "fontSize": "15px", "lineHeight": "1.7", "color": "rgb(63, 70, 63)"}}>{ireland25Plus8Schools[2].description}</p>

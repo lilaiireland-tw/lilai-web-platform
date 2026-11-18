@@ -1,3 +1,8 @@
+export const ireland25Plus8Video = {
+  youtubeId: "fY5Qom7wTKE",
+  title: "25+8 說明會精華",
+};
+
 // Approved source copy. Keep prices and school facts aligned with the supplied handoff.
 export const ireland25Plus8Tiers = [
   {
@@ -27,6 +32,7 @@ export const ireland25Plus8Schools = [
   {
     "id": "school-ned-college",
     "name": "NED College",
+    "detailUrl": "https://tidy-nerine-6a5.notion.site/NED-College-32a23b0a4ab3805d9701ebd99c48d2ab",
     "image": {
       "src": "/assets/ireland-25-plus-8/photos/school-ned-college.jpg",
       "alt": "NED College 學生在 Dublin 校舍門口交談",
@@ -47,6 +53,7 @@ export const ireland25Plus8Schools = [
   {
     "id": "school-isi-dublin",
     "name": "ISI Dublin",
+    "detailUrl": "https://tidy-nerine-6a5.notion.site/ISI-Dublin-27b23b0a4ab380dc867ee2e91082bb64",
     "image": {
       "src": "/assets/ireland-25-plus-8/photos/school-isi-dublin.jpg",
       "alt": "ISI Dublin 石牆教室裡的英文課",
@@ -67,6 +74,7 @@ export const ireland25Plus8Schools = [
   {
     "id": "school-atlas-language-school",
     "name": "Atlas Language School",
+    "detailUrl": "https://tidy-nerine-6a5.notion.site/Atlas-Language-School-32c23b0a4ab38020a5cbcaa85eb18832",
     "image": {
       "src": "/assets/ireland-25-plus-8/photos/school-atlas-language-school.jpg",
       "alt": "Atlas Language School 接待大廳與學生",

@@ -1,4 +1,5 @@
 // Native interactions retained from the supplied production HTML.
+import { ireland25Plus8Video } from '@/content/ireland-25-plus-8-copy';
 import { readConsentCookie } from '@/lib/analytics/consent';
 
 /* 哩來 25+8｜頁面互動與追蹤（原生 JS，無框架、無外部套件）。沿用網站既有 GTM/GA4，本檔不安裝追蹤碼。 */
@@ -114,6 +115,56 @@ export function initialize(root){
     on(window, 'beforeprint', function(){ $$('[data-rv]').forEach(function(el){ el.setAttribute('data-in', '1'); }); });
   }
 
+  // Load YouTube on request; retain source playback events and fallback.
+  var V = ireland25Plus8Video, ytId = V.youtubeId;
+  var vurl = 'https://www.youtube.com/shorts/' + ytId;
+  var poster = 'https://i.ytimg.com/vi/' + ytId + '/hqdefault.jpg';
+  var player = $('#hv-player'), fired = {}, disposed = false, prevReady, apiReady;
+  function track(stage){
+    if (fired[stage]) return;
+    fired[stage] = true;
+    push({ event: 'highlight_video_' + stage, video_title: V.title, video_provider: 'youtube', video_url: vurl });
+  }
+  if (player) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'l-play'; b.setAttribute('aria-label', '播放影片：' + V.title);
+    b.style.cssText = 'font:inherit;position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;cursor:pointer;background:#0b3927;display:block;overflow:hidden;color:#fff';
+    b.innerHTML = '<img alt="" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block">' +
+      '<span class="l-play-btn" aria-hidden="true" style="position:absolute;left:50%;top:50%;translate:-50% -50%;width:clamp(64px,9vw,84px);height:clamp(64px,9vw,84px);box-sizing:border-box;padding-left:4px;border-radius:999px;background:#ffbe12;color:#0b3927;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 8px rgba(11,57,39,.35)"><span style="display:inline-block;width:34px;height:34px;background:currentcolor;-webkit-mask:url(/assets/ireland-25-plus-8/icons/play.svg) center/contain no-repeat;mask:url(/assets/ireland-25-plus-8/icons/play.svg) center/contain no-repeat"></span></span>' +
+      '<span aria-hidden="true" style="position:absolute;left:0;bottom:0;display:flex;align-items:center;gap:8px;padding:9px 16px;background:#0b3927;font-size:14px;font-weight:800;line-height:1.4">精華影片</span>';
+    b.querySelector('img').src = poster;
+    player.appendChild(b);
+    var yp = null, timer = null, fellBack = false, fbT = null;
+    on(b, 'click', function(){
+      player.innerHTML = ''; var host = document.createElement('div'); host.style.cssText = 'position:absolute;inset:0'; var inner = document.createElement('div'); host.appendChild(inner); player.appendChild(host);
+      var go = function(){
+        if (fellBack || yp) return; clearTimeout(fbT);
+        yp = new window.YT.Player(inner, { host: 'https://www.youtube-nocookie.com', videoId: ytId, width: '100%', height: '100%',
+          playerVars: { autoplay: 1, rel: 0, playsinline: 1, cc_lang_pref: 'zh-Hant', hl: 'zh-TW' },
+          events: {
+            onReady: function(e){ var f = e.target.getIframe(); if (f) { f.title = V.title; f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0'; f.focus(); } },
+            onStateChange: function(e){
+              if (e.data === 1) { track('play'); clearInterval(timer); timer = setInterval(function(){ var d = yp.getDuration(), c = yp.getCurrentTime(); if (d > 0 && c / d >= 0.5) track('50_percent'); }, 1000); }
+              else clearInterval(timer);
+              if (e.data === 0) track('complete');
+            }
+          } });
+      };
+      if (window.YT && window.YT.Player) { go(); return; }
+      prevReady = window.onYouTubeIframeAPIReady; apiReady = function(){ if (prevReady) prevReady(); if (!disposed) go(); }; window.onYouTubeIframeAPIReady = apiReady;
+      if (!document.getElementById('yt-iframe-api')) { var s = document.createElement('script'); s.id = 'yt-iframe-api'; s.src = 'https://www.youtube.com/iframe_api'; s.async = true; document.head.appendChild(s); }
+      // API 6 秒內沒載入：改用一般 iframe（無法回報播放事件，因此不推送 highlight_video_play）
+      fbT = later(function(){
+        if (yp) return; fellBack = true; host.innerHTML = '';
+        var f = document.createElement('iframe');
+        f.src = 'https://www.youtube-nocookie.com/embed/' + ytId + '?autoplay=1&rel=0&playsinline=1&hl=zh-TW';
+        f.title = V.title; f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true;
+        f.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0'; host.appendChild(f); f.focus();
+        push({ event: 'highlight_video_fallback_embed', video_title: V.title });
+      }, 6000);
+    }, { once: true });
+  }
+
   // ── 點擊追蹤（只記錄互動；正式 Lead 以免費出發評估表單「成功送出」為準）──
   var names = { top: 'hero', budget: 'pricing', 'why-lilai': 'services', start: 'footer' };
   var target = CTA ? new URL(CTA, location.href).href.split('#')[0] : '';
@@ -138,6 +189,11 @@ export function initialize(root){
   // ── FAQ：展開時記錄一次 ──
   $$('#faq details').forEach(function(d){ on(d, 'toggle', function(){ if (d.open) { var q = $('summary h3', d); push({ event: 'click_25plus8_faq', cta_position: 'faq', faq_question: q ? q.textContent.trim() : '' }); } }); });
   return function(){
+    disposed = true;
+    clearInterval(timer);
+    if (yp && yp.destroy) yp.destroy();
+    if (player) player.replaceChildren();
+    if (apiReady && window.onYouTubeIframeAPIReady === apiReady) window.onYouTubeIframeAPIReady = prevReady;
     listeners.forEach(function(args){ args[0].removeEventListener(args[1], args[2], args[3]); });
     observers.forEach(function(observer){ observer.disconnect(); });
     timers.forEach(clearTimeout);
