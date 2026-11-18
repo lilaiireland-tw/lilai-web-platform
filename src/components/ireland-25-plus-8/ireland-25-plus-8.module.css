@@ -302,6 +302,7 @@
 .design [hidden]{display:none!important}
 .design details>summary::-webkit-details-marker{display:none}
 .design details[open] :global(.l-chev){transform:rotate(180deg)}
+.design details[data-faq-closing] :global(.l-chev){transform:rotate(0deg)}
 .design :global(.l-hd-mob){display:none!important}
 .design :global(.l-auto):has(>:only-child){grid-template-columns:minmax(0,1fr)!important}
 .design :global(.l-tab)[aria-selected="true"]{background:#0b3927!important;border-color:#0b3927!important;color:#fff!important}

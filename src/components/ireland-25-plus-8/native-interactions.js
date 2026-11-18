@@ -186,10 +186,29 @@ export function initialize(root){
     push({ event: pos === 'school_card' ? 'click_25plus8_school_card' : pos === 'webinar' ? 'full_replay_cta_click' : 'click_25plus8_cta_' + (names[pos] || pos), cta_position: pos, link_url: a.href, cta_text: (a.textContent || '').trim().slice(0, 60), school_name: a.getAttribute('data-school') || undefined });
   }, true);
 
-  // ── FAQ：展開時記錄一次 ──
-  $$('#faq details').forEach(function(d){ on(d, 'toggle', function(){ if (d.open) { var q = $('summary h3', d); push({ event: 'click_25plus8_faq', cta_position: 'faq', faq_question: q ? q.textContent.trim() : '' }); } }); });
+  // Keep details open while closing so its content remains visible throughout the animation.
+  var faqCleanups = [];
+  $$('#faq details').forEach(function(d){
+    var summary = $('summary', d), expanded = d.open, animation;
+    if (!reduce && d.animate) {
+      on(summary, 'click', function(e){
+        e.preventDefault();
+        expanded = !expanded;
+        var from = d.getBoundingClientRect().height;
+        if (animation) animation.cancel();
+        d.open = true;
+        d.toggleAttribute('data-faq-closing', !expanded);
+        var to = expanded ? d.getBoundingClientRect().height : summary.getBoundingClientRect().height + d.offsetHeight - d.clientHeight;
+        animation = d.animate({ height: [from + 'px', to + 'px'] }, { duration: 280, easing: 'cubic-bezier(.2,.7,.3,1)' });
+        animation.onfinish = function(){ d.open = expanded; d.removeAttribute('data-faq-closing'); animation = null; };
+      });
+      faqCleanups.push(function(){ if (animation) animation.cancel(); d.open = expanded; d.removeAttribute('data-faq-closing'); });
+    }
+    on(d, 'toggle', function(){ if (d.open) { var q = $('summary h3', d); push({ event: 'click_25plus8_faq', cta_position: 'faq', faq_question: q ? q.textContent.trim() : '' }); } });
+  });
   return function(){
     disposed = true;
+    faqCleanups.forEach(function(cleanup){ cleanup(); });
     clearInterval(timer);
     if (yp && yp.destroy) yp.destroy();
     if (player) player.replaceChildren();

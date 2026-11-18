@@ -64,6 +64,11 @@ package was added. The original local HTML and handoff remain untracked referenc
 - FAQ text/optional links: `ireland25Plus8Faq` in that content file.
   `Ireland25Plus8Faq.tsx` supplies the original disclosure markup: first two
   entries open, no exclusive `name` group, independent keyboard toggles.
+  Native interactions animate FAQ height over 280ms in either direction, including
+  rapid reversals. Reduced motion keeps the immediate native toggle. Without JS
+  or Web Animations support, the native disclosure still works. Animations cancel
+  on unmount; `scripts/check-25plus8-faq.cjs` covers keyboard operation, intermediate
+  heights, reversal and reduced motion at 375/1440px on a local server at port 3120.
 - School names, photos/alt text, locations, descriptions, features and suitable
   audiences: `ireland25Plus8Schools` in that content file.
 - Original page-only tokens, breakpoints and effects:
