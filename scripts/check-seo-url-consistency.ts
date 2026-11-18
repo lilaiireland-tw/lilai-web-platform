@@ -82,7 +82,8 @@ async function main() {
 
     const routes = [
       ["/consult", "/consult/"],
-      ["/events", "/events/"]
+      ["/events", "/events/"],
+      ["/ireland-25-plus-8", "/ireland-25-plus-8/"]
     ] as const;
     for (const [canonicalPath, aliasPath] of routes) {
       const canonicalResponse = await get(canonicalPath);

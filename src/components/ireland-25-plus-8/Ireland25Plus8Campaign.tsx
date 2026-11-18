@@ -976,7 +976,7 @@ export function Ireland25Plus8Campaign() {
                 <p style={{"margin": "0px", "fontSize": "14px", "lineHeight": "1.65", "color": "rgb(95, 103, 95)"}}>費用與退費條件以哩來正式公告為準。</p>
                 <div className="l-wrapbtn" style={{"display": "flex", "marginTop": "auto", "paddingTop": "6px"}}>
                   <div className="sc-host-x" style={{"display": "contents"}}>
-                    <Ireland25Plus8Cta aria-disabled="true" data-paid-consult="" role="link" tabIndex={-1} variant="surface" compact label="直接預約付費諮詢 →" />
+                    <Ireland25Plus8Cta href="https://lilaiireland.com/language-school-signup/#direct-application-form" data-paid-consult="" variant="surface" compact label="直接預約付費諮詢 →" />
                   </div>
                 </div>
               </article>

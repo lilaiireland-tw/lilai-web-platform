@@ -165,7 +165,7 @@ export const ireland25Plus8Schema = [
         "@type": "ListItem",
         "position": 2,
         "name": "愛爾蘭 25+8 打工遊學",
-        "item": "https://lilaiireland.com/ireland-25-plus-8/"
+        "item": "https://lilaiireland.com/ireland-25-plus-8"
       }
     ]
   },
@@ -173,7 +173,7 @@ export const ireland25Plus8Schema = [
     "@context": "https://schema.org",
     "@type": "WebPage",
     "name": "愛爾蘭25+8完整攻略｜費用、打工規定與語校推薦",
-    "url": "https://lilaiireland.com/ireland-25-plus-8/",
+    "url": "https://lilaiireland.com/ireland-25-plus-8",
     "inLanguage": "zh-Hant",
     "dateModified": "2026-11-18",
     "publisher": {

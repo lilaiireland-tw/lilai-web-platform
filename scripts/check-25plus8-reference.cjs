@@ -93,11 +93,17 @@ const sourceServer = http.createServer((req,res) => {
    assert.equal(await page.locator('h1').count(),1);
    assert.equal(await page.locator('body > header').count(),1);
    assert.equal(await page.locator('body > footer').count(),1);
-   assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),'https://lilaiireland.com/ireland-25-plus-8/');
+   assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),'https://lilaiireland.com/ireland-25-plus-8');
+   assert.equal(await page.locator('meta[property="og:url"]').getAttribute('content'),'https://lilaiireland.com/ireland-25-plus-8');
    assert.equal(await page.locator('meta[name="robots"]').getAttribute('content'),'noindex, nofollow');
    const schemas=await page.locator('script[type="application/ld+json"]').evaluateAll(items=>items.map(item=>JSON.parse(item.textContent)));
    assert.equal(schemas.length,2);
-   assert.equal(schemas[1].url,'https://lilaiireland.com/ireland-25-plus-8/');
+   assert.equal(schemas[0].itemListElement[1].item,'https://lilaiireland.com/ireland-25-plus-8');
+   const paid=page.locator('[data-paid-consult]');
+   assert.equal(await paid.getAttribute('href'),'https://lilaiireland.com/language-school-signup/#direct-application-form');
+   assert.equal(await paid.getAttribute('aria-disabled'),null);
+   assert.equal(await paid.getAttribute('tabindex'),null);
+   assert.equal(schemas[1].url,'https://lilaiireland.com/ireland-25-plus-8');
    assert.equal(await page.locator('[data-ireland25]').evaluate(el=>el.classList.contains('l-js')),false,'reduced motion skips reveal transitions');
    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'horizontal overflow '+width);
    for(const list of await page.locator('[role="tablist"]').all()) {
@@ -142,7 +148,15 @@ const sourceServer = http.createServer((req,res) => {
     await page.evaluate(()=>{window.dataLayer=[]; document.cookie='lilai_consent_v1=; Max-Age=0; Path=/';});
     await page.locator('[data-jump][data-flash="1"]').first().click();
     assert.equal(await page.evaluate(()=>window.dataLayer.length),0);
+    // Cancel navigation after document-capture analytics; never contact the booking form.
+    await paid.evaluate(el=>el.addEventListener('click',event=>event.preventDefault()));
+    await paid.focus(); await page.keyboard.press('Enter');
+    assert.equal(await page.evaluate(()=>window.dataLayer.length),0);
     await page.evaluate(()=>{document.cookie='lilai_consent_v1=v1.100; Path=/';});
+    await paid.focus(); await page.keyboard.press('Enter');
+    const paidEvents=await page.evaluate(()=>window.dataLayer.filter(event=>event.event==='click_25plus8_paid_consult'));
+    assert.equal(paidEvents.length,1);
+    assert.equal(paidEvents[0].link_url,'https://lilaiireland.com/language-school-signup/#direct-application-form');
     await page.locator('[data-jump][data-flash="1"]').first().click();
     assert.equal(await page.evaluate(()=>window.dataLayer.filter(e=>e.event==='click_25plus8_tier_school').length),1);
     await page.evaluate(()=>{window.__lilaiLifecycleCheck=1;});

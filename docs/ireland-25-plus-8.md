@@ -1,6 +1,6 @@
 # Ireland 25+8 landing page handoff
 
-Route: `/ireland-25-plus-8/`. Source: local `deploy/ireland-25-plus-8.html`
+Canonical route: `/ireland-25-plus-8` (slash alias redirects). Source: local `deploy/ireland-25-plus-8.html`
 and `deploy/README_上架交接.md`, supplied November 18, 2026. No issue number
 was supplied. Work starts from `origin/develop` at `f94ca55` (Black Friday PR #49).
 Original deploy/handoff inputs are not published or committed.
@@ -48,7 +48,7 @@ package was added. The original local HTML and handoff remain untracked referenc
 - Composition, headings, photos, CTA labels and destinations:
   `src/components/ireland-25-plus-8/Ireland25Plus8Campaign.tsx`.
   Edit each `<Ireland25Plus8Cta label="button text" href="destination" />` directly.
-  The paid consultation intentionally has no `href` and retains its disabled ARIA.
+  The paid consultation uses the approved `https://lilaiireland.com/language-school-signup/#direct-application-form` URL and retains `data-paid-consult` for consent-gated tracking.
 - Repeated button appearance/size variants: `Ireland25Plus8Cta.tsx`.
 - Prices/budget tier descriptions: `src/content/ireland-25-plus-8-copy.ts`,
   `ireland25Plus8Tiers`. Check the FAQ fee explanation in the same file when
@@ -66,7 +66,7 @@ package was added. The original local HTML and handoff remain untracked referenc
   initializer cleans up listeners, observers and timers on unmount. Tabs,
   carousel, progress rail, sticky CTA, anchors, consent and GA4 names are retained.
 - Existing structured SEO data now lives in `ireland25Plus8Schema` in the content
-  file; metadata/robots remain in `page.tsx` with the same values.
+  file; metadata remains in `page.tsx` and robots stays noindex/nofollow.
 
 The original contains block wrappers inside paragraphs. The JSX spells out the
 browser-repaired location/consultation DOM (including empty paragraphs) so the
@@ -74,10 +74,11 @@ rendered geometry stays identical and React hydrates without errors.
 
 ## Release blockers and routing
 
-- Missing paid fast-consultation booking URL: the original card/button remain
-  visually present but the link is disabled with ARIA and has no placeholder URL.
-  Once supplied, add its `href`, remove disabled attributes, retain
-  `data-paid-consult` and verify navigation/event behavior.
+- Paid consultation now uses the owner-approved
+  `https://lilaiireland.com/language-school-signup/#direct-application-form`.
+  Disabled ARIA/tabIndex are removed; the native link is keyboard accessible and
+  retains consent-gated `click_25plus8_paid_consult` tracking. No form is submitted
+  by regression checks.
 - Missing `og-25plus8.png`: no broken image URL is advertised. Add the approved
   artwork and set OG/Twitter image metadata when available.
 - Page remains `noindex, nofollow`, with no new static sitemap entry, until the required
@@ -88,9 +89,18 @@ rendered geometry stays identical and React hydrates without errors.
 The existing exact production Router allowlist gains this path with/without a
 trailing slash. Prefix lookalikes, child paths, WordPress query endpoints and
 signup ownership remain unchanged. Standalone staging admits the same page.
-Assets use the already routed `/assets/` namespace. Canonical and JSON-LD remain
-`https://lilaiireland.com/ireland-25-plus-8/`; Next's existing slash redirect is
-unchanged. No live Cloudflare Routes, DNS, bindings, WordPress or backend changed.
+Assets use the already routed `/assets/` namespace. Canonical, OG URL and both
+JSON-LD URL references use `https://lilaiireland.com/ireland-25-plus-8`, matching
+Next's existing slashless URL policy. `/ireland-25-plus-8/` returns 308 to the
+slashless path, preserving query parameters; no global redirect config changed. No live Cloudflare Routes, DNS, bindings, WordPress or backend changed.
+
+Live read-only URL audit on November 18, 2026: `/consult` and `/events` each
+return 200 with slashless canonicals; their slash aliases return 308 to the
+slashless path. The separate signup route serves both forms with a trailing-slash
+canonical, and the approved `direct-application-form` anchor exists. Its exact
+approved URL is preserved. The new 25+8 route currently returns 404 on production
+because this PR has not been released. `check-seo-url-consistency.ts` covers its
+canonical 200, slash/query-preserving 308 aliases alongside existing Next routes.
 
 Unlike Black Friday inside `/events/`, this top-level URL requires releasing the
 updated **Router code as well as Platform code**. The existing manual workflow
@@ -105,7 +115,7 @@ Worker route, move signup or merge/deploy this PR automatically.
   production-router, new `scripts/check-25plus8.ts`, Next production build and
   `git diff --check` are required. The new source check runs in both existing CI
   validation workflows. It verifies local assets/fonts, seven original photo
-  hashes when deploy inputs exist, lazy image dimensions, canonical, noindex and
+  hashes when deploy inputs exist, active approved paid link, lazy image dimensions, canonical, noindex and
   route ownership.
 - `node scripts/check-25plus8-reference.cjs` compares original and built content
   geometry/computed styles and section screenshots at 320/375/390/430/768/1024/1440px using identical local
@@ -128,7 +138,7 @@ excluded from the pixel comparison; they are restored for interaction checks.
 There were no page/console errors or horizontal overflow. Mobile/desktop images
 were visually inspected. FAQ defaults/keyboard/independent disclosure, tabs,
 carousel, school anchors, reduced/normal motion, consent-gated single events,
-mobile sticky/footer/consent suppression and client-navigation unmount/remount
+paid-link keyboard activation/consent-gated events, mobile sticky/footer/consent suppression and client-navigation unmount/remount
 passed. Canonical, noindex and both JSON-LD entries are checked in the browser.
 No production form or service was submitted. These results do not establish
 Safari or production analytics behavior.
