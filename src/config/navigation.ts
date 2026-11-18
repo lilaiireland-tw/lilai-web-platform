@@ -17,6 +17,12 @@ export const primaryCta = {
   href: "/consult"
 } as const satisfies NavigationLink;
 
+export const page25plus8 =
+  {
+    label: "25+8 打工遊學",
+    href: "/ireland-25-plus-8"
+  } as const satisfies NavigationLink;
+
 export const schoolSignupLink = {
   label: "我要報名語校",
   href: "/language-school-signup/"
@@ -35,6 +41,7 @@ export const informationHubLink = {
 
 export const primaryNavigation = [
   primaryCta,
+  page25plus8,
   schoolSignupLink,
   {
     label: "關於哩來",
