@@ -77,6 +77,7 @@ function main() {
   assertOwner("platform", [
     "/", "/?utm_source=smoke",
     "/consult", "/consult/", "/consult?utm_source=google", "/consult/?gclid=test-click-id",
+    "/ireland-25-plus-8", "/ireland-25-plus-8/", "/ireland-25-plus-8/?utm_source=google",
     "/events", "/events/", "/events?source=smoke",
     "/events-sitemap.xml",
     "/events/daydream-adventure-2027/", "/events/unknown", "/events/missing.png?cache=1",
@@ -92,6 +93,7 @@ function main() {
     "/?rest_route=/wp/v2/posts", "/?p=123", "/?page_id=123", "/?preview=true",
     "/?s=ireland", "/events/?add-to-cart=1",
     "/consult?wc-ajax=checkout", "/consult/?rest_route=/wp/v2/posts",
+    "/ireland-25-plus-8-other", "/ireland-25-plus-8/child", "/ireland-25-plus-8/?preview=true",
   ]);
   console.log("PASS platform allowlist boundaries and WordPress/WooCommerce fallback");
 

@@ -24,7 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const [posts, pages] = await Promise.all([getAllPostSlugs(), getAllPageSlugs()]);
     const wpUrls = [...posts, ...pages]
-      .filter(item => !["consult", "cart", "checkout", "my-account"].includes(item.slug))
+      .filter(item => !["consult", "ireland-25-plus-8", "cart", "checkout", "my-account"].includes(item.slug))
       .map(item => ({
         url: absoluteUrl(`/${item.slug}/`),
         lastModified: item.modified ? new Date(item.modified) : new Date(),

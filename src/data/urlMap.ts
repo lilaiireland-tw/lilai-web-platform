@@ -19,6 +19,7 @@ export const IMPORTANT_URLS = [
 export const STATIC_SITEMAP_URLS = [
   "/",
   "/consult",
+  "/ireland-25-plus-8",
   "/about/",
   "/ireland-study-consultation/",
   "/free-departure-assessment/",

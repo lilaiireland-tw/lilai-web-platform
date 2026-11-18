@@ -1,0 +1,80 @@
+/* Original Google Fonts families and requested weights, self-hosted for source copy. */
+@font-face {
+  font-family: 'Ireland25 Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/assets/ireland-25-plus-8/fonts/inter-0.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Ireland25 Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(/assets/ireland-25-plus-8/fonts/inter-1.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Ireland25 Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(/assets/ireland-25-plus-8/fonts/inter-2.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Ireland25 Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(/assets/ireland-25-plus-8/fonts/inter-3.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Ireland25 Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(/assets/ireland-25-plus-8/fonts/inter-4.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'Ireland25 Noto Sans TC';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/assets/ireland-25-plus-8/fonts/sans-0.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Ireland25 Noto Sans TC';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(/assets/ireland-25-plus-8/fonts/sans-1.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Ireland25 Noto Sans TC';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(/assets/ireland-25-plus-8/fonts/sans-2.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Ireland25 Noto Sans TC';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(/assets/ireland-25-plus-8/fonts/sans-3.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'Ireland25 Noto Serif TC';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(/assets/ireland-25-plus-8/fonts/serif-0.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Ireland25 Noto Serif TC';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(/assets/ireland-25-plus-8/fonts/serif-1.woff2) format('woff2');
+}

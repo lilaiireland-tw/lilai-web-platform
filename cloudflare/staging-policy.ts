@@ -1,6 +1,6 @@
 import { eventManifest } from "../src/content/events/event-manifest";
 
-const frontendExactPaths = new Set(["/", "/consult", "/robots.txt", "/sitemap.xml"]);
+const frontendExactPaths = new Set(["/", "/consult", "/ireland-25-plus-8", "/robots.txt", "/sitemap.xml"]);
 const eventPaths = new Set(eventManifest.map(event => `/events/${event.slug}`));
 const staticAssetPrefixes = ["/_next/", "/assets/", "/fonts/", "/events/"] as const;
 
