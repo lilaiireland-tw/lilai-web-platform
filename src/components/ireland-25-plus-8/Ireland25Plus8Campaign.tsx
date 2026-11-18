@@ -621,7 +621,7 @@ export function Ireland25Plus8Campaign() {
                     <li>{ireland25Plus8Schools[0].features[2]}</li>
                   </ul>
                   <p style={{"margin": "0px", "fontSize": "14px", "lineHeight": "1.6", "color": "rgb(11, 57, 39)", "background": "rgb(234, 244, 236)", "borderRadius": "11px", "padding": "10px 12px"}}><strong style={{"fontWeight": "900"}}>適合：</strong>{ireland25Plus8Schools[0].suitableFor}</p>
-                  <a data-school={ireland25Plus8Schools[0].name} href="/consult" style={{"display": "flex", "alignItems": "center", "gap": "6px", "minHeight": "44px", "fontSize": "15px", "fontWeight": "800"}}>問問哩來這間適不適合我<span aria-hidden="true" className="l-ar">→</span></a>
+                  <a data-school={ireland25Plus8Schools[0].name} href="/consult#form" style={{"display": "flex", "alignItems": "center", "gap": "6px", "minHeight": "44px", "fontSize": "15px", "fontWeight": "800"}}>問問哩來這間適不適合我<span aria-hidden="true" className="l-ar">→</span></a>
                 </div>
               </div>
             </article>
@@ -654,7 +654,7 @@ export function Ireland25Plus8Campaign() {
                     <li>{ireland25Plus8Schools[1].features[2]}</li>
                   </ul>
                   <p style={{"margin": "0px", "fontSize": "14px", "lineHeight": "1.6", "color": "rgb(11, 57, 39)", "background": "rgb(234, 244, 236)", "borderRadius": "11px", "padding": "10px 12px"}}><strong style={{"fontWeight": "900"}}>適合：</strong>{ireland25Plus8Schools[1].suitableFor}</p>
-                  <a data-school={ireland25Plus8Schools[1].name} href="/consult" style={{"display": "flex", "alignItems": "center", "gap": "6px", "minHeight": "44px", "fontSize": "15px", "fontWeight": "800"}}>問問哩來這間適不適合我<span aria-hidden="true" className="l-ar">→</span></a>
+                  <a data-school={ireland25Plus8Schools[1].name} href="/consult#form" style={{"display": "flex", "alignItems": "center", "gap": "6px", "minHeight": "44px", "fontSize": "15px", "fontWeight": "800"}}>問問哩來這間適不適合我<span aria-hidden="true" className="l-ar">→</span></a>
                 </div>
               </div>
             </article>
@@ -687,7 +687,7 @@ export function Ireland25Plus8Campaign() {
                     <li>{ireland25Plus8Schools[2].features[2]}</li>
                   </ul>
                   <p style={{"margin": "0px", "fontSize": "14px", "lineHeight": "1.6", "color": "rgb(11, 57, 39)", "background": "rgb(234, 244, 236)", "borderRadius": "11px", "padding": "10px 12px"}}><strong style={{"fontWeight": "900"}}>適合：</strong>{ireland25Plus8Schools[2].suitableFor}</p>
-                  <a data-school={ireland25Plus8Schools[2].name} href="/consult" style={{"display": "flex", "alignItems": "center", "gap": "6px", "minHeight": "44px", "fontSize": "15px", "fontWeight": "800"}}>問問哩來這間適不適合我<span aria-hidden="true" className="l-ar">→</span></a>
+                  <a data-school={ireland25Plus8Schools[2].name} href="/consult#form" style={{"display": "flex", "alignItems": "center", "gap": "6px", "minHeight": "44px", "fontSize": "15px", "fontWeight": "800"}}>問問哩來這間適不適合我<span aria-hidden="true" className="l-ar">→</span></a>
                 </div>
               </div>
             </article>
