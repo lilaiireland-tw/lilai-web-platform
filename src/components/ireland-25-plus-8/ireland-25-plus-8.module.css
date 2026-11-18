@@ -1,0 +1,431 @@
+/* Source-parity exception matching Black Friday. Every rule is page-scoped. */
+.design section { padding: 0; }
+
+.design h1 { max-width: none; }
+
+.design { background: #faf8ef; font-family: Ireland25 Inter, "Ireland25 Noto Sans TC", "PingFang TC", sans-serif; color: #1a1a1a; }
+
+
+/* tokens/colors.css */
+/* Lilai Ireland colour system — DESIGN.md §3.1.
+   Page ratio target (§3.2): 60–70% cream + light neutrals, 20–30% green, 5–10% gold. */
+.design{
+  /* --- base palette --- */
+  --color-bg:#faf8ef;
+  --color-surface:#fffff6;
+  --color-green:#005230;
+  --color-green-dark:#0b3927;
+  --color-green-soft:#eaf4ec;
+  --color-gold:#d59500;
+  --color-gold-bright:#ffbe12;
+  --color-gold-soft:#fff2c8;
+  --color-text:#1a1a1a;
+  --color-text-muted:#5f675f;
+  --color-border:#cfe0d3;
+  --color-danger:#a33b32;
+  --color-white:#ffffff;
+
+  /* --- derived states (never invent new hues; these are the only sanctioned derivations) --- */
+  --color-green-hover:#013f25;
+  --color-green-press:#0b3927;
+  --color-border-strong:#a9c6b1;
+  --color-danger-soft:#f7e8e6;
+  --color-overlay:rgba(11,57,39,.42);
+  --color-header-veil:rgba(250,248,239,.94);
+
+  /* --- semantic aliases: use these in components --- */
+  --surface-page:var(--color-bg);
+  --surface-card:var(--color-surface);
+  --surface-raised:var(--color-white);
+  --surface-inverse:var(--color-green-dark);
+  --surface-accent-soft:var(--color-green-soft);
+  --surface-warm-soft:var(--color-gold-soft);
+  --surface-error-soft:var(--color-danger-soft);
+
+  --text-body:var(--color-text);
+  --text-muted:var(--color-text-muted);
+  --text-heading:var(--color-green-dark);
+  --text-brand:var(--color-green);
+  --text-on-inverse:var(--color-white);
+  --text-on-inverse-muted:rgba(255,255,255,.7);
+  --text-error:var(--color-danger);
+
+  --border-hairline:var(--color-border);
+  --border-emphasis:var(--color-green);
+  --border-inverse:rgba(255,255,255,.22);
+
+  --cta-bg:var(--color-green);
+  --cta-bg-hover:var(--color-green-hover);
+  --cta-fg:var(--color-white);
+  --accent-marker:var(--color-gold-bright);
+  --accent-marker-ink:var(--color-gold);
+
+  --focus-ring-inner:var(--color-surface);
+  --focus-ring-outer:var(--color-gold-bright);
+}
+
+
+/* tokens/typography.css */
+/* Lilai Ireland type system — DESIGN.md §3.3.
+   Serif = Traditional Chinese humanist serif, for CJK display headings and major card titles.
+   Sans  = body copy, nav, buttons, labels, forms, small Latin text. Never one geometric sans everywhere. */
+.design{
+  --font-sans:Ireland25 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Ireland25 Noto Sans TC","Microsoft JhengHei",sans-serif;
+  --font-serif:"Ireland25 Noto Serif TC","Songti TC","Source Han Serif TC","PMingLiU",serif;
+
+  --font-display:var(--font-serif);
+  --font-body:var(--font-sans);
+  --font-ui:var(--font-sans);
+
+  /* --- desktop scale (>1000px) --- */
+  --fs-hero:clamp(28px,5.2vw,55px);/* @kind font */
+  --fs-h1:50px;
+  --fs-h2:42px;
+  --fs-h3:28px;
+  --fs-card-title:18px;
+  --fs-lead:17.5px;
+  --fs-body:15.5px;
+  --fs-small:12.5px;
+  --fs-eyebrow:12px;
+
+  /* --- mobile scale (<=760px) --- */
+  --fs-hero-m:34px;
+  --fs-h2-m:33px;
+  --fs-h3-m:25px;
+  --fs-card-title-m:17px;
+  --fs-lead-m:15.5px;
+  --fs-body-m:15px;
+  --fs-small-m:11.5px;
+
+  --fw-regular:400;/* @kind font */
+  --fw-medium:500;/* @kind font */
+  --fw-semibold:700;/* @kind font */
+  --fw-bold:800;/* @kind font */
+  --fw-black:900;/* @kind font */
+
+  --lh-display:1.22;/* @kind font */
+  --lh-heading:1.28;/* @kind font */
+  --lh-title:1.32;/* @kind font */
+  --lh-lead:1.75;/* @kind font */
+  --lh-body:1.72;/* @kind font */
+  --lh-tight:1.5;/* @kind font */
+
+  --ls-display:-0.02em;/* @kind font */
+  --ls-heading:-0.012em;/* @kind font */
+  --ls-body:0;/* @kind font */
+  --ls-eyebrow:.09em;/* @kind font */
+
+  /* readable measure: ~28–42 CJK characters per line */
+  --measure-lead:720px;/* @kind spacing */
+  --measure-body:640px;/* @kind spacing */
+}
+
+
+/* tokens/spacing.css */
+/* Lilai Ireland spacing — 4px base, 8px working rhythm. DESIGN.md §3.4 */
+.design{
+  --space-1:4px;
+  --space-2:8px;
+  --space-3:12px;
+  --space-4:16px;
+  --space-5:20px;
+  --space-6:24px;
+  --space-7:28px;
+  --space-8:32px;
+  --space-9:40px;
+  --space-10:48px;
+  --space-12:64px;
+  --space-16:96px;
+
+  /* section rhythm */
+  --section-y-desktop:96px;
+  --section-y-tablet:78px;
+  --section-y-mobile:64px;
+
+  /* page gutters */
+  --gutter-desktop:20px;
+  --gutter-mobile:14px;
+
+  /* component padding */
+  --pad-card:28px;
+  --pad-card-loose:36px;
+  --pad-form-desktop:44px;
+  --pad-form-mobile:24px 18px;/* @kind spacing */
+
+  /* vertical relationships */
+  --gap-heading-to-desc:18px;
+  --gap-section-heading-to-body:40px;
+  --gap-card-to-card:18px;
+
+  /* touch */
+  --tap-min:44px;/* @kind spacing */
+  --tap-gap-min:8px;/* @kind spacing */
+}
+
+
+/* tokens/layout.css */
+/* Containers, grid and corner radii — DESIGN.md §3.5, §3.6 */
+.design{
+  --container-main:1160px;/* @kind spacing */
+  --container-narrow:940px;/* @kind spacing */
+  --container-form:900px;/* @kind spacing */
+  --container-main-fluid:min(1160px,100% - 40px);/* @kind spacing */
+  --container-narrow-fluid:min(940px,100% - 40px);/* @kind spacing */
+
+  /* Radii: brand/content cards stay hard-edged and editorial.
+     Only controls, pills, panels and modals get real curvature. */
+  --radius-none:0;
+  --radius-card:4px;
+  --radius-card-soft:6px;
+  --radius-control:11px;
+  --radius-panel:14px;
+  --radius-modal:16px;
+  --radius-pill:999px;
+
+  --border-width-hairline:1px;/* @kind spacing */
+  --border-width-emphasis:2px;/* @kind spacing */
+  --rule-thick:4px;/* @kind spacing */
+  --border-default:1px solid #cfe0d3;/* @kind other */
+
+  /* breakpoints, documented as tokens for reference (media queries can't read vars) */
+  --bp-tablet:1000px;/* @kind spacing */
+  --bp-mobile:760px;/* @kind spacing */
+  --bp-mobile-sm:420px;/* @kind spacing */
+  --bp-mobile-xs:370px;/* @kind spacing */
+
+  --header-h-desktop:126px;/* @kind spacing */
+  --header-h-mobile:118px;/* @kind spacing */
+  --header-blur:14px;/* @kind spacing */
+}
+
+
+/* tokens/elevation.css */
+/* Borders before shadows. DESIGN.md §3.7 — structure comes from 1px green-grey rules,
+   background steps and a hard offset shadow; soft floating shadows are reserved for overlays. */
+.design{
+  --shadow-none:none;
+  --shadow-elevated:0 22px 60px rgba(0,44,24,.11);
+  --shadow-button:0 9px 24px rgba(39,93,71,.18);
+  --shadow-offset:14px 14px 0 rgba(0,82,48,.08);
+  --shadow-offset-tight:8px 8px 0 rgba(0,82,48,.08);
+  --shadow-inset-hairline:inset 0 0 0 1px var(--color-border);
+  --focus-ring:0 0 0 3px var(--focus-ring-inner),0 0 0 5px var(--focus-ring-outer);
+}
+
+
+/* tokens/motion.css */
+/* Motion assists, never performs. DESIGN.md §8 */
+.design{
+  --motion-fast:200ms;/* @kind other */
+  --motion-normal:250ms;/* @kind other */
+  --motion-slow:450ms;/* @kind other */
+  --ease-standard:ease;/* @kind other */
+  --ease-out:cubic-bezier(.2,.7,.3,1);/* @kind other */
+
+  --lift-hover:-2px;/* @kind other */
+  --zoom-image-hover:1.03;/* @kind other */
+  --rotate-chevron-open:180deg;/* @kind other */
+}
+
+@media (prefers-reduced-motion:reduce){
+  .design{
+    --motion-fast:1ms;/* @kind other */
+    --motion-normal:1ms;/* @kind other */
+    --motion-slow:1ms;/* @kind other */
+    --lift-hover:0px;/* @kind other */
+    --zoom-image-hover:1;/* @kind other */
+  }
+
+}
+
+
+/* tokens/base.css */
+/* Element defaults. Kept intentionally small — components carry their own styling. */
+.design *,.design *::before,.design *::after{box-sizing:border-box}
+
+.design{-webkit-text-size-adjust:100%}
+
+.design{margin:0;background:var(--surface-page);color:var(--text-body);font-family:var(--font-body);font-size:var(--fs-body);line-height:var(--lh-body);font-weight:var(--fw-regular);-webkit-font-smoothing:antialiased;text-wrap:pretty}
+
+.design h1,.design h2,.design h3,.design h4{font-family:var(--font-display);color:var(--text-heading);font-weight:var(--fw-black);line-height:var(--lh-heading);letter-spacing:var(--ls-heading);margin:0}
+
+.design h1{font-size:var(--fs-h1);line-height:var(--lh-display);letter-spacing:var(--ls-display)}
+
+.design h2{font-size:var(--fs-h2)}
+
+.design h3{font-size:var(--fs-h3);line-height:var(--lh-title)}
+
+.design h4{font-size:var(--fs-card-title);font-family:var(--font-body);font-weight:var(--fw-bold);line-height:1.3}
+
+.design p{margin:0}
+
+.design a{color:var(--text-brand);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px;transition:color var(--motion-fast) var(--ease-standard)}
+
+.design a:hover{color:var(--color-green-dark);text-decoration-thickness:1.5px}
+
+.design a:focus-visible,.design button:focus-visible,.design input:focus-visible,.design select:focus-visible,.design textarea:focus-visible,.design summary:focus-visible,.design [tabindex]:focus-visible{outline:none;box-shadow:var(--focus-ring);border-radius:var(--radius-card)}
+
+.design img{max-width:100%;display:block}
+
+.design button{font-family:var(--font-body)}
+
+.design strong,.design b{font-weight:var(--fw-bold)}
+
+.design ::selection{background:var(--color-gold-soft);color:var(--color-green-dark)}
+
+@media (max-width:760px){
+  .design{font-size:var(--fs-body-m)}
+
+  .design h1{font-size:var(--fs-hero-m)}
+
+  .design h2{font-size:var(--fs-h2-m)}
+
+  .design h3{font-size:var(--fs-h3-m)}
+
+}
+
+@media (prefers-reduced-motion:reduce){
+  .design{scroll-behavior:auto}
+
+  .design *,.design *::before,.design *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+
+}
+
+
+
+
+.design{scroll-behavior:smooth}
+.design{margin:0;background:#faf8ef}
+.design a{color:#005230}
+.design a:hover{color:#0b3927}
+.design [id]{scroll-margin-top:120px}
+.design [hidden]{display:none!important}
+.design details>summary::-webkit-details-marker{display:none}
+.design details[open] :global(.l-chev){transform:rotate(180deg)}
+.design :global(.l-hd-mob){display:none!important}
+.design :global(.l-auto):has(>:only-child){grid-template-columns:minmax(0,1fr)!important}
+.design :global(.l-tab)[aria-selected="true"]{background:#0b3927!important;border-color:#0b3927!important;color:#fff!important}
+.design :global(.l-tab)[aria-selected="true"] :global(.l-tab-sub){color:rgba(255,255,255,.78)!important}
+.design :global(.l-tab)[aria-selected="true"] :global(.l-tab-ey){color:#ffbe12!important}
+.design :global(.l-seg)[aria-selected="true"]{background:#005230!important;border-color:#005230!important;color:#fff!important}
+.design :global(.l-cmp) tr>*:nth-child(3){background:#eaf4ec}
+.design :global(.l-cmp) thead th:nth-child(3){background:#005230;color:#fff}
+.design :global(.l-cmp-tabs),.design :global(.l-car-ctrl){display:none!important}
+.design :global(.l-4c){display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.design :global(.l-pg){display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px 24px;align-items:start}
+.design :global(.l-pg)>:nth-child(1),.design :global(.l-pg)>:nth-child(4){grid-column:span 2}
+.design :global(.l-pg)>:nth-child(4){align-self:stretch;justify-content:center;background:#faf8ef;border:1px solid #cfe0d3;border-radius:4px;padding:clamp(24px,3vw,40px)}
+.design :global(.l-pg)>:nth-child(4) h3{font-size:clamp(23px,2.4vw,30px)!important}
+@media (min-width:761px){.design :global(.l-loc){min-height:calc(2 * 1.55em)}
+}
+.design :global(.l-sch-name) :global(.l-ext){display:inline-block;margin-left:8px;vertical-align:-1px}
+.design :global(.l-sch-name){display:inline;color:#0b3927;text-decoration:none;text-underline-offset:4px;border-radius:4px}
+.design :global(.l-sch-name):hover{color:#005230;text-decoration:underline}
+.design :global(.l-sch-name):focus-visible{outline:none;box-shadow:0 0 0 3px #faf8ef,0 0 0 5px #ffbe12}
+.design :global(.l-sch-name) :global(.l-ext){transition:transform 200ms ease}
+.design :global(.l-sch-name):hover :global(.l-ext){transform:translate(2px,-2px)}
+.design [data-sticky]{position:fixed;left:0;right:0;bottom:0;z-index:30;transform:translateY(110%);visibility:hidden;transition:transform 250ms ease,visibility 250ms}
+.design [data-sticky][data-show="true"]{transform:none;visibility:visible}
+@media (min-width:761px){.design [data-sticky]{display:none!important}
+}
+@media (max-width:1000px){.design :global(.l-qn) :global(.l-qn-ar){display:none!important}
+.design :global(.l-qn) a{padding:12px 16px!important}
+.design :global(.l-hd-desk){display:none!important}
+.design :global(.l-hd-mob){display:block!important}
+.design :global(.l-split){grid-template-columns:minmax(0,1fr)!important}
+.design :global(.l-4){grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.design :global(.l-sec){padding:78px 0!important}
+.design :global(.l-gift){grid-template-columns:minmax(0,1fr)!important}
+}
+@media (max-width:760px){.design :global(.l-4),.design :global(.l-3),.design :global(.l-2){grid-template-columns:minmax(0,1fr)!important}
+.design :global(.l-sec){padding:60px 0!important}
+.design :global(.l-pg){grid-template-columns:minmax(0,1fr)}
+.design :global(.l-pg)>*{grid-column:auto!important}
+.design :global(.l-tl){grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.design :global(.l-tl) :global(.l-tab-sub),.design :global(.l-tl) :global(.l-tab-ey){display:none}
+.design :global(.l-tl) button{padding:12px 10px!important}
+.design :global(.l-tl) :global(.l-tab-t){font-size:15px!important}
+.design :global(.l-qn) a{min-height:56px!important;padding:10px 12px!important;font-size:14.5px!important}
+.design :global(.l-qn) :global(.l-qn-n),.design :global(.l-qn) :global(.l-qn-ar){display:none!important}
+.design :global(.l-stats){grid-template-columns:minmax(0,1fr)!important}
+.design :global(.l-stats)>div{border-left:0!important;border-top:1px solid #cfe0d3;padding:12px 0!important;flex-direction:row!important;align-items:baseline;gap:12px!important}
+.design :global(.l-stats)>div:first-child{border-top:0}
+.design :global(.l-cmp-tabs){display:grid!important}
+.design :global(.l-cmp) thead{display:none}
+.design :global(.l-cmp) td{display:none}
+.design :global(.l-cmp) tr>*:nth-child(3){background:transparent}
+.design :global(.l-cmp)[data-active="0"] td:nth-child(2),.design :global(.l-cmp)[data-active="1"] td:nth-child(3),.design :global(.l-cmp)[data-active="2"] td:nth-child(4){display:table-cell}
+.design :global(.l-cmp) th[scope="row"]{width:34%!important}
+.design :global(.l-car){grid-template-columns:none!important;grid-auto-flow:column;grid-auto-columns:86%;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;scrollbar-width:none}
+.design :global(.l-car)::-webkit-scrollbar{display:none}
+.design :global(.l-car)>*{scroll-snap-align:start}
+.design :global(.l-car-ctrl){display:flex!important}
+.design :global(.l-city){grid-template-columns:minmax(0,1fr)!important}
+.design :global(.l-sl){grid-template-columns:minmax(0,1fr)!important;gap:8px!important}
+.design footer>div>div:first-child{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:32px 20px!important}
+.design footer>div>div:first-child>div:first-child{grid-column:1/-1}
+.design footer{padding-bottom:calc(40px + env(safe-area-inset-bottom))!important}
+}
+@media (max-width:420px){.design footer>div>div:first-child{grid-template-columns:minmax(0,1fr)!important}
+}
+@media (prefers-reduced-motion:reduce){.design{scroll-behavior:auto}
+.design [data-sticky]{transition:none}
+.design :global(.l-car){scroll-behavior:auto}
+}
+.design:global(.l-js) [data-rv]{transition:opacity 450ms ease,transform 450ms ease}
+.design:global(.l-js) [data-rv]:not([data-in]){opacity:0;transform:translateY(14px)}
+.design:global(.l-js) [data-rv="img"]{transition:opacity 500ms ease}
+.design:global(.l-js) [data-rv="img"]:not([data-in]){transform:none}
+.design :global(.l-sch){transition:border-color 250ms ease,box-shadow 450ms ease}
+.design:global(.l-js) :global(.l-sch)[data-rv]{transition:opacity 450ms ease,transform 450ms ease,border-color 250ms ease,box-shadow 450ms ease}
+.design :global(.l-sch):focus,.design section[tabindex="-1"]:focus{outline:none}
+.design :global(.l-sch) figure>div>*{transition:transform 450ms ease}
+.design :global(.l-sch):hover{border-top-color:#ffbe12!important}
+.design :global(.l-sch):hover figure>div>*{transform:scale(1.03)}
+.design :global(.l-sch)[data-flash]{box-shadow:0 0 0 3px #faf8ef,0 0 0 6px #ffbe12}
+.design :global(.l-ar){display:inline-block;transition:transform 200ms ease}
+.design a:hover>:global(.l-ar){transform:translateX(3px)}
+.design a:hover>:global(.l-ar-d){transform:translateY(3px)}
+.design :global(.l-play) :global(.l-play-btn){transition:transform 250ms ease,background-color 200ms ease}
+.design :global(.l-play):hover :global(.l-play-btn),.design :global(.l-play):focus-visible :global(.l-play-btn){transform:scale(1.06);background-color:#ffcb3d!important}
+.design :global(.l-play):focus-visible{outline:none;box-shadow:inset 0 0 0 3px #faf8ef,inset 0 0 0 6px #ffbe12}
+.design :global(.l-play) img{transition:transform 450ms ease}
+.design :global(.l-play):hover img{transform:scale(1.03)}
+.design :global(.l-jr){position:fixed;right:14px;top:50%;transform:translateY(-50%);z-index:20;display:none;transition:opacity 250ms ease,visibility 250ms}
+.design :global(.l-jr)[data-show="false"]{opacity:0;visibility:hidden}
+@media (min-width:1260px){.design :global(.l-jr){display:block}
+}
+.design :global(.l-jr-a){position:relative;display:flex;align-items:center;justify-content:center;width:44px;height:44px;text-decoration:none}
+.design :global(.l-jr-a):focus-visible{outline:none}
+.design :global(.l-jr-dot){width:30px;height:30px;box-sizing:border-box;border-radius:999px;border:1px solid #a9c6b1;background:#fffff6;color:#005230;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:900;transition:background-color 250ms ease,border-color 250ms ease,color 250ms ease,transform 200ms ease}
+.design :global(.l-jr-a):hover :global(.l-jr-dot){border-color:#005230;transform:scale(1.06)}
+.design :global(.l-jr-a)[data-state="done"] :global(.l-jr-dot){background:#005230;border-color:#005230;color:#fff}
+.design :global(.l-jr-a)[data-state="current"] :global(.l-jr-dot){background:#ffbe12;border-color:#0b3927;color:#0b3927}
+.design :global(.l-jr-a):focus-visible :global(.l-jr-dot){box-shadow:0 0 0 3px #faf8ef,0 0 0 5px #ffbe12}
+.design :global(.l-jr-lb){position:absolute;right:48px;top:50%;transform:translateY(-50%);white-space:nowrap;background:#fffff6;border:1px solid #cfe0d3;border-radius:4px;padding:5px 10px;font-size:13px;font-weight:800;color:#0b3927;opacity:0;pointer-events:none;transition:opacity 200ms ease}
+.design :global(.l-jr-a):hover :global(.l-jr-lb),.design :global(.l-jr-a):focus-visible :global(.l-jr-lb){opacity:1}
+.design :global(.l-jr)[data-flash="true"] :global(.l-jr-a)[data-state="current"] :global(.l-jr-lb){opacity:1}
+@media (min-width:1480px){.design :global(.l-jr-a)[data-state="current"] :global(.l-jr-lb){opacity:1}
+}
+.design :global(.l-jm)[data-state="done"]{background:#005230!important}
+.design :global(.l-jm)[data-state="current"]{background:#ffbe12!important}
+.design :global(.l-car):focus-visible{outline:none;box-shadow:0 0 0 3px #faf8ef,0 0 0 5px #ffbe12}
+.design :global(.l-car)>*{transition:opacity 450ms ease}
+.design :global(.l-car-btn):disabled{opacity:.4;cursor:default}
+@media (max-width:760px){.design :global(.l-car)>[data-active="false"]{opacity:.55}
+.design :global(.l-wrapbtn) a{white-space:normal!important;height:auto!important;min-height:54px;padding-top:12px!important;padding-bottom:12px!important;text-align:center;line-height:1.4!important;width:100%!important}
+}
+@media (prefers-reduced-motion:reduce){.design :global(.l-jr),.design :global(.l-jr) *,.design :global(.l-play),.design :global(.l-play) *,.design :global(.l-sch),.design :global(.l-sch) *,.design :global(.l-car)>*,.design :global(.l-ar),.design :global(.l-jm){transition:none!important}
+.design :global(.l-sch):hover figure>div>*,.design :global(.l-play):hover img{transform:none!important}
+}
+
+:global(html):has(.design) { scroll-padding-top: 0; }
+
+.design { font-family: 'Ireland25 Inter', 'Ireland25 Noto Sans TC', 'PingFang TC', sans-serif; }
+
+.design [id] { scroll-margin-top: 193px; }
+
+.design [aria-disabled="true"] { cursor: default !important; }
+
+@media(max-width:760px) { .design [id] { scroll-margin-top: 143px; }
+ }

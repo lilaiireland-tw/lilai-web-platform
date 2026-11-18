@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
+const sharp = require('sharp');
 const fontCss = fs.readFileSync('src/components/ireland-25-plus-8/fonts.css', 'utf8').replaceAll('Ireland25 ', '').replaceAll('url(/assets/', 'url(http://127.0.0.1:3101/assets/');
 const properties = ['display','width','height','marginTop','marginBottom','paddingTop','paddingBottom','gap','fontFamily','fontSize','fontWeight','lineHeight','letterSpacing','color','backgroundColor','borderRadius','boxShadow','gridTemplateColumns','objectFit'];
 const sourceServer = http.createServer((req,res) => {
@@ -48,15 +49,56 @@ const sourceServer = http.createServer((req,res) => {
     const got=actual[i]; assert.equal(section.id,got.id); assert.equal(section.nodes.length,got.nodes.length,section.id);
     section.nodes.forEach((node,j)=>{
      const received=got.nodes[j];
+     assert.equal(node.tag,received.tag,section.id+' DOM tag');
      for(const key of ['x','y','w','h']) if(Math.abs(node[key]-received[key])>0.1)diff.push(`${section.id}/${j} ${key}: ${node[key]} => ${received[key]}`);
      for(const [key,value] of Object.entries(node.styles)) if(value!==received.styles[key])diff.push(`${section.id}/${j} ${key}: ${value} => ${received.styles[key]}`);
      assert.equal(node.text,received.text,section.id+' copy');
     });
    });
    fs.writeFileSync(`artifacts/25plus8/diff-${width}.json`,JSON.stringify(diff,null,2));
+   const pixels=[];
+   // Hide fixed shell overlays only; retain campaign section content and borders.
+   for (const p of [reference,page]) await p.addStyleTag({content:'html{scroll-behavior:auto!important}body{padding-bottom:3000px!important}body>header,body>a,.l-hd-mob,.l-hd-desk,[data-site-top-strip],[data-sticky],.l-jr{display:none!important}'});
+   const fullScreenshots=[];
+   for(const [p,label] of [[reference,'source'],[page,'actual']]) {
+    await p.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
+    fullScreenshots.push(await p.screenshot({path:`artifacts/25plus8/${width}-${label}-full.png`,fullPage:true}));
+   }
+   for (const section of expected) {
+    const file=`artifacts/25plus8/${width}-${section.id}`;
+    const screenshots=[];
+    for(const [i,p] of [reference,page].entries()) {
+     const rect=await p.locator('#'+section.id).boundingBox();
+     screenshots.push(await sharp(fullScreenshots[i]).extract({left:0,top:Math.round(rect.y),width,height:Math.floor(rect.height)}).png().toBuffer());
+     fs.writeFileSync(file+(i===0?'-source.png':'-actual.png'),screenshots[i]);
+    }
+    const [source,result]=screenshots;
+    const a=await sharp(source).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+    const b=await sharp(result).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+    assert.deepEqual(a.info,b.info,section.id+' image dimensions');
+    let changed=0,total=0;
+    for(let y=2;y<a.info.height-2;y++)for(let x=2;x<a.info.width-2;x++){
+     const offset=(y*a.info.width+x)*4;
+     if([0,1,2].some(channel=>Math.abs(a.data[offset+channel]-b.data[offset+channel])>8))changed++;
+     total++;
+    }
+    pixels.push({section:section.id,changedRatio:changed/total});
+   }
+   fs.writeFileSync(`artifacts/25plus8/pixels-${width}.json`,JSON.stringify(pixels,null,2));
+   // Remove only the temporary comparison styles before interaction checks.
+   for (const p of [reference,page]) {
+    await p.locator('style').last().evaluate(el=>el.remove());
+    await p.setViewportSize({width,height:900});
+   }
    assert.equal(await page.locator('h1').count(),1);
    assert.equal(await page.locator('body > header').count(),1);
    assert.equal(await page.locator('body > footer').count(),1);
+   assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),'https://lilaiireland.com/ireland-25-plus-8/');
+   assert.equal(await page.locator('meta[name="robots"]').getAttribute('content'),'noindex, nofollow');
+   const schemas=await page.locator('script[type="application/ld+json"]').evaluateAll(items=>items.map(item=>JSON.parse(item.textContent)));
+   assert.equal(schemas.length,2);
+   assert.equal(schemas[1].url,'https://lilaiireland.com/ireland-25-plus-8/');
+   assert.equal(await page.locator('[data-ireland25]').evaluate(el=>el.classList.contains('l-js')),false,'reduced motion skips reveal transitions');
    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'horizontal overflow '+width);
    for(const list of await page.locator('[role="tablist"]').all()) {
     const tabs=list.locator('[role="tab"]');
@@ -65,8 +107,10 @@ const sourceServer = http.createServer((req,res) => {
     assert.equal(await tabs.nth(1).getAttribute('aria-selected'),'true');
     await page.keyboard.press('Home'); assert.equal(await tabs.first().getAttribute('aria-selected'),'true');
    }
+   assert.deepEqual(await page.locator('#faq details').evaluateAll(items=>items.map(item=>item.open)),[true,true,false,false,false,false,false,false,false,false]);
    await page.locator('#faq summary').nth(2).focus(); await page.keyboard.press('Enter');
    await page.waitForFunction(()=>document.querySelectorAll('#faq details')[2].open);
+   assert.equal(await page.locator('#faq details[open]').count(),3);
    if(width<=760){
     await page.locator('[data-car-next]').click();
     assert.match(await page.locator('#stories [aria-live]').innerText(),/02\s*\/\s*02/);
@@ -78,11 +122,15 @@ const sourceServer = http.createServer((req,res) => {
    const id=await jump.getAttribute('data-jump');
    assert.equal(await page.locator('#'+id).getAttribute('data-flash'),'1');
    assert(await page.locator('#'+id).evaluate(el=>el.getBoundingClientRect().top>=document.querySelector('body > header').getBoundingClientRect().bottom));
+   if(width===1440) {
+    await page.waitForFunction(()=>document.querySelector('.l-jr-a[data-jump="choose"]').getAttribute('aria-current')==='step');
+    assert(await page.locator('.l-jr').isVisible());
+   }
    await page.evaluate(()=>scrollTo(0,0));
    await page.screenshot({path:`artifacts/25plus8/${width}.png`});
    if(width===390) {
     await page.emulateMedia({reducedMotion:'no-preference'}); await page.reload({waitUntil:'networkidle'});
-    await page.waitForFunction(()=>document.querySelector('.ireland25').classList.contains('l-js'));
+    await page.waitForFunction(()=>document.querySelector('[data-ireland25]').classList.contains('l-js'));
     await page.evaluate(()=>scrollTo({top:document.querySelector('#choose').offsetTop,behavior:'instant'}));
     await page.waitForFunction(()=>document.querySelector('[data-sticky]').dataset.show==='true');
     await page.evaluate(()=>{const notice=document.createElement('div');notice.id='lilai-cookie-title';document.body.appendChild(notice);});
@@ -97,13 +145,22 @@ const sourceServer = http.createServer((req,res) => {
     await page.evaluate(()=>{document.cookie='lilai_consent_v1=v1.100; Path=/';});
     await page.locator('[data-jump][data-flash="1"]').first().click();
     assert.equal(await page.evaluate(()=>window.dataLayer.filter(e=>e.event==='click_25plus8_tier_school').length),1);
-    console.log('PASS normal motion, mobile sticky/footer/consent suppression and consent-gated single analytics event');
+    await page.evaluate(()=>{window.__lilaiLifecycleCheck=1;});
+    await page.locator('body > header a[href="/"]').click();
+    await page.waitForURL('http://127.0.0.1:3100/');
+    await page.goBack();
+    await page.waitForFunction(()=>document.querySelector('[data-ireland25]')?.classList.contains('l-js'));
+    assert.equal(await page.evaluate(()=>window.__lilaiLifecycleCheck),1,'same-document client navigation');
+    await page.evaluate(()=>{window.dataLayer=[];});
+    await page.locator('[data-jump][data-flash="1"]').first().click();
+    assert.equal(await page.evaluate(()=>window.dataLayer.filter(e=>e.event==='click_25plus8_tier_school').length),1,'remount retains a single listener');
+    console.log('PASS normal/reduced motion, progress rail, mobile sticky/footer/consent suppression, consent-gated analytics and client navigation remount');
    }
-   report.push({width,sections:actual.length,nodes:actual.reduce((n,s)=>n+s.nodes.length,0),differences:diff,errors});
+   report.push({width,sections:actual.length,nodes:actual.reduce((n,s)=>n+s.nodes.length,0),differences:diff,pixels,errors});
    await context.close();
   }
   fs.writeFileSync('artifacts/25plus8/report.json',JSON.stringify(report,null,2));
-  for(const r of report) { console.log(r.width, r.nodes, 'nodes;',r.differences.length,'differences;',r.errors); if(r.differences.length)console.log(r.differences.slice(0,12)); }
-  assert(report.every(r=>!r.differences.length&&!r.errors.length),'See artifacts/25plus8/report.json');
+  for(const r of report) { console.log(r.width, r.nodes, 'nodes;',r.differences.length,'differences; max pixel ratio',Math.max(...r.pixels.map(p=>p.changedRatio)),r.errors); if(r.differences.length)console.log(r.differences.slice(0,12)); }
+  assert(report.every(r=>!r.differences.length&&!r.errors.length&&r.pixels.every(p=>p.changedRatio<0.001)),'See artifacts/25plus8/report.json');
  } finally {await browser.close();sourceServer.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;sourceServer.close();});

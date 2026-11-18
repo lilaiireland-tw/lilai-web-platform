@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
-import content from "@/components/ireland-25-plus-8/content.json";
-import { Interactions } from "@/components/ireland-25-plus-8/Interactions";
-import "@/components/ireland-25-plus-8/source.css";
-import "@/components/ireland-25-plus-8/fonts.css";
+import { ireland25Plus8Schema } from "@/content/ireland-25-plus-8-copy";
+import { Ireland25Plus8Campaign } from "@/components/ireland-25-plus-8/Ireland25Plus8Campaign";
 
 export const dynamic = "force-static";
 
-const title = content.schema[1].name!;
-const url = content.schema[1].url!;
+const title = ireland25Plus8Schema[1].name!;
+const url = ireland25Plus8Schema[1].url!;
 export const metadata: Metadata = {
   title: { absolute: `${title}｜哩來愛爾蘭` },
   description: "愛爾蘭25+8打工遊學完整指南！了解25週英文課程、學費三大級距、工作規定、續簽條件及語校選擇。哩來提供客製選校、開局大禮包與在地經驗，陪你規劃愛爾蘭生活。",
@@ -24,8 +22,7 @@ export const metadata: Metadata = {
 
 export default function Ireland25Plus8Page() {
   return <>
-    {content.schema.map((schema, index) => <script key={index} type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, "\\u003c") }} />)}
-    <Interactions><div dangerouslySetInnerHTML={{ __html: content.html }} /></Interactions>
+    {ireland25Plus8Schema.map((schema, index) => <script key={index} type="application/ld+json">{JSON.stringify(schema).replace(/</g, "\\u003c")}</script>)}
+    <Ireland25Plus8Campaign />
   </>;
 }
