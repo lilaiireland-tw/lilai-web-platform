@@ -95,7 +95,7 @@ const sourceServer = http.createServer((req,res) => {
    assert.equal(await page.locator('body > footer').count(),1);
    assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),'https://lilaiireland.com/ireland-25-plus-8');
    assert.equal(await page.locator('meta[property="og:url"]').getAttribute('content'),'https://lilaiireland.com/ireland-25-plus-8');
-   assert.equal(await page.locator('meta[name="robots"]').getAttribute('content'),'noindex, nofollow');
+   assert.equal(await page.locator('meta[name="robots"]').getAttribute('content'),'index, follow');
    const schemas=await page.locator('script[type="application/ld+json"]').evaluateAll(items=>items.map(item=>JSON.parse(item.textContent)));
    assert.equal(schemas.length,2);
    assert.equal(schemas[0].itemListElement[1].item,'https://lilaiireland.com/ireland-25-plus-8');

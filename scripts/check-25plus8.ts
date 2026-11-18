@@ -68,7 +68,7 @@ for (const [, file] of css.matchAll(/url\(([^)]+)\)/g)) {
   assert.equal(readFileSync("public" + file).subarray(0, 4).toString(), "wOF2");
 }
 const page = readFileSync("src/app/ireland-25-plus-8/page.tsx", "utf8");
-assert.match(page, /index: false/);
+assert.match(page, /robots: \{ index: true, follow: true \}/);
 assert.match(page, /<Ireland25Plus8Campaign \/>/);
 assert.doesNotMatch(page, /dangerouslySetInnerHTML|content\.json|fetch\(/);
 assert.equal(ireland25Plus8Schema[1].url, "https://lilaiireland.com/ireland-25-plus-8");

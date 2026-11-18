@@ -66,23 +66,27 @@ package was added. The original local HTML and handoff remain untracked referenc
   initializer cleans up listeners, observers and timers on unmount. Tabs,
   carousel, progress rail, sticky CTA, anchors, consent and GA4 names are retained.
 - Existing structured SEO data now lives in `ireland25Plus8Schema` in the content
-  file; metadata remains in `page.tsx` and robots stays noindex/nofollow.
+  file; metadata remains in `page.tsx` and production indexing is approved (`index, follow`).
 
 The original contains block wrappers inside paragraphs. The JSX spells out the
 browser-repaired location/consultation DOM (including empty paragraphs) so the
 rendered geometry stays identical and React hydrates without errors.
 
-## Release blockers and routing
+## Optional artwork and release routing
 
 - Paid consultation now uses the owner-approved
   `https://lilaiireland.com/language-school-signup/#direct-application-form`.
   Disabled ARIA/tabIndex are removed; the native link is keyboard accessible and
   retains consent-gated `click_25plus8_paid_consult` tracking. No form is submitted
   by regression checks.
-- Missing `og-25plus8.png`: no broken image URL is advertised. Add the approved
-  artwork and set OG/Twitter image metadata when available.
-- Page remains `noindex, nofollow`, with no new static sitemap entry, until the required
-  handoff inputs are complete. Do not describe this state as production launched.
+- Optional `og-25plus8.png` can be added later. No broken image URL is advertised;
+  set OG/Twitter image metadata when approved artwork becomes available. Missing
+  artwork does not block indexing.
+- The owner approved search indexing after testing the page. Metadata now permits
+  `index, follow`; `STATIC_SITEMAP_URLS` includes `/ireland-25-plus-8`. The production
+  sitemap emits this slashless canonical once, even if WordPress has a same-slug
+  page. Preview/staging robots and noindex response protections remain unchanged.
+  These changes take effect on production after the reviewed code is released.
 - Owner still needs to confirm the source fee tiers/refund wording and operational
   replay process; none was rewritten or independently revalidated.
 
@@ -101,6 +105,9 @@ canonical, and the approved `direct-application-form` anchor exists. Its exact
 approved URL is preserved. The new 25+8 route currently returns 404 on production
 because this PR has not been released. `check-seo-url-consistency.ts` covers its
 canonical 200, slash/query-preserving 308 aliases alongside existing Next routes.
+It also verifies production index/follow, no blocking X-Robots-Tag, one canonical
+entry in the actual `/sitemap.xml` response despite a CMS collision fixture,
+and an empty sitemap/disallow-all robots in preview.
 
 Unlike Black Friday inside `/events/`, this top-level URL requires releasing the
 updated **Router code as well as Platform code**. The existing manual workflow
@@ -115,7 +122,7 @@ Worker route, move signup or merge/deploy this PR automatically.
   production-router, new `scripts/check-25plus8.ts`, Next production build and
   `git diff --check` are required. The new source check runs in both existing CI
   validation workflows. It verifies local assets/fonts, seven original photo
-  hashes when deploy inputs exist, active approved paid link, lazy image dimensions, canonical, noindex and
+  hashes when deploy inputs exist, active approved paid link, lazy image dimensions, canonical, indexing and
   route ownership.
 - `node scripts/check-25plus8-reference.cjs` compares original and built content
   geometry/computed styles and section screenshots at 320/375/390/430/768/1024/1440px using identical local
@@ -139,7 +146,8 @@ There were no page/console errors or horizontal overflow. Mobile/desktop images
 were visually inspected. FAQ defaults/keyboard/independent disclosure, tabs,
 carousel, school anchors, reduced/normal motion, consent-gated single events,
 paid-link keyboard activation/consent-gated events, mobile sticky/footer/consent suppression and client-navigation unmount/remount
-passed. Canonical, noindex and both JSON-LD entries are checked in the browser.
+passed. Canonical and both JSON-LD entries were checked in that browser baseline.
+The indexing follow-up checks production index/follow through HTTP regression.
 No production form or service was submitted. These results do not establish
 Safari or production analytics behavior.
 
@@ -149,3 +157,9 @@ rail at >=1260px; sticky suppression at CTA zones/footer/consent; touch carousel
 normal/reduced motion; console/hydration errors; real GA4/GTM receiving and event
 deduplication after consent. No GTM container ID was supplied, so receiving is
 unverified. Existing `npm run lint` still uses removed `next lint`; unchanged.
+
+Indexing follow-up validation passed: updated SEO regression (actual production
+sitemap and robots response, CMS collision fixture and preview protections),
+source guard, TypeScript, production build, shared-layout, design-system and
+routing checks. No visual markup/styles changed; the seven-width pixel comparison
+was not rerun and remains the visual baseline.

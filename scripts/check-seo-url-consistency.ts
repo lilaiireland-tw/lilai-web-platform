@@ -40,6 +40,7 @@ async function main() {
   globalThis.fetch = originalFetch;
   const sitemapUrls = currentSitemap.map(item => item.url);
   assert(sitemapUrls.includes("https://lilaiireland.com/consult"));
+  assert.equal(sitemapUrls.filter(url => url === "https://lilaiireland.com/ireland-25-plus-8").length, 1);
   assert(sitemapUrls.includes("https://lilaiireland.com/events"));
   assert(!sitemapUrls.includes("https://lilaiireland.com/events/daydream-adventure-2027"));
   assert.deepEqual(robotsModule.default().sitemap, [
@@ -47,6 +48,13 @@ async function main() {
     "https://lilaiireland.com/sitemap.xml",
     "https://lilaiireland.com/events-sitemap.xml"
   ]);
+
+  process.env.SITE_DEPLOYMENT_ENV = "preview";
+  process.env.EVENT_DEPLOYMENT_ENV = "preview";
+  assert.deepEqual(await sitemap(), [], "Preview sitemap stays empty");
+  assert.deepEqual(robotsModule.default().rules, [{ userAgent: "*", disallow: "/" }]);
+  process.env.SITE_DEPLOYMENT_ENV = "production";
+  process.env.EVENT_DEPLOYMENT_ENV = "production";
 
   let port = 0;
   for (let attempt = 0; attempt < 10 && port < 5000; attempt++) {
@@ -60,11 +68,20 @@ async function main() {
   }
   assert(port >= 5000, `Unable to select an unreserved test port: ${port}`);
 
+  // Model a CMS slug collision without contacting production WordPress.
+  const wordpress = createServer((request, response) => {
+    response.setHeader("Content-Type", "application/json");
+    response.end(JSON.stringify(request.url?.startsWith("/pages?") ? [{ slug: "ireland-25-plus-8" }] : []));
+  });
   let app: ReturnType<typeof spawn> | undefined;
   let logs = "";
   try {
+    wordpress.listen(0, "127.0.0.1");
+    await once(wordpress, "listening");
+    const wordpressAddress = wordpress.address();
+    assert(wordpressAddress && typeof wordpressAddress !== "string");
     app = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "--hostname", "127.0.0.1", "--port", String(port)], {
-      env: { ...process.env, SITE_DEPLOYMENT_ENV: "production", EVENT_DEPLOYMENT_ENV: "production", EVENTS_INCLUDE_DRAFTS: "false" },
+      env: { ...process.env, SITE_DEPLOYMENT_ENV: "production", EVENT_DEPLOYMENT_ENV: "production", EVENTS_INCLUDE_DRAFTS: "false", WORDPRESS_API_BASE: `http://127.0.0.1:${wordpressAddress.port}` },
       stdio: ["ignore", "pipe", "pipe"]
     });
     app.stdout?.on("data", data => { logs += data; });
@@ -107,6 +124,14 @@ async function main() {
     assert.match(consult, /name="robots" content="index, follow"/);
     const events = await (await get("/events")).text();
     assert.match(events, /name="robots" content="index, follow"/);
+    const ireland = await get("/ireland-25-plus-8");
+    assert.doesNotMatch(ireland.headers.get("x-robots-tag") ?? "", /noindex/i);
+    assert.match(await ireland.text(), /name="robots" content="index, follow"/);
+    const sitemapResponse = await get("/sitemap.xml");
+    assert.equal(sitemapResponse.status, 200);
+    const sitemapXml = await sitemapResponse.text();
+    assert.equal((sitemapXml.match(/<loc>https:\/\/lilaiireland\.com\/ireland-25-plus-8<\/loc>/g) ?? []).length, 1);
+    assert(!sitemapXml.includes("<loc>https://lilaiireland.com/ireland-25-plus-8/</loc>"), "CMS slug must not duplicate the Platform canonical");
     const robotTxt = await (await get("/robots.txt")).text();
     assert(robotTxt.includes("Sitemap: https://lilaiireland.com/sitemap_index.xml"));
     assert(robotTxt.includes("Sitemap: https://lilaiireland.com/sitemap.xml"));
@@ -125,6 +150,7 @@ async function main() {
     console.log("PASS direct canonical 200s, slash/query redirects, robots directives, WordPress and Platform sitemap discovery, and indexable event sitemap coverage");
   } finally {
     if (app && app.exitCode === null) { const exited = once(app, "exit"); app.kill(); await exited; }
+    if (wordpress.listening) await new Promise<void>(resolve => wordpress.close(() => resolve()));
   }
 }
 
