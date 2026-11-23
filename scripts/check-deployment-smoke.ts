@@ -52,6 +52,8 @@ async function main() {
   if (environment === "staging") {
     for (const [path, status] of [
       ["/events", 200],
+      ["/language-school-signup/", 200],
+      ["/language-school-signup/og.png", 200],
       ["/events/daydream-adventure-2027", 200],
       ["/events/daydream-adventure-2027/arsha.webp", 200],
       ["/events/missing-staging-smoke", 404],
