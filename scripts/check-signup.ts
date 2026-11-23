@@ -3,8 +3,9 @@ import { createServer } from "node:http";
 import { mkdirSync, writeFileSync } from "node:fs";
 import next from "next";
 import { chromium, expect, type Page } from "@playwright/test";
+import { createSignupTestBackend } from "../tests/signup-backend/fixture";
 
-// Isolated localhost QA. All browser egress and submissions use fixtures.
+// Isolated localhost QA. Real local Worker/D1; external providers use fixtures.
 process.env.SITE_DEPLOYMENT_ENV = "staging";
 process.env.EVENT_DEPLOYMENT_ENV = "preview";
 process.env.SIGNUP_LOCAL_PREVIEW = "1";
@@ -18,6 +19,7 @@ async function main() {
   const server = createServer(app.getRequestHandler());
   await new Promise<void>(resolve => server.listen(3130, "127.0.0.1", resolve));
   const browser = await chromium.launch({ headless: true });
+  let backend: Awaited<ReturnType<typeof createSignupTestBackend>> | undefined;
   mkdirSync(artifactDir, { recursive: true });
   try {
     for (const [source, status, destination] of [
@@ -40,6 +42,8 @@ async function main() {
     assert.equal(offlineApi.status, 503);
     assert.equal((await fetch(baseURL + "/language-school-signup/api/applications", { method: "POST", body: "{}" })).status, 503);
     console.log("PASS original slash URL, canonical, staging noindex, existing redirects and offline API guard");
+    backend = await createSignupTestBackend();
+    process.env.SIGNUP_LOCAL_BACKEND_ORIGIN = backend.origin;
 
     for (const width of [375, 768, 1440]) {
       const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: width === 1440 ? "no-preference" : "reduce", serviceWorkers: "block" });
@@ -59,7 +63,7 @@ async function main() {
         const request = route.request();
         const url = new URL(request.url());
         if (url.pathname === "/language-school-signup/api/turnstile-config") {
-          await route.fulfill({ json: { siteKey: "local-fixture", action: "application_submit" } });
+          await route.continue();
         } else if (url.hostname === "challenges.cloudflare.com") {
           await route.fulfill({ contentType: "application/javascript", body: `window.turnstile = {
             render(container, options) { window.__signupToken = options.callback; setTimeout(() => options.callback('local-fixture-token'), 0); return 'fixture'; },
@@ -68,10 +72,7 @@ async function main() {
         } else if (url.pathname === "/language-school-signup/api/applications") {
           submissions.push({ body: request.postDataJSON(), key: request.headers()["idempotency-key"] });
           if (submissions.length === 1) await route.fulfill({ status: 403, json: { error: { message: "安全驗證失敗，請重新驗證後再試。" } } });
-          else {
-            await new Promise(resolve => setTimeout(resolve, 200));
-            await route.fulfill({ status: 201, json: { ok: true, submissionId: "ST-123456" } });
-          }
+          else await route.continue();
         } else if (url.origin === baseURL) await route.continue();
         else if (request.resourceType() === "image") {
           await route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>' });
@@ -176,11 +177,21 @@ async function main() {
       console.log(`PASS ${width}px: shared shell, assets, overflow, school tabs, FAQ keyboard, direct/consultation forms, retry, attribution and success`);
       await context.close();
     }
+    const rows = await backend.db.prepare("SELECT reference_code, service_type, utm_source, gclid FROM applications ORDER BY reference_code").all();
+    assert.equal(rows.results.length, 6, "both browser form modes must reach real local D1 at all widths");
+    assert.deepEqual(rows.results.map((row: { service_type: string }) => row.service_type), ["direct_application", "consultation", "direct_application", "consultation", "direct_application", "consultation"]);
+    assert.deepEqual(rows.results.map((row: { reference_code: string }) => row.reference_code), ["ST-000001", "ST-000002", "ST-000003", "ST-000004", "ST-000005", "ST-000006"]);
+    assert(rows.results.every((row: { utm_source: string; gclid: string }) => row.utm_source === "local-qa" && row.gclid === "local-test"));
+    assert.equal((await backend.db.prepare("SELECT COUNT(*) AS n FROM integration_jobs").first()).n, 18);
+    assert.deepEqual(backend.state.unexpected, []);
+    console.log("PASS browser -> Next API bridge -> migrated Worker -> local D1: 6 applications, 18 jobs, original ST codes and attribution");
   } finally {
     await browser.close();
     server.closeAllConnections();
     server.close();
     await app.close();
+    await backend?.mf.dispose();
+    delete process.env.SIGNUP_LOCAL_BACKEND_ORIGIN;
   }
 }
 

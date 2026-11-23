@@ -12,7 +12,11 @@ const worker = {
       // Keep the existing signup routes while Platform renders the shared page/assets.
       if ((url.pathname === "/language-school-signup" || url.pathname.startsWith("/language-school-signup/")) &&
           (request.method === "GET" || request.method === "HEAD") && env.PLATFORM) {
-        return await env.PLATFORM.fetch(request);
+        const page = await env.PLATFORM.fetch(request);
+        if (url.hostname === "lilaiireland.com" || url.hostname === "www.lilaiireland.com") return page;
+        const headers = new Headers(page.headers);
+        headers.set("X-Robots-Tag", "noindex, nofollow");
+        return new Response(page.body, { status: page.status, statusText: page.statusText, headers });
       }
       return errorResponse(404, "not_found", "找不到此頁面。");
     } catch (error) {

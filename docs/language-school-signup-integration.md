@@ -1,6 +1,6 @@
 # Local language-school signup integration
 
-Status: frontend checkpoint `de26b0b`; backend migration in progress, November 23, 2026. No deployment or traffic cutover.
+Status: local frontend/backend migration complete, November 23, 2026. No deployment or traffic cutover.
 
 ## Verified Git baseline
 
@@ -65,6 +65,26 @@ npm run dev:signup
 
 Open `http://127.0.0.1:3120/language-school-signup/`.
 
+For the backend, run these in a separate terminal **from this same repository**:
+
+```powershell
+npm run signup:db:local
+npm run signup:dev
+```
+
+Then set `$env:SIGNUP_LOCAL_BACKEND_ORIGIN = 'http://127.0.0.1:8787'` before
+starting `npm run dev:signup`. Both commands use the local default config and
+`.wrangler/signup-local`; they never request remote D1. Local queues have no
+consumer/Cron, so manual QA cannot send Gmail/Notion jobs automatically.
+For manual Turnstile, use development keys in ignored
+`cloudflare/signup-backend/.dev.vars` (`TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET`,
+`TURNSTILE_HOSTNAMES` matching the local browser hostname). Missing keys fail
+closed. Production secrets and the old project's `.dev.vars` were not copied.
+
+`npm run check:signup` needs no keys: only the challenge widget/providers are
+fixtures; successful browser submissions use the real migrated Worker and D1.
+The fixture backend runs on an ephemeral loopback port and is disposed after QA.
+
 This command uses staging/preview markers and `.next/signup-local` so existing
 `.next/dev` caches are preserved. It does not change production configuration.
 The ordinary `npm run dev` still works with the default Next output directory
@@ -78,7 +98,8 @@ The backend now lives in `worker/signup/`, SQL migrations in `migrations/signup/
 and backend tests in `tests/signup-backend/`. Business handlers are copied from
 source `8b47338`; the student email template imports the platform's existing
 commercial terms. Vinext rendering/image handling is replaced at the entry point
-by a `PLATFORM` service binding for signup GET/HEAD page/assets. API paths,
+by a `PLATFORM` service binding for signup GET/HEAD page/assets. Nonproduction
+hostnames, including workers.dev, retain noindex/nofollow via X-Robots-Tag. API paths,
 validation, SQL, Queue/Cron and provider behavior remain the original code.
 
 `cloudflare/signup-backend/wrangler.jsonc` defaults to local-only resources:
@@ -94,6 +115,42 @@ resources with no public routes, consumers or Cron.
 Phase 1 verification: clean offline `npm ci` installed 632 packages; generated
 Wrangler types and backend TypeScript passed; 16 original OAuth/Gmail, email
 template and Turnstile tests passed with mocked providers. No secrets copied.
+
+Phase 1 checkpoint: `f0fee83` on `feature/migrate-signup-backend`, pushed and
+matched to the local tree. Frontend checkpoint remains `de26b0b` on the original
+integration branch. Work continues in `lilai-web-platform-signup-migration/`,
+a worktree of the same repository, to preserve the original directory's edits.
+
+Phase 2 verification: 26 backend tests cover original provider/template tests,
+resource isolation, real local Workers/D1 routing and writes, ST sequence,
+validation/Turnstile failures before writes, deduplication, admin auth/update,
+Queue redelivery, temporary failure/retry, Cron reconciliation/stale recovery,
+dead-letter and the original global rate limit. All outbound providers are
+in-process fixtures; any unexpected outbound URL fails the test.
+
+Full browser QA at 375/768/1440px now reaches Next API -> loopback bridge ->
+migrated Worker -> local D1. It verifies six applications, ST-000001..000006,
+18 integration jobs and stored attribution, plus the existing UI assertions.
+Local Wrangler applied both SQL migrations successfully; production-env dry-run
+packaged the backend with the expected existing bindings and Platform service.
+No remote deployment/resource mutation occurred.
+
+Final checks also passed: Next production build, root/backend TypeScript,
+shared-layout/CMS fixtures, SEO URL consistency, design system, production
+routing/router/route-safety and `git diff --check`. A source-parity check verified
+22 backend modules unchanged (apart from the email import), both SQL files
+byte-identical, and shared commercial terms identical. The actual `signup:dev`
+server started on loopback; missing Turnstile/admin credentials returned the
+original fail-closed 503 responses. This sandbox required workspace-local
+`WRANGLER_LOG_PATH` / `WRANGLER_REGISTRY_PATH`; the Request.cf network fallback
+warning did not prevent startup. No production values were read or copied.
+
+GitHub workflow `signup-backend.yml` runs backend type generation/checks,
+tests, browser QA and a production-config dry-run. It has no deployment job.
+Unused starter Drizzle schema/examples and Vinext rendering dependencies were
+not imported: the production backend uses the copied SQL migrations directly.
+Database/DataGrip instructions are in `docs/signup-d1-datagrip.md`; Gmail OAuth
+maintenance is retained as `signup:gmail:authorize` (not executed during QA).
 
 The original project's `worker/`, migrations, D1, Queue, Cron, Gmail, Notion,
 admin API, rate limiter and server-side Turnstile verification are unchanged.
@@ -126,8 +183,9 @@ cookies/secrets, does not follow redirects and does not retry submissions.
 ## Verification
 
 `npm run check:signup` runs ten unit/contract tests and an isolated local Next
-server on port 3130. All browser egress, Turnstile and application submissions
-are fixtures. It covers 375/768/1440px, shared shell, one H1, canonical/noindex,
+server on port 3130, connected to an ephemeral local Workers/D1 backend.
+Browser egress/Turnstile/providers use fixtures; successful applications are
+real local D1 writes. It covers 375/768/1440px, shared shell, one H1, canonical/noindex,
 redirect/query preservation, local image responses, overflow, school tabs,
 keyboard FAQ, required fields, both complete form modes, failure/retry,
 duplicate-submit protection, UTM/gclid, sanitized payloads and success screens.
@@ -150,15 +208,27 @@ Also verified locally:
 
 ## Before any future cutover
 
+Historical production baseline from the source development log (not rechecked
+against Cloudflare in this local task): deployed Git `8b47338`, October 19, 2026;
+Worker version `02a78b7f-f5fc-4e9c-b006-bd09b66172fc` at 100% traffic, prior
+rollback baseline `12b84469-612a-4ca7-a0a3-83b8ca172060`. Recheck the actual
+deployed version and D1 backup before any release; code rollback does not undo
+database changes. Neither copied SQL migration was applied remotely.
+
 Existing Cloudflare production routing still assigns the entire signup prefix
 to the original signup Worker. The production router, Worker configs, bindings,
 DNS, WordPress and live traffic were not changed. Deploying the platform alone
 does not activate this new page at the public URL.
 
-A separate release must assign page/assets to Platform while preserving the
-existing backend API ownership (for example through a Service Binding).
+A separate release must activate the copied backend's Platform Service Binding
+after deploying/verifying the integrated Platform page and assets. This keeps
+the existing signup routes and backend API ownership.
 The development-only bridge is intentionally unavailable in production. The
 standalone Cloudflare staging policy also remains read-only and unchanged.
+
+Retire the old repository's deployment integration and archive it only after a
+controlled production form verifies D1, both Gmail messages, Notion and retries
+from this repository. The old Worker remains active; only its code owner changes.
 
 Remaining verification: real Safari/Firefox and mobile devices, live Turnstile,
 controlled backend/D1/Email/Notion end-to-end testing, actual Ads receiving and
