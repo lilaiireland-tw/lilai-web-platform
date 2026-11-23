@@ -1,0 +1,32 @@
+name: Signup backend (local verification)
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [feature/migrate-signup-backend, develop, main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      SITE_DEPLOYMENT_ENV: staging
+      EVENT_DEPLOYMENT_ENV: preview
+      NEXT_TELEMETRY_DISABLED: '1'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run signup:typecheck
+      - run: npm run signup:test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run check:signup
+      - run: npx wrangler deploy --config cloudflare/signup-backend/wrangler.jsonc --env production --dry-run --outdir .next/signup-worker-production
+      - run: git diff --check

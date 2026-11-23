@@ -71,7 +71,7 @@ async function main() {
   // Model a CMS slug collision without contacting production WordPress.
   const wordpress = createServer((request, response) => {
     response.setHeader("Content-Type", "application/json");
-    response.end(JSON.stringify(request.url?.startsWith("/pages?") ? [{ slug: "ireland-25-plus-8" }] : []));
+    response.end(JSON.stringify(request.url?.startsWith("/pages?") ? [{ slug: "ireland-25-plus-8" }, { slug: "language-school-signup" }] : []));
   });
   let app: ReturnType<typeof spawn> | undefined;
   let logs = "";
@@ -100,7 +100,8 @@ async function main() {
     const routes = [
       ["/consult", "/consult/"],
       ["/events", "/events/"],
-      ["/ireland-25-plus-8", "/ireland-25-plus-8/"]
+      ["/ireland-25-plus-8", "/ireland-25-plus-8/"],
+      ["/language-school-signup/", "/language-school-signup"]
     ] as const;
     for (const [canonicalPath, aliasPath] of routes) {
       const canonicalResponse = await get(canonicalPath);
@@ -127,10 +128,14 @@ async function main() {
     const ireland = await get("/ireland-25-plus-8");
     assert.doesNotMatch(ireland.headers.get("x-robots-tag") ?? "", /noindex/i);
     assert.match(await ireland.text(), /name="robots" content="index, follow"/);
+    const signup = await get("/language-school-signup/");
+    assert.doesNotMatch(signup.headers.get("x-robots-tag") ?? "", /noindex/i);
+    assert.match(await signup.text(), /name="robots" content="index, follow"/);
     const sitemapResponse = await get("/sitemap.xml");
     assert.equal(sitemapResponse.status, 200);
     const sitemapXml = await sitemapResponse.text();
     assert.equal((sitemapXml.match(/<loc>https:\/\/lilaiireland\.com\/ireland-25-plus-8<\/loc>/g) ?? []).length, 1);
+    assert.equal((sitemapXml.match(/<loc>https:\/\/lilaiireland\.com\/language-school-signup\/<\/loc>/g) ?? []).length, 1);
     assert(!sitemapXml.includes("<loc>https://lilaiireland.com/ireland-25-plus-8/</loc>"), "CMS slug must not duplicate the Platform canonical");
     const robotTxt = await (await get("/robots.txt")).text();
     assert(robotTxt.includes("Sitemap: https://lilaiireland.com/sitemap_index.xml"));

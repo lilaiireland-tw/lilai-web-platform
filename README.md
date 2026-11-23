@@ -68,6 +68,19 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+For the integrated language-school signup preview, run `npm run dev:signup` and
+open `http://127.0.0.1:3120/language-school-signup/`. Run `npm run check:signup`
+for isolated form/browser regression checks. See the
+[integration handoff](docs/language-school-signup-integration.md) for the
+unchanged backend contract, optional local Worker bridge and pending cutover.
+
+The complete signup backend is in `worker/signup/`. Run `npm run signup:db:local`
+then `npm run signup:dev` in a separate terminal; set
+`SIGNUP_LOCAL_BACKEND_ORIGIN=http://127.0.0.1:8787` before `npm run dev:signup`.
+Local Turnstile keys are required for manual submissions; `npm run check:signup`
+tests both browser forms against real local Worker/D1 with mocked providers.
+Backend checks: `npm run signup:typecheck` and `npm run signup:test`.
+
 ## Environment Variables
 
 Copy `.env.example` to `.env.local` and adjust values:
