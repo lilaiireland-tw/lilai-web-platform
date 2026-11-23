@@ -28,6 +28,11 @@ jobs:
       - run: npm ci
       - run: npm run cf:typegen
       - run: npm run cf:typegen:router
+      - run: npm run signup:typecheck
+      - run: npm run signup:test
+      - run: npm run check:signup-staging
+      - run: npx playwright install --with-deps chromium
+      - run: npm run check:signup
       - run: npx tsc -p cloudflare/tsconfig.json
       - run: npx tsc --noEmit --incremental false
       - run: npm run check:staging
@@ -47,8 +52,8 @@ jobs:
       - run: npx tsx scripts/check-cloudflare-staging.ts
 
   deploy:
-    # Publication stays off until the placeholder Worker is Access-protected,
-    # the token is configured and runtime QA is approved.
+    # Existing Access gate remains. cf:deploy applies only staging migrations,
+    # deploys its private signup backend, then deploys the Platform.
     needs: verify
     if: github.ref == 'refs/heads/develop' && vars.CLOUDFLARE_STAGING_ENABLED == 'true'
     runs-on: ubuntu-latest

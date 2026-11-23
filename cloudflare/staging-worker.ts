@@ -1,6 +1,7 @@
 // @ts-ignore OpenNext generates this module at build time.
 import handler from "../.open-next/worker.js";
 import { stagingResponse } from "./staging-response";
+import { forwardStagingSignupRequest, stagingSignupMethod } from "./staging-signup";
 import {
   isStandaloneFrontendPath,
   isStandaloneStaticAssetPath,
@@ -14,13 +15,16 @@ export default {
           !env.ASSETS) {
         return new Response("Staging environment is not configured", { status: 503 });
       }
-      // Standalone staging is read-only. No request is forwarded to WordPress,
-      // WooCommerce, production routes or another Worker.
+      const url = new URL(request.url);
+      // Only these two APIs can reach the private, isolated signup backend.
+      if (stagingSignupMethod(url.pathname)) return forwardStagingSignupRequest(request, env.SIGNUP_BACKEND);
       if (!["GET", "HEAD"].includes(request.method)) {
         return new Response("Read-only staging", { status: 405, headers: { Allow: "GET, HEAD" } });
       }
-      const url = new URL(request.url);
       if (url.pathname === "/_next/image") return stagingUnavailableResponse(request.method);
+      if (!isStandaloneFrontendPath(url.pathname) && !isStandaloneStaticAssetPath(url.pathname)) {
+        return stagingUnavailableResponse(request.method);
+      }
       const asset = await env.ASSETS.fetch(request);
       if (asset.status !== 404) return asset;
       if (isStandaloneFrontendPath(url.pathname)) {

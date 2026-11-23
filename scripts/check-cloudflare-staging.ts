@@ -53,6 +53,12 @@ async function main() {
     assert(brandFontPath);
     for (const [path, status] of [
       ["/events", 200], ["/events/daydream-adventure-2027", 200],
+      ["/language-school-signup/", 200],
+      ["/language-school-signup/og.png", 200], ["/language-school-signup/favicon.svg", 200],
+      ["/language-school-signup/lilai-assets/schools/logo-atc-language-schools.png", 200],
+      ["/language-school-signup/lilai-assets/missing.png", 404],
+      ["/language-school-signup-other", 503], ["/language-school-signup/wp-admin/", 503],
+      ["/language-school-signup/api/admin/applications", 503],
       ["/events/missing-fixture", 404], ["/events/missing.png", 404],
       ["/events/daydream-adventure-2027/arsha.webp?smoke=1", 200],
       ["/assets/lilai-logo.png", 200], [brandFontPath, 200],
@@ -73,6 +79,22 @@ async function main() {
       }
       console.log(`PASS workerd ${status} + noindex: ${path}`);
     }
+    const signup = await get("/language-school-signup/");
+    const html = await signup.text();
+    assert.equal((html.match(/rel="canonical"/g) ?? []).length, 1);
+    assert(html.includes('href="https://lilaiireland.com/language-school-signup/"'));
+    assert.match(html, /name="robots" content="noindex, nofollow"/);
+    assert.match(html, /<header\b/);
+    assert.match(html, /<footer\b/);
+    const assetPaths = new Set([...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map(match => match[1].replaceAll("&amp;", "&"))
+      .filter(path => path.startsWith("/_next/static/") || path.startsWith("/fonts/") || path.startsWith("/language-school-signup/")));
+    for (const path of assetPaths) assert.equal((await get(path)).status, 200, path);
+    const alias = await get("/language-school-signup?utm_source=qa&gclid=fixture");
+    assert.equal(alias.status, 308);
+    assert.equal(new URL(alias.headers.get("location")!, base).pathname, "/language-school-signup/");
+    assert.equal(new URL(alias.headers.get("location")!, base).search, "?utm_source=qa&gclid=fixture");
+    assert.equal((await get("/language-school-signup/", "HEAD")).status, 200);
+    console.log("PASS workerd signup canonical/slash/query, noindex, shell, scripts/styles/fonts/images and HEAD");
     const denied = await get("/wp-json/write-probe", "POST");
     assert.equal(denied.status, 405);
     assert.equal(denied.headers.get("x-robots-tag"), "noindex, nofollow");

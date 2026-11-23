@@ -2,6 +2,15 @@
 
 Status: local frontend/backend migration complete, November 23, 2026. No deployment or traffic cutover.
 
+Staging follow-up after PR #53: fix branch starts at verified `develop` commit
+`4118474`. The original deploy workflow succeeded but did not test signup: its
+edge allowlist omitted the page, all POSTs were denied, and the deployed Next
+API intentionally had only a local bridge. The repair adds exact page/assets
+and API rules, a private Service Binding and a dedicated Staging-only backend
+config/entry. See [Staging runbook](cloudflare-staging.md#signup-staging-integration).
+The original production configs, backend business modules, routes, SQL and
+resources remain untouched. No remote deployment or D1 operation was performed.
+
 ## Verified Git baseline
 
 Before copying source, the GitHub connector resolved the live branch tips:
@@ -223,8 +232,9 @@ does not activate this new page at the public URL.
 A separate release must activate the copied backend's Platform Service Binding
 after deploying/verifying the integrated Platform page and assets. This keeps
 the existing signup routes and backend API ownership.
-The development-only bridge is intentionally unavailable in production. The
-standalone Cloudflare staging policy also remains read-only and unchanged.
+The development-only bridge is intentionally unavailable in production. Staging
+now has the narrow signup Service Binding/API exception described above; all
+other writes and WordPress/WooCommerce routes remain denied.
 
 Retire the old repository's deployment integration and archive it only after a
 controlled production form verifies D1, both Gmail messages, Notion and retries
