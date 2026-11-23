@@ -7,6 +7,16 @@ assertDeploymentEnvironment();
 const WP_ORIGIN = process.env.WORDPRESS_ORIGIN || "https://cms.lilaiireland.com";
 
 const nextConfig: NextConfig = {
+  distDir: process.env.SIGNUP_LOCAL_PREVIEW === "1" ? ".next/signup-local" : ".next",
+  // Signup keeps its existing slash canonical; all other paths retain Next's slashless policy.
+  skipTrailingSlashRedirect: true,
+  async redirects() {
+    return [
+      // Anchor the bare path so Next's optional slash match cannot redirect the canonical to itself.
+      { source: "/:signup(language-school-signup$)", destination: "/language-school-signup/", permanent: true },
+      { source: "/:path((?!language-school-signup/$).+)/", destination: "/:path", permanent: true },
+    ];
+  },
   images: {
     remotePatterns: [
       {
