@@ -41,6 +41,8 @@
     "node_modules",
     ".open-next",
     ".cloudflare",
-    "cloudflare"
+    "cloudflare",
+    "worker",
+    "tests/signup-backend"
   ]
 }

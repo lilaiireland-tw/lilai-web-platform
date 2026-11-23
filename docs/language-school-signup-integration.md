@@ -1,6 +1,6 @@
 # Local language-school signup integration
 
-Status: local frontend integration, November 23, 2026. No deployment or traffic cutover.
+Status: frontend checkpoint `de26b0b`; backend migration in progress, November 23, 2026. No deployment or traffic cutover.
 
 ## Verified Git baseline
 
@@ -71,6 +71,29 @@ The ordinary `npm run dev` still works with the default Next output directory
 when that directory is writable.
 
 ## Existing backend contract
+
+### Backend source migration
+
+The backend now lives in `worker/signup/`, SQL migrations in `migrations/signup/`,
+and backend tests in `tests/signup-backend/`. Business handlers are copied from
+source `8b47338`; the student email template imports the platform's existing
+commercial terms. Vinext rendering/image handling is replaced at the entry point
+by a `PLATFORM` service binding for signup GET/HEAD page/assets. API paths,
+validation, SQL, Queue/Cron and provider behavior remain the original code.
+
+`cloudflare/signup-backend/wrangler.jsonc` defaults to local-only resources:
+no public routes, no consumers/Cron or production credentials. Its explicit
+production environment records the existing Worker identity, D1/Queue IDs,
+rate limiter, Cron, routes and required secret names, plus the Platform binding.
+This is a coordinated future release: deploy/verify the new Platform first,
+then release the backend with the binding. Do not deploy the backend alone while
+the production Platform still contains the old frontend. No deploy script or
+automatic backend deployment has been added. Staging keeps isolated original
+resources with no public routes, consumers or Cron.
+
+Phase 1 verification: clean offline `npm ci` installed 632 packages; generated
+Wrangler types and backend TypeScript passed; 16 original OAuth/Gmail, email
+template and Turnstile tests passed with mocked providers. No secrets copied.
 
 The original project's `worker/`, migrations, D1, Queue, Cron, Gmail, Notion,
 admin API, rate limiter and server-side Turnstile verification are unchanged.
