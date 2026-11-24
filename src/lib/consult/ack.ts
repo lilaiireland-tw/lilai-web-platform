@@ -1,8 +1,9 @@
 export const CONSULT_SUBMISSIONS_PATH = "/api/consult/submissions";
 export const CONSULT_FEEDBACK_PATH = "/api/consult/accuracy-feedback";
+export const CONSULT_UNSUBSCRIBE_PATH = "/api/consult/unsubscribe";
 
 export function isConsultApiPath(path: string) {
-  return path === CONSULT_SUBMISSIONS_PATH || path === CONSULT_FEEDBACK_PATH;
+  return path === CONSULT_SUBMISSIONS_PATH || path === CONSULT_FEEDBACK_PATH || path === CONSULT_UNSUBSCRIBE_PATH;
 }
 
 export function isSubmissionId(value: unknown): value is string {

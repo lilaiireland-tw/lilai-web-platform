@@ -44,7 +44,7 @@ function harness() {
     PropertiesService:{getScriptProperties:()=>({getProperty:(key: string)=>properties[key], getProperties:()=>({...properties}), deleteProperty:(key:string)=>{delete properties[key];}, setProperty:(key:string,value:string)=>{properties[key]=value;}})},
     Utilities:{getUuid:()=>id, formatDate:(date:Date,_zone:string,format:string)=>new Date(date.getTime()+8*3600000).toISOString().slice(0,10),
       computeHmacSha256Signature:(message:string,key:string)=>[...createHmac("sha256",key).update(message).digest()], base64EncodeWebSafe:(bytes:number[])=>Buffer.from(bytes).toString("base64url")},
-    LockService:{getScriptLock:()=>lock}, SpreadsheetApp:{openById:()=>({getSheetByName:()=>sheet}),flush(){}},
+    LockService:{getScriptLock:()=>lock}, SpreadsheetApp:{openById:()=>({getSheetByName:(name:string)=>name === '行銷授權紀錄' ? null : sheet}),flush(){}},
     CalendarApp:{getDefaultCalendar:()=>({createAllDayEvent(){calls.calendar++;}})},
     MailApp:{sendEmail:(data:Record<string,any>)=>{calls.mail.push(data);}},
     DriveApp:{Access:{ANYONE_WITH_LINK:'link'},Permission:{VIEW:'view'},getFileById:(fileId:string)=>({getId:()=>fileId,isTrashed:()=>false,getMimeType:()=>"application/pdf",getSize:()=>100,getSharingAccess:()=> 'link',getSharingPermission:()=> 'view',
@@ -63,7 +63,7 @@ localTest("local snapshot integrity and protected algorithms/queue/retry/fallbac
   const source = readFileSync(modifiedPath!, "utf8");
   const after = declarations(source);
   assert.equal(after.size, [...source.matchAll(/^function /gm)].length, 'No duplicate top-level functions');
-  assert.ok(source.endsWith(readFileSync('scripts/gas/assessment-compat.js','utf8')), 'Full GAS contains exact reviewed helper source');
+  assert.ok(source.replace(/\r\n/g, '\n').endsWith(readFileSync('scripts/gas/assessment-compat.js','utf8').replace(/\r\n/g, '\n')), 'Full GAS contains exact reviewed helper source');
   for (const name of ["calcMotivationClarity","calcDimensionsGAS","calcRouteScores","getRouteRecommendationGAS","calcIrelandFitCheck","classifyStage","classifyLead","generateAIAnalysis",
     "createPdfReport","enqueueAssessmentJob","getJobQueueSheet","processAssessmentQueue","saveJobCheckpoint","fallbackAssessmentQueue","recoverStaleAssessmentJobs","runAssessmentQueueWorker","ensureAssessmentQueueWorker","getNext1811TaipeiMs"]) {
     assert.ok(before.has(name), `original function missing: ${name}`);
@@ -80,7 +80,7 @@ localTest("local snapshot integrity and protected algorithms/queue/retry/fallbac
 });
 
 function evidence(data: Record<string, any>) {
-  return {Email:data.email, submissionId:data.submissionId, ...assessmentFormContract, consentTimestamp:data.consentTimestamp,
+  return {Email:data.email, submissionId:data.submissionId, ...assessmentFormContract, consentTimestamp:data.consentTimestamp, receivedAt:data.receivedAt,
     contactConsent:data.contactConsent, marketingConsent:data.marketingConsent,
     contactConsentState:data.contactConsent ? "granted" : "declined", marketingConsentState:data.marketingConsent ? "granted" : "declined",
     contactWithdrawnAt:"", marketingUnsubscribedAt:""};
