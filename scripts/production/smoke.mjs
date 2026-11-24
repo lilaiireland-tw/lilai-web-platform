@@ -29,7 +29,7 @@ export function assertPage(result, path) {
   assert(!/noindex/i.test(result.robots ?? ""), `${path}: noindex header`);
   assert(!/<meta[^>]+name="robots"[^>]+content="[^"]*noindex/i.test(result.body), `${path}: noindex metadata`);
   const canonical = result.body.match(/<link[^>]*rel="canonical"[^>]*href="([^"]+)"/i)?.[1];
-  assert.equal(canonical, origin + path, `${path}: canonical changed`);
+  assert.equal(canonical, path === "/" ? origin : origin + path, `${path}: canonical changed`);
 }
 export function assetPaths(html) {
   const paths = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map(m => m[1].replaceAll("&amp;", "&"))

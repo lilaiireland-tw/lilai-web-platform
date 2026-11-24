@@ -59,8 +59,12 @@ test("Cloudflare helper rejects all writes except exact migration SELECT and ver
   }
 });
 test("SEO and asset guards reject noindex and unrelated origins", () => {
+  const home = { status: 200, type: "text/html", body: '<link rel="canonical" href="https://lilaiireland.com">' };
+  assertPage(home, "/");
+  assert.throws(() => assertPage({ ...home, body: home.body.replace('.com"', '.com/"') }, "/"), /canonical changed/);
   const body = '<link rel="canonical" href="https://lilaiireland.com/language-school-signup/"><script src="/_next/static/app.js"></script><img src="https://outside.invalid/assets/a.png">';
   assertPage({ status: 200, type: "text/html", body }, "/language-school-signup/");
+  assert.throws(() => assertPage({ status: 200, type: "text/html", body: body.replace('signup/"', 'signup"') }, "/language-school-signup/"), /canonical changed/);
   assert.deepEqual(assetPaths(body), ["/_next/static/app.js"]);
   assert.throws(() => assertPage({ status: 200, type: "text/html", body, robots: "noindex" }, "/language-school-signup/"));
 });
@@ -80,7 +84,7 @@ test("mock smoke only sends empty refusal POST and blocks offsite redirects", as
     if (path.endsWith("/turnstile-config")) return Response.json({ siteKey: "mock", action: "application_submit" });
     if (path === "/wp-json/") return Response.json({ namespaces: [] });
     if (path.startsWith("/_next/")) return new Response(init.method === "HEAD" ? null : "asset", { headers: { "content-type": "text/javascript" } });
-    return new Response(init.method === "HEAD" ? null : `<link rel="canonical" href="https://lilaiireland.com${path}"><script src="/_next/static/app.js"></script>`, { headers: { "content-type": "text/html" } });
+    return new Response(init.method === "HEAD" ? null : `<link rel="canonical" href="https://lilaiireland.com${path === "/" ? "" : path}"><script src="/_next/static/app.js"></script>`, { headers: { "content-type": "text/html" } });
   };
   try {
     const smoke = await publicSmoke();
