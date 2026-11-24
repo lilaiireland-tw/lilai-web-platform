@@ -9,12 +9,12 @@
 flowchart TD
   PR[develop → main PR] --> Dispatch[手動 Production Deploy / 固定 github.sha]
   Dispatch --> Gate[production Environment / Required Reviewers / 全域發布鎖]
-  Gate --> Validate[Validate / OpenNext Build / 本地測試 / Dry Run]
+  Gate --> Validate[Validate / 同 SHA CI 成功 / OpenNext Build / Dry Run]
   Validate --> Preflight[Preflight / 唯讀資源檢查 / 保存已驗證的前一組版本]
   Preflight --> Platform[Deploy Platform / versions upload + 100% activation]
   Platform --> Probe[直接 Service Binding 驗證新版 Signup 前端]
   Probe --> Backend[Deploy Signup Backend / 相同 main SHA]
-  Backend --> Verify[Verify Production / 公開網址 + Service Binding + 版本對應]
+  Backend --> Verify[Verify Production / 核心公開 Smoke + 基礎設施 + 版本對應]
   Verify --> Record[production-verified artifact / Release Summary]
   Preflight -.失敗或部分部署.-> Rollback[受 production 保護的手動成對 Rollback]
 ```
@@ -91,6 +91,13 @@ Builds 或其他外部部署器；第一次切換前由維運人員確認並停�
 既有 `production-private-deploy.yml` 保留 PR/push 的純驗證；移除 Platform-only
 部署 job 與 CLI，以免繞過發布鎖。原 staging Workflow 維持獨立。
 
+Validate 先執行 `npm ci`，核對同一個 main SHA 的 `production-private-deploy.yml`
+及 `signup-backend.yml` 最新 push run 均已 completed / success；找不到、執行中或
+失敗時停止，待 CI 成功後再手動觸發。保留 production route-safety、OpenNext
+production build、packaging dry run 與 build asset routing audit。Typecheck、Signup
+完整單元測試、Mock Tests、Design System、Shared Layout、git diff 格式檢查留在
+既有 CI，不在 CD 重跑；Next production build 自身的型別檢查仍依原設定執行。
+
 Preflight 自動核對：
 
 1. workflow_dispatch、main、checkout SHA、遠端 main SHA、固定 Cloudflare account。
@@ -101,7 +108,8 @@ Preflight 自動核對：
 5. 十個 Secret 名稱、Queue Producer/Consumer/DLQ、Cron、rate limiter、Service Binding。
 6. 整個 zone route table、Custom Domains、workers.dev / preview exposure 與 baseline。
 7. 首次核對舊版 Version；一般發布核對最新成功 run 的 `production-verified` 版本組。
-8. 部署前公開 GET/HEAD、SEO、靜態資產與空 JSON 拒絕測試，保存通過的回復點。
+8. 部署前僅 GET 首頁、Signup（HTTP 200、精確 Canonical、indexability）及五個
+   WordPress 核心路由，保存 Baseline；不讀取靜態資產、不執行 API 拒絕 POST。
 
 Build 與 Wrangler Dry Run 在 Validate，未通過無法進入 Preflight 或部署。
 實際部署使用 `wrangler versions upload --keep-vars`，再以 Workers Deployments API
@@ -109,6 +117,11 @@ Build 與 Wrangler Dry Run 在 Validate，未通過無法進入 Preflight 或部
 `wrangler deploy`；Router 完全不更新。Backend 明確 `--env production`，仍使用
 `worker/signup/index.ts`。初次部署移除舊 vinext 的 ASSETS / IMAGES binding，
 以 PLATFORM 提供 Next.js 頁面；原資料、Secrets 與 API 邏輯不變。
+
+版本 ID 取自 Wrangler 4.148.0 的 `WRANGLER_OUTPUT_FILE_PATH` NDJSON，要求唯一的
+`version-upload` schema v1、正確 Worker 名稱及有效 UUID；不解析終端顯示文字，
+也不假設版本清單包含 annotations。啟用前以該 Worker 的 version detail API
+核對 ID 與完整 SHA/run/attempt message；啟用後再次核對 active version。
 
 Signup 既有 workers.dev / previews 開啟狀態被明確記錄並持續檢查，不默默視為私有。
 這是現有曝光的保留，不是本 PR 新增；若要停用，請另行審核並更新 baseline。
@@ -133,7 +146,7 @@ Signup 既有 workers.dev / previews 開啟狀態被明確記錄並持續檢查�
 3. 將 CI/CD 變更透過 develop → main release PR 合併。
 4. 手動 **Production Deploy**，mode=`first-cutover`，完成相容性確認及 production 審核。
 5. Preflight 先驗證舊站並保存 before.json；artifact 上傳完成才部署 Platform。
-   透過本地僅 GET/HEAD 的 remote Service Binding harness 驗證新版 Signup，
+   透過本地 remote Service Binding harness 僅 GET 驗證新版 Signup，
    然後才部署整合 Backend，最後驗證公開路由與 Backend → Platform 呼叫。
 6. 執行以下獨立人工正式驗收，簽核後才停止舊 Repo 的部署。未通過時用該 run 的
    `before` 成對回滾，保留舊 Worker 靜態資產版本。
@@ -151,11 +164,16 @@ Signup 既有 workers.dev / previews 開啟狀態被明確記錄並持續檢查�
 
 ## Smoke Tests
 
-部署後自動檢查首頁、Signup GET/HEAD、裸網址與 query 保留、Signup 引用的同站
-靜態資產、Turnstile config 結構、Canonical/indexability、WordPress REST、cart、
-checkout、robots、sitemap。WP/WooCommerce/SEO 的 status、最終路徑與 redirect chain
-須與部署前一致。兩個 Worker 另透過 remote Service Binding GET/HEAD 檢查 Next Signup。
-Cloudflare active Version 與本 run message / SHA 必須相符。
+部署後自動檢查首頁、Signup HTTP 200、精確 Canonical/indexability、裸網址轉址及
+UTM 保留。首頁 Canonical 嚴格等於 `https://lilaiireland.com`，Signup 嚴格等於
+`https://lilaiireland.com/language-school-signup/`，不做 URL 正規化。
+每頁各抽一個主要同站 JS 與 CSS、跨頁去重後僅 GET，不逐一 GET/HEAD 所有資產。
+保留 Turnstile config 結構、空 JSON 拒絕，以及 WordPress REST、cart、checkout、
+robots、sitemap 基本可用性。WP 最終路徑變動僅 Warning，不嚴格比較 redirect chain
+或 Content-Type 字串；失效路由、錯誤 JSON/XML/robots、HTML 偽裝的 JS/CSS 仍阻擋。
+Platform 啟用後只以 Service Binding GET 檢查新版 Signup HTTP 200、Canonical
+及 Next 資產標記，再部署 Backend；部署後以公開路由檢查整合結果，不重跑 binding
+資產掃描。Cloudflare active Version、SHA/run message 及基礎設施檢查必須通過。
 
 唯一自動 POST 為 `{}`，沒有 Turnstile token；既有程式於任何 D1/Queue 寫入與
 外部驗證前回 403 / turnstile_failed，本地測試也證實不會寫資料。正式環境不得自動

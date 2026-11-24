@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
-import { baseline, production, migrationHashes, assertMigrations, assertInfrastructure, activeVersion, assertConfigs, api, root } from "../../scripts/production/lib.mjs";
-import { assetPaths, assertPage, publicSmoke, request } from "../../scripts/production/smoke.mjs";
+import { baseline, production, migrationHashes, assertMigrations, assertInfrastructure, activeVersion, assertConfigs, api, root, assertCiRun, uploadedVersion } from "../../scripts/production/lib.mjs";
+import { assetPaths, assertPage, preflightSmoke, publicSmoke, request } from "../../scripts/production/smoke.mjs";
 import probe from "../../cloudflare/production-release-probe.js";
 
 function fixture(first = false) {
@@ -83,16 +83,40 @@ test("mock smoke only sends empty refusal POST and blocks offsite redirects", as
     }
     if (path.endsWith("/turnstile-config")) return Response.json({ siteKey: "mock", action: "application_submit" });
     if (path === "/wp-json/") return Response.json({ namespaces: [] });
-    if (path.startsWith("/_next/")) return new Response(init.method === "HEAD" ? null : "asset", { headers: { "content-type": "text/javascript" } });
-    return new Response(init.method === "HEAD" ? null : `<link rel="canonical" href="https://lilaiireland.com${path === "/" ? "" : path}"><script src="/_next/static/app.js"></script>`, { headers: { "content-type": "text/html" } });
+    if (path === "/robots.txt") return new Response("User-agent: *");
+    if (path === "/sitemap_index.xml") return new Response("<sitemapindex/>");
+    if (path.startsWith("/_next/")) return new Response("asset", { headers: { "content-type": path.endsWith(".css") ? "text/css" : "application/javascript" } });
+    return new Response(`<link rel="canonical" href="https://lilaiireland.com${path === "/" ? "" : path}"><script src="/_next/static/app.js"></script><script src="/_next/static/extra.js"></script><link href="/_next/static/site.css" rel="stylesheet">`, { headers: { "content-type": "text/html; charset=UTF-8" } });
   };
   try {
-    const smoke = await publicSmoke();
-    await publicSmoke({ previous: smoke });
+    const before = await preflightSmoke();
+    assert.equal(calls.length, 7);
+    assert(calls.every(c => !c.init.method || c.init.method === "GET"));
+    await publicSmoke();
+    before.regression["/checkout/"].path = "/cart/";
+    await publicSmoke({ previous: before });
     assert.equal(calls.filter(c => c.init.method === "POST").length, 2);
+    assert.equal(calls.filter(c => c.init.method === "HEAD").length, 0);
+    assert.equal(calls.filter(c => c.url.pathname.startsWith("/_next/")).length, 4);
     assert(calls.every(c => c.url.origin === "https://lilaiireland.com"));
     await assert.rejects(() => request("/offsite"), /outside production/);
   } finally { globalThis.fetch = original; }
+});
+test("CD requires successful CI for the exact main SHA and reads Wrangler upload output", () => {
+  const sha = "a".repeat(40);
+  const workflow = "production-private-deploy.yml";
+  const run = { head_sha: sha, head_branch: "main", event: "push", path: `.github/workflows/${workflow}`, status: "completed", conclusion: "success" };
+  assertCiRun(run, sha, workflow);
+  for (const change of [{ head_sha: "b".repeat(40) }, { head_branch: "develop" }, { event: "pull_request" }, { path: "other.yml" }, { status: "in_progress" }, { conclusion: "failure" }]) {
+    assert.throws(() => assertCiRun({ ...run, ...change }, sha, workflow));
+  }
+  assert.throws(() => assertCiRun(undefined, sha, workflow));
+  const entry = { type: "version-upload", version: 1, worker_name: baseline.platform, version_id: baseline.versions[baseline.platform] };
+  const output = JSON.stringify({ type: "wrangler-session", version: 1 }) + "\n" + JSON.stringify(entry) + "\n";
+  assert.equal(uploadedVersion(output, baseline.platform), entry.version_id);
+  assert.throws(() => uploadedVersion(output, baseline.backend));
+  assert.throws(() => uploadedVersion(output + JSON.stringify(entry), baseline.platform));
+  assert.throws(() => uploadedVersion(JSON.stringify({ ...entry, version_id: undefined }), baseline.platform));
 });
 test("local binding probe permits page/asset GET and HEAD, blocks mutations and APIs", async () => {
   const calls = [];
