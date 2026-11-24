@@ -21,7 +21,7 @@ import {
   runConsultationSubmission,
   type ConsultationSubmissionGate,
 } from "@/lib/consult/submission";
-import { benefits, faqs, heroImages, optionLabels, options } from "./consult-content";
+import { assessmentFormContract, benefits, contactPreferences, faqs, heroImages, optionLabels, options, privacyNotice } from "./consult-content";
 import styles from "./consultation.module.css";
 
 const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbx8AxEZ_Dh1IFWqMvTLDGGvUyPyBKrgjzoSlW9wWgyTAAgYH3qUPtm6NBdZ5Mq6Mb0N/exec";
@@ -39,22 +39,25 @@ type FormValues = {
   location: string; awareness: string; timeline: string; plan: string;
   workIntention: string; goals: string[]; englishGoal: string; lifeChange: string;
   barriers: string[]; cityPreference: string; budget: string; resources: string[];
-  webinar: string[]; consent1: boolean; consent2: boolean;
+  webinar: string[]; contactConsent: boolean; marketingConsent: boolean;
+  discoveryChannels: (typeof options.discoveryChannels)[number][]; discoveryOther: string;
+  dcardExposure: (typeof options.dcardExposure)[number] | null;
 };
 
 const initialValues: FormValues = {
   name: "", nickname: "", email: "", instagram: "", lineId: "", location: "",
   awareness: "", timeline: "", plan: "", workIntention: "", goals: [],
   englishGoal: "", lifeChange: "", barriers: [], cityPreference: "", budget: "",
-  resources: [], webinar: [], consent1: false, consent2: false,
+  resources: [], webinar: [], contactConsent: false, marketingConsent: false,
+  discoveryChannels: [], discoveryOther: "", dcardExposure: null,
 };
 
-const stepFields: Record<number, (keyof FormValues | "consent")[]> = {
+const stepFields: Record<number, (keyof FormValues)[]> = {
   1: ["name", "nickname", "email", "instagram", "lineId", "location"],
   2: ["awareness", "timeline", "plan"],
-  3: ["workIntention", "goals", "englishGoal", "lifeChange"],
+  3: ["workIntention", "goals", "englishGoal"],
   4: ["barriers", "cityPreference", "budget", "resources"],
-  5: ["webinar", "consent"],
+  5: [],
 };
 
 const errorCopy: Record<string, string> = {
@@ -62,13 +65,12 @@ const errorCopy: Record<string, string> = {
   instagram: "Instagram 帳號請控制在 100 字元以內", lineId: "LINE ID 請控制在 100 字元以內",
   location: "請選擇所在地", awareness: "請選擇了解程度", timeline: "請選擇出發時間",
   plan: "請選擇感興趣的方案", workIntention: "請選擇一個選項", goals: "請至少選擇一個選項",
-  englishGoal: "請選擇一個選項", lifeChange: "請填寫這個問題", barriers: "請至少選擇一個選項",
+  englishGoal: "請選擇一個選項", barriers: "請至少選擇一個選項",
   cityPreference: "請選擇一個選項", budget: "請選擇預算區間", resources: "請至少選擇一個選項",
-  webinar: "請至少選擇一個選項", consent: "請同意以上兩項條款才能完成送出",
 };
 
 const fieldLimits: Partial<Record<keyof FormValues, number>> = {
-  name: 100, nickname: 100, email: 254, instagram: 100, lineId: 100, lifeChange: 3000,
+  name: 100, nickname: 100, email: 254, instagram: 100, lineId: 100, lifeChange: 3000, discoveryOther: 200,
 };
 
 function cx(...names: (string | false | undefined)[]) {
@@ -91,7 +93,7 @@ function OptionGroup({
 }) {
   const selected = (option: string) => Array.isArray(value) ? value.includes(option) : value === option;
   return (
-    <div className={cx(styles.optionsGrid, singleColumn && styles.singleCol)} id={`${name}-options`}>
+    <div role="group" aria-labelledby={`${name}-label`} className={cx(styles.optionsGrid, singleColumn && styles.singleCol)} id={`${name}-options`}>
       {values.map(option => (
         <label key={option} className={cx(styles.optionItem, selected(option) && styles.selected)} data-value={option}>
           <input type={multiple ? "checkbox" : "radio"} name={name} value={option} checked={selected(option)} onChange={() => onChange(option)} />
@@ -173,6 +175,7 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
   const [accuracy, setAccuracy] = useState<string | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const conversionGuard = useRef<GoogleAdsConversionGuard>({ sent: false });
+  const submissionId = useRef<string | null>(null);
   const submissionGate = useRef<ConsultationSubmissionGate>({ inFlight: false, completed: false });
   const formRef = useRef<HTMLElement>(null);
   const analytics = useRef<ReturnType<typeof createConsultAnalytics> | null>(null);
@@ -209,33 +212,40 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
     setValues(current => {
       if (!multiple) return { ...current, [field]: option };
       const selected = current[field] as string[];
+      const toggled = selected.includes(option) ? selected.filter(item => item !== option) : [...selected, option];
+      if (field === "discoveryChannels") {
+        const channels = option === "unknown"
+          ? (selected.includes(option) ? [] : [option])
+          : toggled.filter(item => item !== "unknown");
+        return { ...current, discoveryChannels: options.discoveryChannels.filter(item => channels.includes(item)), discoveryOther: channels.includes("other") ? current.discoveryOther : "" };
+      }
       if (field === "barriers" && !selected.includes(option) && selected.length >= 3) {
         setBarrierLimit(true);
         window.setTimeout(() => setBarrierLimit(false), 2000);
         return current;
       }
-      return { ...current, [field]: selected.includes(option) ? selected.filter(item => item !== option) : [...selected, option] };
+      return { ...current, [field]: toggled };
     });
   };
 
-  const fieldValid = (field: keyof FormValues | "consent") => {
-    if (field === "consent") return values.consent1 && values.consent2;
+  const fieldValid = (field: keyof FormValues) => {
     const value = values[field];
     const limit = fieldLimits[field];
     if (limit && typeof value === "string" && value.length > limit) return false;
     if (["instagram", "lineId"].includes(field)) return true;
     if (field === "email") return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim());
+    if (value === null) return true;
     return Array.isArray(value) ? value.length > 0 : typeof value === "boolean" ? value : value.trim().length > 0;
   };
 
   useEffect(() => {
     setErrors(current => {
-      const next = new Set([...current].filter(field => !fieldValid(field as keyof FormValues | "consent")));
+      const next = new Set([...current].filter(field => !fieldValid(field as keyof FormValues)));
       return next.size === current.size && [...next].every(field => current.has(field)) ? current : next;
     });
   }, [values]);
 
-  const validateFields = (fields: (keyof FormValues | "consent")[]) => {
+  const validateFields = (fields: (keyof FormValues)[]) => {
     const invalid = fields.filter(field => !fieldValid(field));
     setErrors(current => {
       const next = new Set(current);
@@ -284,7 +294,12 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
     const leadQuality = classifyLead(data);
     const stageInfo = getAssessmentContent(data, stage);
     const stageName = `${stageInfo.emoji} ${stageInfo.name}`;
+    submissionId.current ??= crypto.randomUUID();
     const payload = {
+      ...assessmentFormContract, submissionId: submissionId.current,
+      contactConsent: values.contactConsent, marketingConsent: values.marketingConsent,
+      discoveryChannels: values.discoveryChannels, discoveryOther: values.discoveryOther.trim(),
+      dcardExposure: values.dcardExposure,
       name: data.name, nickname: data.nickname, email: data.email, instagram: data.instagram,
       lineId: data.lineId, location: data.location, awareness: data.awareness, timeline: data.timeline,
       plan: data.plan, workIntention: data.workIntention, wantWork: data.wantWork,
@@ -354,7 +369,7 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
   const optionField = (name: ChoiceName, label: string, required: boolean, hint = "", multiple = false, singleColumn = false) => (
     <div className={styles.fieldGroup}>
       <div className={styles.fieldLabel} id={`${name}-label`}>{label}{required && <span className={styles.required}>*</span>}{hint && <span className={cx(styles.fieldHint, name === "barriers" && barrierLimit && styles.limitError)}>{name === "barriers" && barrierLimit ? "最多只能選 3 個" : hint}</span>}</div>
-      <OptionGroup name={name} values={options[name]} value={values[name] as string | string[]} onChange={value => setChoice(name, value, multiple)} multiple={multiple} singleColumn={singleColumn} />
+      <OptionGroup name={name} values={options[name]} value={values[name] ?? ""} onChange={value => setChoice(name, value, multiple)} multiple={multiple} singleColumn={singleColumn} />
       <FieldError field={name} errors={errors} message={name === "barriers" && values.barriers.length > 3 ? "最多只能選 3 個" : undefined} />
     </div>
   );
@@ -409,14 +424,10 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
                 track("consult_form_start");
               }
             }}
-            onClickCapture={event => {
-              if (event.target instanceof Element && event.target.closest('button[role="checkbox"]')) {
-                track("consult_form_start");
-              }
-            }}
           >
           {!submitted && step === 1 && <div className={cx(styles.formStep, styles.active)}>
             <div className={styles.stepHeader}><p className={styles.stepNum}>SECTION 01 / 05</p><h2 className={styles.stepTitle}>先認識一下你</h2><p className={styles.stepDesc}>填寫評估結果會寄到你的 Email，請確認正確。</p></div>
+            <p className={styles.privacyNotice}>{privacyNotice.short} <a href={privacyNotice.url} target="_blank" rel="noreferrer">個人資料蒐集告知聲明（另開分頁）</a></p>
             {textField("name", "姓名", true, "", "你的名字")}
             {textField("nickname", "暱稱", true, "你希望哩來如何稱呼你？", "暱稱（英文 / 中文都可以）")}
             {textField("email", "Email", true, "評估結果與資料包將寄到這裡", "your@email.com", "email")}
@@ -439,7 +450,11 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
             {optionField("workIntention", "你有沒有打算在愛爾蘭工作？", true, "", false, true)}
             {optionField("goals", "你考慮去愛爾蘭，主要是為了什麼？", true, "可複選", true)}
             {optionField("englishGoal", "英文提升對你來說是？", true, "", false, true)}
-            <div className={styles.fieldGroup}><label className={styles.fieldLabel} htmlFor="lifeChange">如果真的去愛爾蘭，你最希望這趟旅程幫你改變什麼？ <span className={styles.required}>*</span></label><textarea className={styles.textInput} id="lifeChange" placeholder="寫下你的想法，沒有標準答案。可以是很個人的事，也可以是對生活的期待…" rows={5} maxLength={3000} value={values.lifeChange} onChange={event => setText("lifeChange", event.target.value)} aria-invalid={errors.has("lifeChange")} aria-describedby="lifeChange-error" /><FieldError field="lifeChange" errors={errors} /></div>
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel} htmlFor="lifeChange">如果真的去愛爾蘭，你最希望這趟旅程幫你改變什麼？（選填）</label>
+              <p id="lifeChange-hint" className={styles.fieldHint}>寫下你希望透過這趟旅程達成的目標，或對未來生活的期待。沒有標準答案，不需要提供身分證號、護照資訊、健康狀況或其他敏感個人資料。</p>
+              <textarea className={styles.textInput} id="lifeChange" placeholder="僅分享與出發計畫相關的內容" rows={5} maxLength={3000} value={values.lifeChange} onChange={event => setText("lifeChange", event.target.value)} aria-describedby="lifeChange-hint" />
+            </div>
             <div className={styles.formNav}><button type="button" className={styles.btnBack} onClick={() => goToStep(2)}>← 返回</button><button type="button" className={styles.btnNext} onClick={nextStep}>繼續 →</button></div>
           </div>}
 
@@ -453,12 +468,21 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
           </div>}
 
           {!submitted && step === 5 && <div className={cx(styles.formStep, styles.active)}>
-            <div className={styles.stepHeader}><p className={styles.stepNum}>SECTION 05 / 05</p><h2 className={styles.stepTitle}>最後一步了！</h2><p className={styles.stepDesc}>讓我們知道你對什麼最感興趣，我們會寄給你最相關的內容。</p></div>
-            {optionField("webinar", "如果哩來未來有主題說明會，你會想參加哪一類？", true, "可複選", true)}
-            <div className={styles.fieldGroup}><div className={styles.fieldLabel}>同意條款 <span className={styles.required}>*</span></div>
-              <button type="button" className={cx(styles.consentItem, values.consent1 && styles.checked)} role="checkbox" aria-checked={values.consent1} onClick={() => setValues(current => ({ ...current, consent1: !current.consent1 }))}><span className={styles.consentCheck}><span className={styles.consentCheckMark}>✓</span></span><span className={styles.consentText}>我同意收到哩來愛爾蘭寄送的出發建議、活動通知與相關資料。</span></button>
-              <button type="button" className={cx(styles.consentItem, values.consent2 && styles.checked)} role="checkbox" aria-checked={values.consent2} onClick={() => setValues(current => ({ ...current, consent2: !current.consent2 }))}><span className={styles.consentCheck}><span className={styles.consentCheckMark}>✓</span></span><span className={styles.consentText}>我了解本表單資料僅供哩來愛爾蘭進行出發階段評估、後續聯繫與服務建議使用，不會任意公開或販售給第三方。</span></button>
-              <FieldError field="consent" errors={errors} />
+            <div className={styles.stepHeader}><p className={styles.stepNum}>SECTION 05 / 05</p><h2 className={styles.stepTitle}>最後一步了！</h2><p className={styles.stepDesc}>選填感興趣的主題、認識哩來的管道，以及你的聯繫偏好。</p></div>
+            {optionField("webinar", "如果哩來未來有主題說明會，你會想參加哪一類？", false, "可複選，選填", true)}
+            {optionField("discoveryChannels", "在填寫這次免費出發評估之前，你曾經透過哪些管道看過或認識『哩來愛爾蘭』？（可複選，選填）", false, "", true)}
+            {values.discoveryChannels.includes("other") && textField("discoveryOther", "其他管道（選填）", false, "最多 200 字元", "其他認識哩來的管道")}
+            {optionField("dcardExposure", "在填寫這次免費出發評估之前，你是否曾看過學長姐在 Dcard 分享『哩來愛爾蘭』相關的文章或心得？（選填）", false, "", false, true)}
+            <div className={styles.fieldGroup}>
+              <h3 className={styles.fieldLabel}>關於你的資料與聯繫偏好</h3>
+              <p className={styles.privacyNotice}>{privacyNotice.full}<a href={privacyNotice.url} target="_blank" rel="noreferrer">《個人資料蒐集告知聲明》（另開分頁）</a>。</p>
+              {contactPreferences.map(({ field, label, hint }) => <div key={field}>
+                <label className={cx(styles.consentItem, values[field] && styles.checked)}>
+                  <input type="checkbox" name={field} checked={values[field]} onChange={event => setValues(current => ({ ...current, [field]: event.target.checked }))} aria-describedby={`${field}-hint`} />
+                  <span className={styles.consentText}>{label}</span>
+                </label>
+                <p id={`${field}-hint`} className={styles.preferenceHint}>{hint}</p>
+              </div>)}
             </div>
             <div className={styles.formNav}><button type="button" className={styles.btnBack} onClick={() => goToStep(4)}>← 返回</button><button type="submit" className={styles.btnSubmit} disabled={submitting}>{submitting && <span className={styles.spinner} />}{submitting ? "正在送出資料，請稍等……" : "取得我的出發評估 🍀"}</button></div>
           </div>}

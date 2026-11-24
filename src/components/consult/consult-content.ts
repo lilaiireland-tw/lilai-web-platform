@@ -12,6 +12,8 @@ export const benefits = [
 ] as const;
 
 export const options = {
+  discoveryChannels: ["instagram", "threads", "google_website", "dcard", "facebook", "accupass", "referral", "youtube", "other", "unknown"],
+  dcardExposure: ["yes", "maybe_dcard", "maybe_other", "no_recall"],
   location: ["台灣", "愛爾蘭", "其他歐洲國家", "其他地區"],
   awareness: ["剛開始了解，還在查資料", "已經看過一些愛爾蘭語校或 25+8 資訊", "正在比較愛爾蘭和其他國家", "已經蠻確定想去愛爾蘭，但還沒決定方案", "已經準備報名，只是在找可信任的代辦或顧問"],
   timeline: ["3 個月內", "3–6 個月內", "6–12 個月內", "一年以上", "還不確定"],
@@ -27,10 +29,38 @@ export const options = {
 } as const;
 
 export const optionLabels: Partial<Record<keyof typeof options, Record<string, string>>> = {
+  discoveryChannels: {
+    instagram: "Instagram（貼文／Reels／限時動態）", threads: "Threads", google_website: "Google 搜尋／哩來官方網站",
+    dcard: "Dcard（心得分享／文章推薦）", facebook: "Facebook（社團／貼文）", accupass: "Accupass",
+    referral: "朋友、學長姐或熟人推薦", youtube: "YouTube", other: "其他", unknown: "不確定／沒有印象",
+  },
+  dcardExposure: {
+    yes: "有，我曾經看過", maybe_dcard: "不太確定，但有印象在 Dcard 看過相關分享",
+    maybe_other: "不太確定，有印象看過相關分享，但不是在 Dcard", no_recall: "沒有／沒有印象",
+  },
   englishGoal: { "最主要目的": "這趟旅程最主要的目的", "重要但非唯一": "重要，但不是唯一原因", "非首要目標": "不是我的首要目標，我有其他優先考量" },
   cityPreference: { "都柏林為主，願意考慮其他城市": "都柏林為主，但願意考慮其他城市", "傾向非都柏林城市": "傾向非都柏林城市（高威、科克等）", "沒有特別偏好": "沒有特別偏好，哪裡適合就去哪裡" },
   budget: { "還不確定": "還不確定，需要更多資訊" },
 };
+
+// shortcut: UI reference keys only; verify the public policy revision and backend registry before release.
+export const assessmentFormContract = {
+  contractVersion: "free-assessment.v1",
+  privacyNoticeVersion: "agreement-reference.v1",
+  consentTextVersion: "free-assessment-consent.v1",
+  consentSource: "free_assessment",
+} as const;
+
+export const privacyNotice = {
+  url: "https://lilaiireland.com/agreement/",
+  short: "哩來愛爾蘭將使用你提供的資料進行本次免費評估、寄送結果及必要的服務回覆。",
+  full: "哩來愛爾蘭將使用你提供的聯絡方式、出發計畫與需求等資料，進行本次免費評估、寄送結果及必要的服務回覆。未經適當告知與確認，我們不會直接以此表單替你向語言學校提出正式申請。詳細資料使用、保存方式及個資權利，請參閱",
+};
+
+export const contactPreferences = [
+  { field: "contactConsent", label: "我希望哩來的學長姐依據這次評估，透過我提供的聯絡方式與我討論下一步。", hint: "僅用於本次評估相關的個別聯繫，不代表訂閱日後行銷訊息。" },
+  { field: "marketingConsent", label: "我願意透過 Email 收到哩來提供的愛爾蘭語校、25+8、出發攻略、說明會邀請與活動優惠資訊。", hint: "可隨時取消訂閱。不勾選也能取得完整免費評估結果。" },
+] as const;
 
 export const faqs = [
   ["《哩來出發計畫》是報名表嗎？", "不是。《哩來出發計畫》是一份免費的出發前評估表單，目的是幫你初步看懂自己目前的狀態、適合的方向，以及下一步可以怎麼走。填完不代表你要立刻報名語校，也不代表你一定要購買任何方案。我們希望你先把自己看清楚，再決定要不要出發。"],

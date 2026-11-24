@@ -88,9 +88,10 @@ test("full funnel preserves GA4 destination, private values, UTM and exactly one
   for (const field of ["barriers", "cityPreference", "budget", "resources"]) await choose(page, field);
   await next(page, 5);
   await choose(page, "webinar");
-  await page.locator('button[type="submit"]').click();
-  expect(gas).toHaveLength(0);
-  for (const button of await page.locator('button[role="checkbox"]').all()) await button.click();
+  await page.locator('input[name="discoveryChannels"][value="other"]').evaluate((input: HTMLInputElement) => input.click());
+  await page.locator("#discoveryOther").fill("Private discovery free text");
+  await page.locator('input[name="contactConsent"]').check();
+  await page.locator('input[name="marketingConsent"]').check();
   await page.locator('button[type="submit"]').evaluate((button: HTMLButtonElement) => { button.click(); button.click(); });
   await expect(page.getByRole("heading", { name: "你的出發評估來了" })).toBeVisible();
   expect(gas).toHaveLength(1);
@@ -99,14 +100,14 @@ test("full funnel preserves GA4 destination, private values, UTM and exactly one
     expect(recorded.filter(e => e[1] === name).map(e => e[2].step_number)).toEqual([1, 2, 3, 4, 5]);
   }
   expect(recorded.filter(e => e[1] === "consult_form_start")).toHaveLength(1);
-  expect(recorded.filter(e => e[1] === "consult_submit_attempt")).toHaveLength(2);
+  expect(recorded.filter(e => e[1] === "consult_submit_attempt")).toHaveLength(1);
   expect(recorded.filter(e => e[1] === "consult_submit_success")).toHaveLength(1);
-  expect(recorded.filter(e => e[1] === "consult_validation_error").map(e => e[2].step_number)).toEqual([1, 5]);
+  expect(recorded.filter(e => e[1] === "consult_validation_error").map(e => e[2].step_number)).toEqual([1]);
   for (const [, , params] of recorded) {
     expect(params.send_to).toBe(destination);
     expect(Object.keys(params).every(key => ["send_to", "form_id", "step_number"].includes(key))).toBe(true);
   }
-  expect(JSON.stringify(recorded)).not.toMatch(/Synthetic|synthetic@|private_ig|private_line|Private free text|utm_/);
+  expect(JSON.stringify(recorded)).not.toMatch(/Synthetic|synthetic@|private_ig|private_line|Private free text|Private discovery|contactConsent|marketingConsent|submissionId|utm_/);
   const conversions = (await commands(page)).filter(c => c[1] === "conversion");
   expect(conversions).toEqual([["event", "conversion", { send_to: "AW-17610996814/Ynp6CPHkhe4cEM74yc1B" }]]);
   expect(page.url()).toBe(landing);
