@@ -105,6 +105,9 @@ test("local binding probe permits page/asset GET and HEAD, blocks mutations and 
 });
 test("workflow saves recovery evidence before activation; release code never reconciles triggers", () => {
   const source = readFileSync("scripts/production/release.mjs", "utf8");
+  assert(source.includes('const token = await api(`accounts/${baseline.account_id}/tokens/verify`);'));
+  assert(source.includes('assert.equal(token.status, "active", "Cloudflare token is inactive");'));
+  assert.doesNotMatch(source, /user\/tokens\/verify/);
   assert.match(source, /run\(\["versions", "upload"/);
   assert.doesNotMatch(source, /run\(\["deploy"|migrations.*apply|secret.*put/);
   const workflow = readFileSync(".github/workflows/production-deploy.yml", "utf8");

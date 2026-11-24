@@ -63,7 +63,7 @@ async function preflight() {
   assert(["first-cutover", "release"].includes(process.env.RELEASE_MODE));
   assert.equal(process.env.COMPATIBILITY_APPROVED, "true", "Review adjacent frontend/backend and Queue payload compatibility");
   await sourceAndProtection();
-  const token = await api("user/tokens/verify");
+  const token = await api(`accounts/${baseline.account_id}/tokens/verify`);
   assert.equal(token.status, "active", "Cloudflare token is inactive");
   const snapshot = await capture();
   assertInfrastructure(snapshot, first);
