@@ -8,6 +8,7 @@ import {
   getBlockerDiagnosis,
   getRouteRecommendation,
   getTimeAnchor,
+  type Stage,
 } from "../src/lib/consult/assessment";
 import { DENIED_CONSENT, readConsentCookie, toGoogleConsent, encodeConsent } from "../src/lib/analytics/consent";
 import {
@@ -53,9 +54,33 @@ assert.equal(route.secondary?.rt, "RT02");
 console.log("PASS five-route scoring and budget-gap penalty");
 
 assert.equal(getAssessmentContent({ plan: "25+8 打工遊學" }, "ready").cta, "twentyfive_plus8");
-assert.match(getTimeAnchor("3 個月內", "25+8 打工遊學"), /團隊聯繫/);
+assert.match(getTimeAnchor("3 個月內", "25+8 打工遊學"), /自行預約諮詢/);
 assert.match(getTimeAnchor("3 個月內", "2–4 週短期遊學"), /預約諮詢/);
 console.log("PASS 25+8 content override and time anchors");
+
+for (const stage of ["watch", "explore", "ready", "action"] as Stage[]) {
+  for (const plan of ["2–4 週短期遊學", "25+8 打工遊學"]) {
+    for (const contactConsent of [false, true]) for (const marketingConsent of [false, true]) {
+      const data = { ...routeInput, plan };
+      const preferences = { contactConsent, marketingConsent };
+      const content = getAssessmentContent(data, stage, preferences);
+      const copy = `${content.nextSteps}\n${content.followUp}`;
+      assert.equal(copy.includes("我們會在 1–2 個工作天內聯繫你"), contactConsent);
+      assert.equal(copy.includes("你會透過 Email 收到未來"), marketingConsent);
+      assert.doesNotMatch(copy, /自主評估包|諮詢費|24–48|今天會主動/);
+      if (contactConsent) assert.match(copy, /授權仍有效且未撤回.*週一至週五/);
+      if (marketingConsent) assert.match(copy, /授權仍有效且未退訂/);
+      assert.equal(content.description, getAssessmentContent(data, stage).description);
+      assert.equal(content.nextSteps, getAssessmentContent(data, stage).nextSteps);
+      for (const score of [classifyStage, classifyLead, calcDimensions, getRouteRecommendation]) {
+        assert.deepEqual(score({ ...data, ...preferences }), score(data));
+      }
+    }
+  }
+}
+assert.doesNotMatch(getAssessmentContent({}, "watch").followUp, /我們會在|你會透過 Email 收到未來/);
+assert.doesNotMatch(getAssessmentContent({}, "watch", JSON.parse('{"contactConsent":"true","marketingConsent":1}')).followUp, /我們會在|你會透過 Email 收到未來/);
+console.log("PASS 32 stage/plan/opt-in combinations; missing/non-boolean choices fail closed; scoring unchanged");
 
 const client = readFileSync("src/components/consult/ConsultationPage.tsx", "utf8");
 const rootLayout = readFileSync("src/app/layout.tsx", "utf8");
