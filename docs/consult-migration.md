@@ -1,5 +1,10 @@
 # `/consult/` frontend migration
 
+2026-11-24 update: #65/#66 supersede the original questionnaire/CTA notes below.
+Issue #64 replaces browser-to-GAS no-cors with two exact same-origin APIs and
+validated GAS ACKs. See [the current API/routing/retry contract](free-assessment-64-ack.md).
+Historical migration observations below are not evidence of current production deployment.
+
 Issue #25 moves the existing WordPress-embedded consultation frontend into the
 Next.js App Router. The implementation was transcribed from the supplied
 `index-with-wp-note.md` source and uses the shared Top Strip, Header, Footer,
@@ -30,14 +35,12 @@ values, calculations, GAS payloads and assessment results. Specifically:
 
 ## Preserved integration behavior
 
-- Main submission and accuracy feedback still post directly to the same Google
-  Apps Script web app.
-- Both requests remain `POST`, `mode: "no-cors"`, with
-  `Content-Type: text/plain;charset=utf-8` and JSON-stringified bodies.
+- Main submission and accuracy feedback post JSON to the same-origin APIs in
+  the current contract. Only the server forwards text/plain JSON to fixed GAS.
 - The main payload retains every existing key, calculated stage/route values,
   team email, resource link, discount values and Taipei timestamp.
-- Accuracy feedback retains `type: accuracy_feedback` and adds
-  `urgentFollowUp: true` only for `不太準`.
+- Accuracy feedback retains `type: accuracy_feedback`, includes original
+  submissionId/jobId for correlation, and never sends urgentFollowUp or new consent.
 - The signup repository's `main` branch is the reference architecture for the
   global tag and conversion helper. All apps share tag ID `AW-17610996814`, but
   the conversion actions stay separate: direct signup uses
@@ -54,7 +57,7 @@ values, calculations, GAS payloads and assessment results. Specifically:
   render the Google tag integration.
 - The consultation conversion remains event `conversion` with
   `send_to: AW-17610996814/Ynp6CPHkhe4cEM74yc1B`. It runs only after the main
-  GAS `fetch` promise resolves. A synchronous in-flight/completed gate prevents
+  GAS ACK has been validated. A synchronous in-flight/completed gate prevents
   repeated clicks and handler re-entry; a separate per-mount conversion guard
   prevents React re-render duplicates. A rejected fetch remains retryable, and
   a fresh page/form lifecycle can make a genuinely separate submission.
@@ -62,14 +65,15 @@ values, calculations, GAS payloads and assessment results. Specifically:
   eligible post-fetch conversion is queued rather than silently discarded.
   Carousel use, form navigation, validation failures, loading state and
   accuracy feedback never invoke the main conversion.
-- No GAS, Google Forms, Queue, Sheet, email, Worker, WordPress or production
-  route configuration is changed.
+- No GAS, Google Forms, Queue, Sheet, email, WordPress or production Cloudflare
+  Routes configuration is changed. Only the two precise API ownership paths
+  are added to the existing production Router and staging Worker.
 
-Because a `no-cors` response is opaque, the browser cannot verify the GAS HTTP
-status or confirm server-side receipt. The success screen therefore preserves
-the original behavior: it means the browser dispatched the request without a
-client-side network exception, not that GAS confirmed persistence. Changing
-that contract needs a separate issue and coordinated backend work.
+Success requires HTTP 2xx, valid JSON, status=ok, accepted=true and a valid jobId;
+an optional upstream submissionId must match. This confirms receipt only, not
+PDF/Email delivery. Unknown receipt keeps answers and the original payload/ID
+for manual same-content retries. No automatic retry or persistent idempotency
+is added; #62/#67 still own GAS authorization and real integration validation.
 
 ## Routing and SEO
 
@@ -101,9 +105,9 @@ production ad-conversion tooling during verification.
 | Step 4 | Select/deselect each group; confirm a fourth barrier is rejected and the temporary max-three message appears. |
 | Step 5 | Webinar multi-select, both consent controls, submit disabled/loading state and prevention of duplicate submission. |
 | Results | Exercise watch/explore/ready/action and 25+8 paths. Compare stage copy, blocker combinations, next steps, time anchors and all CTA links/prices. |
-| Feedback | Test each accuracy response with mocked/authorized networking; confirm the thank-you message and `urgentFollowUp` only for `不太準`. |
-| Analytics | With the request and `gtag` mocked, confirm no conversion on load, carousel use, step navigation, validation failure or feedback. Confirm exactly one conversion after a resolved main submission and none after a rejected request/repeated click. |
-| Network contract | Inspect mocked requests for the exact endpoint, POST/no-cors/text body, unchanged keys/value strings and both payload shapes. Remember DevTools cannot expose an opaque GAS response status. |
+| Feedback | Mock each response; show thanks only after valid status=ok, preserve original IDs, no urgentFollowUp or new consent. |
+| Analytics | Mock requests and gtag; exactly one conversion after valid main ACK, none for invalid ACK, timeout, feedback or repeated clicks. |
+| Network contract | Check same-origin JSON POST and complete payload; controlled upstream mocks cover ContentService redirect, invalid JSON/error/IN_FLIGHT, bounds and timeout. |
 | Browser behavior | Chrome, Safari and Firefox: Back/Continue controls, native focus-visible order, anchor scroll, refresh, query parameters, console errors, hydration warnings and remote hero/CSP/CORS loading. |
 
 Automated checks mock or inspect the contract only; they never call GAS, submit
@@ -122,8 +126,8 @@ non-lead test plan; staging and localhost intentionally have no Google Tag.
 3. Navigate between steps and provoke validation errors. Confirm no
    `conversion` event appears.
 4. With the GAS request safely mocked or otherwise explicitly authorized,
-   confirm a rejected request produces no conversion and a resolved opaque
-   request produces exactly one event sent to
+   confirm a rejected/invalid ACK produces no conversion and a valid ACK
+   produces exactly one event sent to
    `AW-17610996814/Ynp6CPHkhe4cEM74yc1B`.
 5. Repeat-click during submission and submit accuracy feedback; confirm neither
    creates another main conversion. Confirm neither signup label appears.

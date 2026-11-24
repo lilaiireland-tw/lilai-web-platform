@@ -28,7 +28,7 @@ cloudflare/production-platform.jsonc 的 vars 已設定 NEXT_PUBLIC_GA4_MEASUREM
 
 現有 gtag stub 在遠端 script 尚未載入時已會排入 dataLayer；若 gtag 暫時不存在，使用相同 dataLayer 的 Arguments command 佇列，不建立新 loader/config。只有已接受或入列的事件才標記去重。未同意的操作不暫存、不回放；日後新的有效操作可以開始追蹤。追蹤例外不影響驗證、GAS、Ads。廣告阻擋或離頁前始終未載入 Google script 的情況仍可能無法送達；程式層排隊不是後台送達保證。
 
-原 form noValidate、自訂驗證、GAS no-cors、UI 保留；一般 input Enter 不跳步，textarea Enter 換行，最後 submit 可鍵盤操作。success 仍只代表 no-cors fetch resolved，不能確認 GAS 寫入或寄信成功。
+原 form noValidate、自訂驗證與鍵盤操作保留。#64 改為同網域代理，主提交須 HTTP 2xx 與有效 status=ok/accepted=true/jobId ACK 才完成 gate、success 與既有 Ads conversion；不代表 PDF/Email 完成。無效 ACK、未知收件與 timeout 不送轉換、不自動重送；人工同內容重試保留完整 payload/ID。詳見 [#64 契約](../free-assessment-64-ack.md)。
 
 ## UTM 與 GA4 設定
 

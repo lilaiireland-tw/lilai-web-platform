@@ -22,10 +22,10 @@ import {
   runConsultationSubmission,
   type ConsultationSubmissionGate,
 } from "@/lib/consult/submission";
+import { requestConsultation, RECEIPT_UNCONFIRMED } from "@/lib/consult/request";
 import { assessmentFormContract, benefits, contactPreferences, faqs, heroImages, optionLabels, options, privacyNotice, nextStepInvitation } from "./consult-content";
 import styles from "./consultation.module.css";
 
-const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbx8AxEZ_Dh1IFWqMvTLDGGvUyPyBKrgjzoSlW9wWgyTAAgYH3qUPtm6NBdZ5Mq6Mb0N/exec";
 const TEAM_EMAIL = "lilaiireland@gmail.com";
 const RESOURCE_LINK = "https://linktr.ee/lilaiireland";
 const WEBINAR_DISCOUNT = { original_price: "NT$500", discount_price: "NT$250" };
@@ -133,6 +133,12 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [result, setResult] = useState<null | { data: AssessmentData; stageInfo: ReturnType<typeof getAssessmentContent>; stageName: string; leadQuality: string }>(null);
+  const [submitError, setSubmitError] = useState("");
+  const [feedbackError, setFeedbackError] = useState("");
+  const feedbackGate = useRef<ConsultationSubmissionGate>({ inFlight: false, completed: false });
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+  const acceptedJobId = useRef<string | null>(null);
+  const previousAttempt = useRef<{ fingerprint: string; payload: Record<string, unknown> & { submissionId: string } } | null>(null);
   const [accuracy, setAccuracy] = useState<string | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const conversionGuard = useRef<GoogleAdsConversionGuard>({ sent: false });
@@ -255,6 +261,12 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
     const leadQuality = classifyLead(data);
     const stageInfo = getAssessmentContent(data, stage, values);
     const stageName = `${stageInfo.emoji} ${stageInfo.name}`;
+    const fingerprint = JSON.stringify(values);
+    if (previousAttempt.current && previousAttempt.current.fingerprint !== fingerprint) {
+      if (!window.confirm("你已修改填答。先前提交是否接收仍未確認；繼續會以新的提交編號送出，可能產生另一筆評估。確定要送出修改後的內容嗎？")) return;
+      submissionId.current = null;
+      previousAttempt.current = null;
+    }
     submissionId.current ??= crypto.randomUUID();
     const payload = {
       ...assessmentFormContract, submissionId: submissionId.current,
@@ -288,8 +300,13 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
           track("consult_step_complete", 5);
           return true;
         },
-        request: () => fetch(GAS_ENDPOINT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }),
-        onResolved: () => {
+        request: () => {
+          setSubmitError("");
+          previousAttempt.current ??= { fingerprint, payload };
+          return requestConsultation(previousAttempt.current.payload);
+        },
+        onResolved: ack => {
+          acceptedJobId.current = ack.jobId;
           trackConsultationConversion(conversionGuard.current, {
             productionDeployment: googleAdsEnabled,
           });
@@ -300,22 +317,29 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
         },
         onSubmittingChange: setSubmitting,
       });
-    } catch (error) {
-      console.error(error);
-      window.alert("送出時遇到問題，請稍後再試，或直接私訊哩來愛爾蘭 IG。");
+    } catch {
+      setSubmitError(RECEIPT_UNCONFIRMED);
     }
   };
 
-  const submitAccuracy = (answer: string) => {
-    if (!result || accuracy) return;
-    setAccuracy(answer);
-    const feedbackPayload: Record<string, unknown> = {
+  const submitAccuracy = async (answer: string) => {
+    if (!result || accuracy || feedbackGate.current.inFlight || !submissionId.current || !acceptedJobId.current) return;
+    setFeedbackError("");
+    const feedbackPayload = {
+      submissionId: submissionId.current, jobId: acceptedJobId.current,
       type: "accuracy_feedback", name: result.data.name, nickname: result.data.nickname,
       email: result.data.email, stageName: result.stageName, leadQuality: result.leadQuality,
       accuracyAnswer: answer, submittedAt: new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei" }),
     };
-    runAccuracyFeedbackSubmission(() => fetch(GAS_ENDPOINT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(feedbackPayload) }))
-      .catch(error => console.log("Feedback send error:", error));
+    try {
+      await runConsultationSubmission({
+        gate: feedbackGate.current, validate: () => true,
+        request: () => runAccuracyFeedbackSubmission(() => requestConsultation(feedbackPayload, true)),
+        onResolved: () => setAccuracy(answer), onSubmittingChange: setFeedbackSubmitting,
+      });
+    } catch {
+      setFeedbackError("尚未確認是否成功接收回饋，請稍後再試。重試可能重複記錄回饋。");
+    }
   };
 
   const textField = (id: keyof FormValues, label: string, required: boolean, hint: string, placeholder: string, type = "text") => (
@@ -444,20 +468,22 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
                 <p id={`${field}-hint`} className={styles.preferenceHint}>{hint}</p>
               </div>)}
             </div>
-            <div className={styles.formNav}><button type="button" className={styles.btnBack} onClick={() => goToStep(4)}>← 返回</button><button type="submit" className={styles.btnSubmit} disabled={submitting}>{submitting && <span className={styles.spinner} />}{submitting ? "正在送出資料，請稍等……" : "取得我的出發評估 🍀"}</button></div>
+            {submitError && <p role="alert" id="consult-submit-error">{submitError}</p>}
+            <div className={styles.formNav}><button type="button" className={styles.btnBack} onClick={() => goToStep(4)}>← 返回</button><button type="submit" className={styles.btnSubmit} disabled={submitting} aria-describedby={submitError ? "consult-submit-error" : undefined}>{submitting && <span className={styles.spinner} />}{submitting ? "正在送出資料，請稍等……" : "取得我的出發評估 🍀"}</button></div>
           </div>}
 
           </form>}
 
           {submitted && result && <div className={cx(styles.successScreen, styles.show)} aria-live="polite">
             <div className={styles.successIcon}>🍀</div><h2 className={styles.successTitle}>你的出發評估來了</h2>
+            <p>已確認接收你的評估資料；這不代表 PDF 已生成或 Email 已寄出。</p>
             <div className={styles.stageBadge}>{result.stageInfo.emoji} 你目前是「{result.stageInfo.name}」</div>
             <div className={styles.resultSummary}>{result.stageInfo.description}</div>
             <div className={styles.resultDiagnosis}>{getBlockerDiagnosis(result.data.barriers)}</div>
             <div className={styles.resultNextsteps}><strong>建議你的下一步</strong>{result.stageInfo.nextSteps.split("\n").filter(Boolean).map(item => <div key={item} className={styles.nextStepItem}>{item}</div>)}{getTimeAnchor(result.data.timeline, result.data.plan) && <div className={styles.timeAnchor}>⏰ {getTimeAnchor(result.data.timeline, result.data.plan)}</div>}</div>
             <StageCta type={result.stageInfo.cta} followUp={result.stageInfo.followUp} />
             <p className={styles.resultEmailHint}>完整報告與 PDF 由 Email 提供，與兩項選填授權無關。若未收到，可透過上方 LINE 或 Email 入口詢問。</p>
-            {!accuracy ? <div className={styles.accuracyCheck}><p className={styles.accuracyQuestion}>這個評估結果準嗎？</p><p>回饋僅用於改善評估，不代表額外的聯繫或行銷授權。</p><div className={styles.accuracyOptions}>{["很準 😊", "還好 🤔", "不太準 😕"].map(label => <button key={label} type="button" className={cx(styles.accuracyBtn, label.startsWith("不太準") && styles.accuracyBtnMiss)} onClick={() => submitAccuracy(label.split(" ")[0])}>{label}</button>)}</div></div> : <div className={styles.accuracyDone}><p>{accuracy === "很準" ? "太好了！很高興這個評估對你有幫助 🍀" : accuracy === "還好" ? "謝謝你的回饋，我們會繼續優化評估邏輯！" : "謝謝你告訴我們，我們會用來改善評估。若想重新討論，你可以自行透過上方 LINE 或 Email 入口預約免費諮詢。"}</p></div>}
+            {!accuracy ? <div className={styles.accuracyCheck}>{feedbackError && <p role="alert">{feedbackError}</p>}<p className={styles.accuracyQuestion}>這個評估結果準嗎？</p><p>回饋僅用於改善評估，不代表額外的聯繫或行銷授權。</p><div className={styles.accuracyOptions}>{["很準 😊", "還好 🤔", "不太準 😕"].map(label => <button key={label} type="button" className={cx(styles.accuracyBtn, label.startsWith("不太準") && styles.accuracyBtnMiss)} disabled={feedbackSubmitting} onClick={() => submitAccuracy(label.split(" ")[0])}>{label}</button>)}</div></div> : <div className={styles.accuracyDone}><p>{accuracy === "很準" ? "太好了！很高興這個評估對你有幫助 🍀" : accuracy === "還好" ? "謝謝你的回饋，我們會繼續優化評估邏輯！" : "謝謝你告訴我們，我們會用來改善評估。若想重新討論，你可以自行透過上方 LINE 或 Email 入口預約免費諮詢。"}</p></div>}
             <p className={styles.signature}>哩來愛爾蘭 · 一起把夢，過成生活。</p>
           </div>}
         </div>

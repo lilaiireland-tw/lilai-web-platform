@@ -6,6 +6,7 @@ import next from "next";
 // Bind only loopback; browser tests intercept every request, including Google/GAS.
 export default async function setup() {
   Object.assign(process.env, JSON.parse(readFileSync("cloudflare/production-platform.jsonc", "utf8")).vars);
+  process.env.CONSULT_GAS_ENDPOINT = ""; // Browser fixtures must never fall through to GAS.
   const app = next({ dev: false, dir: process.cwd(), hostname: "127.0.0.1", port: 3101 });
   await app.prepare();
   const server = createServer(app.getRequestHandler());

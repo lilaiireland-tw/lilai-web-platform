@@ -1,3 +1,5 @@
+import { isConsultApiPath } from "../src/lib/consult/ack";
+
 export const PRODUCTION_HOSTNAME = "lilaiireland.com";
 export const PRODUCTION_ROUTER_SCRIPT = "lilai-web-platform-router";
 export const SIGNUP_WORKER_SCRIPT = "site-creator-vinext-starter";
@@ -43,6 +45,7 @@ export function productionRouteOwner(input: string | URL): ProductionRouteOwner 
 
   if (url.hostname !== PRODUCTION_HOSTNAME) return "wordpress";
   if (isSignupPath(url.pathname)) return "signup";
+  if (isConsultApiPath(url.pathname)) return "platform";
   if (hasWordPressQueryEndpoint(url)) return "wordpress";
   if (url.pathname === "/events-sitemap.xml") return "platform";
   if (

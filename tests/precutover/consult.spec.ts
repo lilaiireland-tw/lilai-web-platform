@@ -77,21 +77,24 @@ async function interceptGas(page: Page, mode: "success" | "failure") {
   const intercepted: string[] = [];
   const payloads: Record<string, unknown>[] = [];
   const unexpectedWrites: string[] = [];
+  let ackOverride: unknown;
+  let responseStatus = 200;
+  const setAck = (value: unknown, status = 200) => { ackOverride = value; responseStatus = status; };
   let releaseResponse: () => void = () => {};
   const responseGate = new Promise<void>(resolve => { releaseResponse = resolve; });
   await page.route("**/*", async route => {
     const request = route.request();
-    if (["127.0.0.1", "localhost"].includes(new URL(request.url()).hostname)) {
+    if (["127.0.0.1", "localhost"].includes(new URL(request.url()).hostname) && !new URL(request.url()).pathname.startsWith("/api/consult/")) {
       await route.fallback();
       return;
     }
     const url = new URL(request.url());
-    if (GAS_HOSTS.has(url.hostname)) {
+    if (url.pathname.startsWith("/api/consult/")) {
       intercepted.push(`${request.method()} ${request.url()}`);
       payloads.push(JSON.parse(request.postData() ?? "{}"));
       if (mode === "success") {
         await responseGate;
-        await route.fulfill({ status: 200, contentType: "text/plain", body: "mocked-ok" });
+        await route.fulfill({ status: responseStatus, contentType: "application/json", body: JSON.stringify(ackOverride ?? (url.pathname.endsWith("accuracy-feedback") ? { status: "ok" } : { status: "ok", accepted: true, jobId: "11111111-1111-4111-8111-111111111111" })) });
       }
       else await route.abort("failed");
       return;
@@ -103,7 +106,7 @@ async function interceptGas(page: Page, mode: "success" | "failure") {
     }
     await route.fallback();
   });
-  return { intercepted, payloads, unexpectedWrites: { unexpected: unexpectedWrites, intentionallyBlockedExternal: [] }, releaseResponse };
+  return { intercepted, payloads, unexpectedWrites: { unexpected: unexpectedWrites, intentionallyBlockedExternal: [] }, releaseResponse, setAck };
 }
 
 test("consult validation, optional fields, state retention, selection limits and FAQ", async ({ page }, testInfo) => {
@@ -207,6 +210,83 @@ test("validation and navigation never contact GAS or Google Ads", async ({ page 
   expect(await page.evaluate(() => ({ configured: window.__lilaiGoogleAdsConfigured, dataLayer: window.dataLayer }))).toEqual({ configured: undefined, dataLayer: undefined });
   await attachWriteRequestDiagnostics(testInfo, unexpectedWrites);
   expectNoUnexpectedWrites(unexpectedWrites);
+});
+
+test("invalid ACKs and proxy timeout retain answers and exact payload; changed content requires explicit new submission", async ({ page }) => {
+  const mock = await interceptGas(page, "success");
+  await page.goto("/consult");
+  await waitForConsultHydration(page);
+  await completeFormToStepFive(page);
+  await acceptConsents(page);
+  const submit = page.locator('button[type="submit"]');
+  mock.releaseResponse();
+  const jobId = "11111111-1111-4111-8111-111111111111";
+  for (const [body, status] of [
+    [{ status: "error" }, 200], ["<html>error</html>", 200], [{ status: "ok", accepted: true }, 200],
+    [{ status: "ok", accepted: false, jobId }, 200], [{ status: "IN_FLIGHT" }, 200],
+    [{ error: "receipt_unconfirmed" }, 504],
+  ] as const) {
+    mock.setAck(body, status);
+    const count = mock.payloads.length;
+    await submit.click();
+    await expect.poll(() => mock.payloads.length).toBe(count + 1);
+    await expect(page.locator("#form").getByRole("alert")).toContainText("尚未確認是否成功接收");
+    await expect(submit).toBeEnabled();
+    await expect(page.getByRole("heading", { name: "你的出發評估來了" })).toHaveCount(0);
+    await expect(page.locator('input[name="contactConsent"]')).toBeChecked();
+    await expect(page.locator('input[name="marketingConsent"]')).toBeChecked();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(mock.payloads.at(-1)).toEqual(mock.payloads[0]);
+  }
+  await page.getByRole("button", { name: /返回/ }).click();
+  await expect(page.locator('input[name="resources"]').first()).toBeChecked();
+  await page.getByRole("button", { name: /返回/ }).click();
+  await expect(page.locator("#lifeChange")).not.toHaveValue("");
+  await page.locator("#lifeChange").fill("Edited synthetic answer");
+  await continueTo(page, 4);
+  await continueTo(page, 5);
+  page.once("dialog", dialog => dialog.dismiss());
+  await submit.click();
+  expect(mock.payloads).toHaveLength(6);
+  page.once("dialog", dialog => dialog.accept());
+  mock.setAck({ status: "ok", accepted: true, jobId });
+  await submit.click();
+  await expect(page.getByRole("heading", { name: "你的出發評估來了" })).toBeVisible();
+  expect(mock.payloads).toHaveLength(7);
+  expect(mock.payloads[6].submissionId).not.toBe(mock.payloads[0].submissionId);
+  expect(mock.payloads[6].lifeChange).toBe("Edited synthetic answer");
+});
+
+test("feedback waits for valid ACK, preserves original correlation and stays retryable after failure", async ({ page }) => {
+  const mock = await interceptGas(page, "success");
+  mock.releaseResponse();
+  await page.goto("/consult");
+  await waitForConsultHydration(page);
+  await completeFormToStepFive(page, false);
+  await page.locator('button[type="submit"]').click();
+  await expect(page.getByRole("heading", { name: "你的出發評估來了" })).toBeVisible();
+  let release = () => {};
+  const pending = new Promise<void>(resolve => { release = resolve; });
+  let received = false;
+  await page.route("**/api/consult/accuracy-feedback", async route => {
+    received = true;
+    await pending;
+    await route.fulfill({ status: 200, contentType: "application/json", body: '{"status":"error"}' });
+  });
+  const feedback = page.getByRole("button", { name: "還好 🤔" });
+  await feedback.click();
+  await expect.poll(() => received).toBe(true);
+  await expect(feedback).toBeDisabled();
+  await expect(page.getByText("謝謝你的回饋，我們會繼續優化評估邏輯！")).toHaveCount(0);
+  release();
+  await expect(page.locator("#form").getByRole("alert")).toContainText("尚未確認是否成功接收回饋");
+  await expect(feedback).toBeEnabled();
+  await page.unroute("**/api/consult/accuracy-feedback");
+  await feedback.click();
+  await expect(page.getByText("謝謝你的回饋，我們會繼續優化評估邏輯！")).toBeVisible();
+  expect(mock.payloads[1].submissionId).toBe(mock.payloads[0].submissionId);
+  expect(mock.payloads[1].jobId).toBe("11111111-1111-4111-8111-111111111111");
+  expect(mock.payloads[1]).not.toHaveProperty("urgentFollowUp");
 });
 
 test("explicit unknown remains distinct from unanswered sources and permits independent Dcard exposure", async ({ page }) => {

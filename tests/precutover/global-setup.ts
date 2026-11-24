@@ -13,6 +13,7 @@ export default async function globalSetup(config: FullConfig) {
   }
 
   process.env.SITE_DEPLOYMENT_ENV = "staging";
+  process.env.CONSULT_GAS_ENDPOINT = ""; // No real GAS fallback if a browser mock is missed.
   process.env.WORDPRESS_ORIGIN = "http://127.0.0.1:3199";
   process.env.WORDPRESS_API_BASE = "http://127.0.0.1:3199/wp-json/wp/v2";
   process.env.WOOCOMMERCE_STORE_API_BASE = "http://127.0.0.1:3199/wp-json/wc/store/v1";
