@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { assertDeploymentEnvironment } from "../src/lib/deployment";
-import { assertProductionRouteSafety, platformOnlyDeployArgs, PRODUCTION_ACCOUNT_ID } from "./production-route-safety";
+import { assertProductionRouteSafety } from "./production-route-safety";
 
 const config = JSON.parse(readFileSync("cloudflare/production-platform.jsonc", "utf8"));
 const router = JSON.parse(readFileSync("cloudflare/production-router.jsonc", "utf8"));
@@ -42,19 +42,6 @@ function build() {
   run("node_modules/@opennextjs/cloudflare/dist/cli/index.js", ["populateCache", "local", "--config", configPath]);
 }
 
-function deployPlatform() {
-  assert.deepEqual(process.argv.slice(2), ["deploy-platform", "--confirm-platform-only-deploy"],
-    "Explicit confirmation required: deploy-platform --confirm-platform-only-deploy");
-  assert(process.env.CLOUDFLARE_API_TOKEN, "CLOUDFLARE_API_TOKEN is required");
-  assert.equal(process.env.CLOUDFLARE_ACCOUNT_ID, PRODUCTION_ACCOUNT_ID,
-    "Cloudflare account mismatch: refusing production deployment");
-  assertDeploymentEnvironment({ ...process.env, ...config.vars });
-  // Does not deploy Router, update Service Binding, or declare any live public Route.
-  const wrangler = resolve("node_modules/wrangler/bin/wrangler.js");
-  run(wrangler, platformOnlyDeployArgs());
-}
-
 const action = process.argv[2];
 if (action === "build") build();
-else if (action === "deploy-platform") deployPlatform();
-else throw new Error("Use build or deploy-platform --confirm-platform-only-deploy. Router deployment is disabled.");
+else throw new Error("Use build. Deploy through the unified Production Deploy workflow.");

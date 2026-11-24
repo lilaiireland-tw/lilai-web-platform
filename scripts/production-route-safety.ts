@@ -39,7 +39,3 @@ export function assertProductionRouteSafety(platform: WorkerConfig, router: Work
   assert.equal(platform.vars?.EVENTS_INCLUDE_DRAFTS, "false");
   assert.equal(platform.vars?.NEXT_PUBLIC_SITE_URL, "https://lilaiireland.com");
 }
-
-/** The only Wrangler deploy command authorized for ordinary production updates. */
-export const platformOnlyDeployArgs = (): string[] =>
-  ["deploy", "--config", "cloudflare/production-platform.jsonc"];

@@ -2,6 +2,8 @@
 
 Next.js + TypeScript + App Router frontend for `lilaiireland.com`.
 
+Production deployment and paired rollback: [Unified Production Release](docs/unified-production-release.md).
+
 ## Architecture
 
 - Next.js owns the public frontend.

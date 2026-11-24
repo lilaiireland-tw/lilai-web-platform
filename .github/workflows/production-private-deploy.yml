@@ -1,17 +1,10 @@
-name: Production Platform (manual only)
+name: Production validation
 
 on:
   pull_request:
     branches: [develop, main]
   push:
     branches: [develop, main]
-  workflow_dispatch:
-    inputs:
-      deploy_platform_only:
-        description: Deploy ONLY the production Platform Worker; preserve public Router Routes
-        required: true
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -32,6 +25,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - run: node --test tests/production/*.test.mjs
       - run: npm run cf:typegen
       - run: npm run cf:typegen:router
       - run: npx tsc -p cloudflare/tsconfig.json
@@ -55,30 +49,3 @@ jobs:
       - run: npx tsx scripts/check-design-system.ts
       - run: npm run build
       - run: git diff --check
-
-  deploy-platform:
-    needs: validate
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.deploy_platform_only == true
-    runs-on: ubuntu-latest
-    environment: production
-    concurrency:
-      group: cloudflare-production-platform
-      cancel-in-progress: false
-    env:
-      SITE_DEPLOYMENT_ENV: production
-      EVENT_DEPLOYMENT_ENV: production
-      EVENTS_INCLUDE_DRAFTS: 'false'
-      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-      NEXT_TELEMETRY_DISABLED: '1'
-      WRANGLER_SEND_METRICS: 'false'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
-      - run: npm ci
-      - run: npm run cf:build:production-platform
-      - run: npm run cf:deploy:production-platform -- --confirm-platform-only-deploy
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

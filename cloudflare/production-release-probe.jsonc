@@ -1,0 +1,14 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "lilai-production-release-probe-local",
+  "account_id": "622900d9297cd7c09cad966aaae64617",
+  "main": "production-release-probe.js",
+  "compatibility_date": "2026-10-09",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [],
+  "services": [
+    { "binding": "PLATFORM", "service": "lilai-web-platform-production", "remote": true },
+    { "binding": "SIGNUP", "service": "site-creator-vinext-starter", "remote": true }
+  ]
+}

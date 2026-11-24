@@ -37,7 +37,6 @@
     "check:staging": "tsx scripts/check-staging.ts",
     "check:signup-staging": "node --import tsx --test tests/signup-staging/*.test.mjs",
     "check:consent": "tsx scripts/check-consent.ts",
-    "cf:deploy:production-platform": "tsx scripts/cloudflare-production.ts deploy-platform",
     "check:production-route-safety": "tsx scripts/check-production-route-safety.ts",
     "dev:signup": "tsx scripts/dev-signup.ts",
     "check:signup": "node --import tsx --test tests/signup/*.test.ts && tsx scripts/check-signup.ts",
