@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { appendFileSync, existsSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { baseline, platformConfig, backendConfig, scriptPath, api, github,
-  run, save, read, capture, assertSource, assertInfrastructure } from "./lib.mjs";
-import { publicSmoke, bindingSmoke } from "./smoke.mjs";
+  run, save, read, capture, assertSource, assertInfrastructure, assertCiRun, uploadedVersion } from "./lib.mjs";
+import { preflightSmoke, publicSmoke, bindingSmoke } from "./smoke.mjs";
 
 const directory = ".cloudflare/release";
 const first = process.env.RELEASE_MODE === "first-cutover";
@@ -76,7 +77,7 @@ async function preflight() {
     snapshot.commit = previous.commit;
   }
   snapshot.legacy = first;
-  snapshot.smoke = await publicSmoke({ legacy: first });
+  snapshot.smoke = await preflightSmoke();
   snapshot.status = "verified-before";
   save(`${directory}/before.json`, snapshot);
   console.log("PASS production preflight; snapshot saved; schema unchanged");
@@ -93,11 +94,14 @@ async function deploy(name, config, env = []) {
     expected.workers[baseline.platform].version = read(`${directory}/platform.json`).version;
   }
   samePair(current, expected);
-  run(["versions", "upload", "--config", config, ...env, "--keep-vars", "--message", message]);
-  const versions = await api(`${scriptPath(name)}/versions`);
-  const matching = versions.items.filter(v => v.annotations?.["workers/message"] === message);
-  assert.equal(matching.length, 1, "Cannot identify unique uploaded version");
-  const version = matching[0].id;
+  const output = `${directory}/${name}-upload.ndjson`;
+  writeFileSync(output, "");
+  run(["versions", "upload", "--config", config, ...env, "--keep-vars", "--message", message],
+    { WRANGLER_OUTPUT_FILE_PATH: resolve(output) });
+  const version = uploadedVersion(readFileSync(output, "utf8"), name);
+  const uploaded = await api(`${scriptPath(name)}/versions/${version}`);
+  assert.equal(uploaded.id, version);
+  assert.equal(uploaded.annotations?.["workers/message"], message, "Uploaded version does not match commit/run");
   // Activation only. Never invoke deploy (which reconciles Routes/Consumers/Cron).
   await api(`${scriptPath(name)}/deployments`, {
     strategy: "percentage", versions: [{ version_id: version, percentage: 100 }],
@@ -118,7 +122,6 @@ async function verify() {
     const version = await api(`${scriptPath(name)}/versions/${recorded.version}`);
     assert.equal(version.annotations?.["workers/message"], message, "Worker version does not match commit/run");
   }
-  await bindingSmoke();
   snapshot.smoke = await publicSmoke({ previous: before.smoke });
   const final = await capture();
   assertInfrastructure(final);
@@ -184,10 +187,18 @@ function summary() {
   console.log(lines.join("\n"));
 }
 const action = process.argv[2];
-if (action === "summary") summary();
+if (action === "ci") {
+  assertSource();
+  for (const workflow of ["production-private-deploy.yml", "signup-backend.yml"]) {
+    const runs = await github(`actions/workflows/${workflow}/runs?branch=main&event=push&head_sha=${process.env.GITHUB_SHA}&per_page=1`);
+    assertCiRun(runs.workflow_runs[0], process.env.GITHUB_SHA, workflow);
+  }
+  console.log("PASS production and signup CI for the exact main SHA");
+}
+else if (action === "summary") summary();
 else if (action === "preflight") await preflight();
 else if (action === "platform") await deploy(baseline.platform, platformConfig);
 else if (action === "backend") await deploy(baseline.backend, backendConfig, ["--env", "production"]);
 else if (action === "verify") await verify();
 else if (action === "rollback") await rollback();
-else throw new Error("Expected preflight, platform, backend, verify, rollback, summary");
+else throw new Error("Expected ci, preflight, platform, backend, verify, rollback, summary");

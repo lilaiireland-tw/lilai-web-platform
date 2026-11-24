@@ -16,10 +16,28 @@ export function save(file, value) {
   mkdirSync(".cloudflare/release", { recursive: true });
   writeFileSync(file, JSON.stringify(value, null, 2) + "\n");
 }
-export function run(args) {
-  const result = spawnSync(process.execPath, ["node_modules/wrangler/bin/wrangler.js", ...args], { stdio: "inherit" });
+export function run(args, env = {}) {
+  const result = spawnSync(process.execPath, ["node_modules/wrangler/bin/wrangler.js", ...args], { stdio: "inherit", env: { ...process.env, ...env } });
   if (result.error) throw result.error;
   assert.equal(result.status, 0, `Wrangler ${args.slice(0, 2).join(" ")} failed`);
+}
+export function uploadedVersion(output, name) {
+  const uploads = output.trim().split(/\r?\n/).map(line => JSON.parse(line))
+    .filter(entry => entry.type === "version-upload");
+  assert.equal(uploads.length, 1, "Expected one Wrangler version upload");
+  assert.equal(uploads[0].version, 1, "Unsupported Wrangler output schema");
+  assert.equal(uploads[0].worker_name, name, "Uploaded Worker mismatch");
+  assert.match(uploads[0].version_id ?? "", /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i, "Missing/invalid uploaded version ID");
+  return uploads[0].version_id;
+}
+export function assertCiRun(run, sha, workflow) {
+  assert(run, `No main push CI run for ${workflow} at ${sha}`);
+  assert.equal(run.head_sha, sha, "CI SHA mismatch");
+  assert.equal(run.head_branch, "main");
+  assert.equal(run.event, "push");
+  assert.equal(run.path, `.github/workflows/${workflow}`);
+  assert.equal(run.status, "completed", `${workflow}: CI is not complete`);
+  assert.equal(run.conclusion, "success", `${workflow}: CI must pass before release`);
 }
 export async function api(path, body) {
   assert(process.env.CLOUDFLARE_API_TOKEN, "Cloudflare token required");
