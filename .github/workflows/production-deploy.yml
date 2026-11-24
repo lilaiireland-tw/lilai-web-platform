@@ -58,24 +58,13 @@ jobs:
           test "$GITHUB_REF" = refs/heads/main
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           npm ci
-          npm run cf:typegen
-          npm run cf:typegen:router
-          npm run signup:typecheck
-          npx tsc --noEmit --incremental false
-          npx tsc -p cloudflare/tsconfig.json
-          node --test tests/production/*.test.mjs
-          npm run signup:test
-          npx tsx scripts/check-production-release-strategy.ts
+          node scripts/production/release.mjs ci
           npm run check:production-route-safety
-          npm run check:production-routing
-          npm run check:production-router
-          npm run check:production-integration
-          npx tsx scripts/check-shared-layout.ts
-          npx tsx scripts/check-design-system.ts
           npm run cf:build:production-platform
           npm run check:production-packaging
           npm run audit:production-assets
-          git diff --check
+        env:
+          GH_TOKEN: ${{ github.token }}
       - name: Preflight
         run: node scripts/production/release.mjs preflight
         env:

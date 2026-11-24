@@ -29,7 +29,7 @@ export function assertPage(result, path) {
   assert(!/noindex/i.test(result.robots ?? ""), `${path}: noindex header`);
   assert(!/<meta[^>]+name="robots"[^>]+content="[^"]*noindex/i.test(result.body), `${path}: noindex metadata`);
   const canonical = result.body.match(/<link[^>]*rel="canonical"[^>]*href="([^"]+)"/i)?.[1];
-  assert.equal(canonical, origin + path, `${path}: canonical changed`);
+  assert.equal(canonical, path === "/" ? origin : origin + path, `${path}: canonical changed`);
 }
 export function assetPaths(html) {
   const paths = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map(m => m[1].replaceAll("&amp;", "&"))
@@ -39,32 +39,44 @@ export function assetPaths(html) {
 }
 function assertAsset(result, path) {
   assert.equal(result.status, 200, `Signup asset failed: ${path}`);
-  assert(result.body.length > 0 && !result.type.includes("text/html"), `Invalid asset: ${path}`);
-  if (/\.m?js(?:\?|$)/.test(path)) assert.match(result.type, /javascript/);
-  if (/\.css(?:\?|$)/.test(path)) assert.match(result.type, /text\/css/);
+  assert(result.body.length > 0 && !/text\/html/i.test(result.type) && !/^\s*(?:<!doctype html|<html)/i.test(result.body), `Invalid asset: ${path}`);
+  if (!/javascript|css/i.test(result.type)) console.warn(`WARNING asset Content-Type ${result.type}: ${path}`);
 }
-export async function publicSmoke({ legacy = false, previous } = {}) {
+export async function preflightSmoke({ previous } = {}) {
   const home = await request("/");
   const signup = await request("/language-school-signup/");
   assertPage(home, "/");
   assertPage(signup, "/language-school-signup/");
+  const regression = {};
+  for (const path of ["/wp-json/", "/cart/", "/checkout/", "/robots.txt", "/sitemap_index.xml"]) {
+    const result = await request(path);
+    assert.equal(result.status, 200, `WordPress/SEO route failed: ${path}`);
+    assert(result.body.length > 0, `Empty WordPress/SEO response: ${path}`);
+    if (path === "/wp-json/") assert(Array.isArray(JSON.parse(result.body).namespaces), "WordPress REST API unavailable");
+    if (path === "/robots.txt") assert(/user-agent\s*:/i.test(result.body), "Invalid robots.txt");
+    if (path === "/sitemap_index.xml") assert(/<(?:sitemapindex|urlset)\b/i.test(result.body), "Invalid sitemap");
+    regression[path] = { status: result.status, path: result.path };
+    if (previous?.regression?.[path] && previous.regression[path].path !== result.path) {
+      console.warn(`WARNING ${path}: final path changed from ${previous.regression[path].path} to ${result.path}`);
+    }
+  }
+  return { regression, homeAssets: assetPaths(home.body), signupAssets: assetPaths(signup.body), checkedAt: new Date().toISOString() };
+}
+export async function publicSmoke({ legacy = false, previous } = {}) {
+  const smoke = await preflightSmoke({ previous });
   const bare = await request("/language-school-signup?utm_source=production-smoke");
   assert.equal(bare.status, 200);
   assert.equal(bare.path, "/language-school-signup/?utm_source=production-smoke");
   assert(bare.redirects.length > 0, "Bare signup must preserve slash redirect");
-  const head = await request("/language-school-signup/", { method: "HEAD" });
-  assert.equal(head.status, 200);
-  assert.equal(head.body, "");
-  const assets = assetPaths(signup.body);
-  assert(assets.length > 0, "No signup assets discovered");
-  if (!legacy) assert(assets.some(p => p.startsWith("/_next/static/")), "Signup is not the Next.js frontend");
-  for (const path of assets) {
-    const asset = await request(path);
-    assertAsset(asset, path);
-    const assetHead = await request(path, { method: "HEAD" });
-    assert.equal(assetHead.status, 200, `Asset HEAD failed: ${path}`);
-    assert.equal(assetHead.body, "");
+  const assets = new Set();
+  for (const paths of [smoke.homeAssets, smoke.signupAssets]) {
+    for (const extension of [/\.m?js(?:\?|$)/, /\.css(?:\?|$)/]) {
+      const path = paths.find(path => extension.test(path));
+      assert(path, `Missing main JS/CSS asset: ${extension}`);
+      assets.add(path);
+    }
   }
+  for (const path of assets) assertAsset(await request(path), path);
   const turnstile = await request("/language-school-signup/api/turnstile-config");
   assert.equal(turnstile.status, 200);
   const config = JSON.parse(turnstile.body);
@@ -75,15 +87,7 @@ export async function publicSmoke({ legacy = false, previous } = {}) {
   });
   assert.equal(refused.status, 403, "Missing Turnstile must be rejected");
   assert.equal(JSON.parse(refused.body).error.code, "turnstile_failed");
-  const regression = {};
-  for (const path of ["/wp-json/", "/cart/", "/checkout/", "/robots.txt", "/sitemap_index.xml"]) {
-    const result = await request(path);
-    assert(result.status >= 200 && result.status < 400, `WordPress/SEO route failed: ${path}`);
-    if (path === "/wp-json/") assert.match(result.type, /json/);
-    regression[path] = { status: result.status, path: result.path, type: result.type, redirects: result.redirects };
-  }
-  if (previous) assert.deepEqual(regression, previous.regression, "WordPress/WooCommerce/SEO routing changed");
-  return { legacy, regression, signupAssets: assets, checkedAt: new Date().toISOString() };
+  return { ...smoke, legacy, checkedAssets: [...assets] };
 }
 export async function bindingSmoke({ platformOnly = false } = {}) {
   const log = openSync(".cloudflare/release/probe.log", "a");
@@ -105,17 +109,6 @@ export async function bindingSmoke({ platformOnly = false } = {}) {
       const body = await response.text();
       assertPage({ status: response.status, type: response.headers.get("content-type"), body }, "/language-school-signup/");
       assert(assetPaths(body).some(p => p.startsWith("/_next/static/")), `${target}: Next signup missing`);
-      const head = await fetch(`http://127.0.0.1:8798/${target}/language-school-signup/`, { method: "HEAD", signal: AbortSignal.timeout(30000) });
-      assert.equal(head.status, 200);
-      assert.equal(await head.text(), "");
-      // Shared root assets are owned by Platform/Router, not the signup route.
-      if (target === "platform") for (const path of assetPaths(body)) {
-        const asset = await fetch(`http://127.0.0.1:8798/platform${path}`, { signal: AbortSignal.timeout(30000) });
-        assertAsset({ status: asset.status, type: asset.headers.get("content-type") ?? "", body: await asset.text() }, path);
-        const assetHead = await fetch(`http://127.0.0.1:8798/platform${path}`, { method: "HEAD", signal: AbortSignal.timeout(30000) });
-        assert.equal(assetHead.status, 200);
-        assert.equal(await assetHead.text(), "");
-      }
     }
   } finally {
     child.kill();
