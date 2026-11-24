@@ -9,7 +9,7 @@ class ProxyError extends Error {
   constructor(readonly status: number, readonly code: string) { super(code); }
 }
 
-async function limitedText(message: Request | Response, limit: number, signal: AbortSignal) {
+export async function limitedText(message: Request | Response, limit: number, signal: AbortSignal) {
   signal.throwIfAborted();
   const reader = message.body?.getReader();
   if (!reader) return "";
@@ -94,6 +94,32 @@ async function feedbackProof(secret: string, submissionId: string, jobId: string
   return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+/** Shared bounded transport; fixed GAS URL and one safe ContentService redirect. */
+export async function consultGasRequest(endpoint: string | undefined, data: unknown, signal: AbortSignal, upstream: typeof fetch = fetch): Promise<unknown> {
+  signal.throwIfAborted();
+  const gasUrl = endpointUrl(endpoint);
+  let response = await upstream(gasUrl, {
+    method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(data), redirect: "manual", signal, cache: "no-store",
+  });
+  if ([302, 303].includes(response.status)) {
+    const location = response.headers.get("location");
+    await response.body?.cancel();
+    const target = new URL(location ?? "", gasUrl);
+    if (!location || target.protocol !== "https:" || target.hostname !== "script.googleusercontent.com" ||
+        target.port || target.username || target.password || target.hash || target.pathname !== "/macros/echo") {
+      throw new ProxyError(502, "upstream_redirect_rejected");
+    }
+    // ContentService redirect retrieves the result with GET; never replay the POST/body/secret.
+    response = await upstream(target, { method: "GET", redirect: "manual", signal, cache: "no-store" });
+  }
+  if (!response.ok) { await response.body?.cancel(); throw new ProxyError(502, "upstream_http_error"); }
+  let ack: unknown;
+  try { ack = JSON.parse(await limitedText(response, ACK_LIMIT, signal)); }
+  catch { throw new ProxyError(502, "invalid_ack"); }
+  return ack;
+}
+
 /** Fixed server-configured upstream; never forwards caller headers, credentials or URLs. */
 export async function proxyConsultation(request: Request, feedback: boolean, endpoint: string | undefined, upstream: typeof fetch = fetch, credential = process.env.CONSULT_GAS_CREDENTIAL) {
   try {
@@ -110,7 +136,7 @@ export async function proxyConsultation(request: Request, feedback: boolean, end
     if (request.headers.get("content-type")?.split(";")[0].trim() !== "application/json" ||
         request.headers.get("x-consult-request") !== "1") throw new ProxyError(415, "json_required");
     if (Number(request.headers.get("content-length")) > BODY_LIMIT) throw new ProxyError(413, "body_too_large");
-    const gasUrl = endpointUrl(endpoint);
+    endpointUrl(endpoint);
     if (!credential || credential.length < 32) throw new ProxyError(503, "not_configured");
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -132,25 +158,7 @@ export async function proxyConsultation(request: Request, feedback: boolean, end
         }
         forwarded._serverCredential = credential;
         controller.signal.throwIfAborted();
-        let response = await upstream(gasUrl, {
-          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(forwarded), redirect: "manual", signal: controller.signal, cache: "no-store",
-        });
-        if ([302, 303].includes(response.status)) {
-          const location = response.headers.get("location");
-          await response.body?.cancel();
-          const target = new URL(location ?? "", gasUrl);
-          if (!location || target.protocol !== "https:" || target.hostname !== "script.googleusercontent.com" ||
-              target.port || target.username || target.password || target.hash || target.pathname !== "/macros/echo") {
-            throw new ProxyError(502, "upstream_redirect_rejected");
-          }
-          // ContentService redirect retrieves the result with GET; never replay the POST/body/secret.
-          response = await upstream(target, { method: "GET", redirect: "manual", signal: controller.signal, cache: "no-store" });
-        }
-        if (!response.ok) { await response.body?.cancel(); throw new ProxyError(502, "upstream_http_error"); }
-        let ack: unknown;
-        try { ack = JSON.parse(await limitedText(response, ACK_LIMIT, controller.signal)); }
-        catch { throw new ProxyError(502, "invalid_ack"); }
+        const ack = await consultGasRequest(endpoint, forwarded, controller.signal, upstream);
         if (feedback) {
           if (!validFeedbackAck(ack, data.submissionId)) throw new ProxyError(502, "invalid_ack");
           return json({ status: "ok" });

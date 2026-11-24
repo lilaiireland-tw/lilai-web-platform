@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { build } from "esbuild";
 import { Miniflare, Response, convertV4MiniflareOptions } from "miniflare";
 import { assessmentFormContract } from "../../src/components/consult/consult-content.ts";
+import { createUnsubscribeToken } from "../../src/lib/consult/unsubscribe-token.ts";
 
 test("actual existing Router/Platform/staging Workers route exact APIs to Next handler fixture and safe GAS transport", async () => {
   const platform = JSON.parse(await readFile("cloudflare/production-platform.jsonc", "utf8"));
@@ -15,6 +16,8 @@ test("actual existing Router/Platform/staging Workers route exact APIs to Next h
   const payload = { ...assessmentFormContract, submissionId: id, name: "Synthetic", nickname: "QA", email: "qa@example.test",
     contactConsent: false, marketingConsent: false, discoveryChannels: [], discoveryOther: "", dcardExposure: null };
   const endpoint = "https://script.google.com/macros/s/CONTROLLED_MOCK_ONLY/exec";
+  const unsubscribeSecret = "a1".repeat(32);
+  const unsubscribeToken = await createUnsubscribeToken(id, unsubscribeSecret);
   const compile = async (entry, frontend = false) => (await build({
     entryPoints: [entry], bundle: true, format: "esm", platform: "browser", target: "es2022", write: false,
     plugins: frontend ? [{ name: "next-route-handler-fixture", setup(builder) {
@@ -23,10 +26,12 @@ test("actual existing Router/Platform/staging Workers route exact APIs to Next h
         // Exercise real Route Handlers and runtime process.env, replacing only the generated Next dispatcher.
         contents: `import { POST as submit } from './src/app/api/consult/submissions/route.ts';
           import { POST as feedback } from './src/app/api/consult/accuracy-feedback/route.ts';
+          import { GET as confirmUnsubscribe, POST as withdraw } from './src/app/api/consult/unsubscribe/route.ts';
           export default { fetch(request) {
             const path = new URL(request.url).pathname;
             if (path === '${paths[0]}') return submit(request);
             if (path === '${paths[1]}') return feedback(request);
+            if (path === '/api/consult/unsubscribe') return request.method === 'GET' ? confirmUnsubscribe(request) : withdraw(request);
             return new Response('frontend fixture');
           } };`, resolveDir: process.cwd(),
       }));
@@ -58,9 +63,9 @@ test("actual existing Router/Platform/staging Workers route exact APIs to Next h
     { name: router.name, modules: true, script: scripts[0], compatibilityDate: router.compatibility_date, compatibilityFlags: router.compatibility_flags,
       serviceBindings: { PLATFORM: platform.name }, outboundService: outbound },
     { name: platform.name, modules: true, script: scripts[1], compatibilityDate: platform.compatibility_date, compatibilityFlags: platform.compatibility_flags,
-      bindings: { ...platform.vars, CONSULT_GAS_ENDPOINT: endpoint, CONSULT_GAS_CREDENTIAL: "controlled-test-credential-only-32-bytes" }, serviceBindings: { ASSETS: () => new Response(null, { status: 404 }) }, outboundService: outbound },
+      bindings: { ...platform.vars, CONSULT_GAS_ENDPOINT: endpoint, CONSULT_GAS_CREDENTIAL: "controlled-test-credential-only-32-bytes", CONSULT_UNSUBSCRIBE_SECRET: unsubscribeSecret }, serviceBindings: { ASSETS: () => new Response(null, { status: 404 }) }, outboundService: outbound },
     { name: staging.name, modules: true, script: scripts[2], compatibilityDate: staging.compatibility_date, compatibilityFlags: staging.compatibility_flags,
-      bindings: { ...staging.vars, CONSULT_GAS_ENDPOINT: endpoint, CONSULT_GAS_CREDENTIAL: "controlled-test-credential-only-32-bytes" },
+      bindings: { ...staging.vars, CONSULT_GAS_ENDPOINT: endpoint, CONSULT_GAS_CREDENTIAL: "controlled-test-credential-only-32-bytes", CONSULT_UNSUBSCRIBE_SECRET: unsubscribeSecret },
       serviceBindings: { ASSETS: () => new Response(null, { status: 404 }), SIGNUP_BACKEND: () => new Response("signup fixture") }, outboundService: outbound },
   ];
   const mf = new Miniflare(convertV4MiniflareOptions({ workers }));
@@ -82,6 +87,16 @@ test("actual existing Router/Platform/staging Workers route exact APIs to Next h
       assert.equal((await post(paths[0], payload)).status, 502);
       nextAck = { status: "ok" };
       assert.equal((await post(paths[1], { type: "accuracy_feedback", submissionId: id, jobId, name: "Synthetic", nickname: "QA", email: "qa@example.test", accuracyAnswer: "還好" }, response.headers.get("set-cookie").split(";")[0])).status, 200);
+      const beforeGet = posts.length;
+      const confirmation = await worker.fetch(origin + '/api/consult/unsubscribe?token=' + unsubscribeToken);
+      assert.equal(confirmation.status, 200);
+      assert.match(await confirmation.text(), /method="post"/);
+      assert.equal(posts.length, beforeGet);
+      const withdrawn = await worker.fetch(origin + '/api/consult/unsubscribe', { method: 'POST', headers: {
+        Origin: origin, 'Content-Type': 'application/x-www-form-urlencoded',
+      }, body: 'token=' + unsubscribeToken + '&confirm=unsubscribe' });
+      assert.equal(withdrawn.status, 200);
+      assert.deepEqual(posts.at(-1), {type:'withdraw_assessment_consent',submissionId:id,purpose:'marketing',_serverCredential:'controlled-test-credential-only-32-bytes'});
       if (workerName === staging.name) {
         assert.equal((await post("/api/other", {})).status, 405);
         assert.equal((await post(`${paths[0]}/child`, {})).status, 405);
@@ -92,7 +107,7 @@ test("actual existing Router/Platform/staging Workers route exact APIs to Next h
         assert.equal(await (await worker.fetch(origin + "/")).text(), "frontend fixture");
       }
     }
-    assert.equal(posts.length, 6);
+    assert.equal(posts.length, 8);
     assert.equal(unexpected, 2); // Only the two intentional WordPress fallback fixtures.
   } finally { await mf.dispose(); }
 });

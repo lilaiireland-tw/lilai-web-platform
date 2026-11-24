@@ -81,6 +81,7 @@ function assessmentRecords(sheet) {
 
 function assessmentConsent(data, purpose) {
   try {
+    if (purpose === 'marketing') return assessmentMarketingConsent(data);
     const key = purpose === 'marketing' ? 'marketingConsent' : 'contactConsent';
     const withdrawn = purpose === 'marketing' ? 'marketingUnsubscribedAt' : 'contactWithdrawnAt';
     // #62 has no trusted re-grant path; invalid original consent cannot become a grant.
@@ -121,8 +122,104 @@ function withdrawAssessmentConsent(submissionId, purpose) {
   const state = purpose === 'contact' ? 'contactConsentState' : 'marketingConsentState';
   const timestamp = purpose === 'contact' ? 'contactWithdrawnAt' : 'marketingUnsubscribedAt';
   if (![state,timestamp].every(key => record.headers.includes(key))) throw new Error('Missing consent schema');
+  // Append a fresh suppression only after a verified re-subscription; preserve the first withdrawal below.
+  if (purpose === 'marketing') {
+    const events = assessmentMarketingEvents();
+    const email = String(record.values.Email || '').trim().toLowerCase();
+    const latest = events.filter(event => event.email === email).pop();
+    if (latest && latest.action === 'grant') assessmentAppendMarketingEvent(record.values, 'withdraw', '', '');
+  }
   record.sheet.getRange(record.row, record.headers.indexOf(state) + 1).setValue('withdrawn');
   if (!record.values[timestamp]) record.sheet.getRange(record.row, record.headers.indexOf(timestamp) + 1).setValue(new Date().toISOString());
+}
+
+function assessmentConsentTime(value) {
+  return typeof value === 'string' && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(value) &&
+    Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value && Date.parse(value) <= Date.now();
+}
+
+// Restricted, append-only operator evidence. No public or doPost grant action.
+function assessmentMarketingEvents() {
+  const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('行銷授權紀錄');
+  if (!sheet || sheet.getLastRow() < 2) return [];
+  const rows = sheet.getDataRange().getValues();
+  const header = rows.shift();
+  if (JSON.stringify(header) !== JSON.stringify(['email','submissionId','action','recordedAt','evidenceRef','operator'])) throw new Error('Invalid marketing ledger');
+  return rows.map(row => {
+    const event = Object.fromEntries(header.map((key,index) => [key,row[index]]));
+    if (!['grant','withdraw'].includes(event.action) || !assessmentConsentTime(event.recordedAt) ||
+        !event.email || !event.submissionId || (event.action === 'grant' && (!event.evidenceRef || !event.operator))) throw new Error('Invalid marketing event');
+    return event;
+  });
+}
+
+function assessmentAppendMarketingEvent(record, action, evidenceRef, operator) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sheet = ss.getSheetByName('行銷授權紀錄');
+  if (!sheet) {
+    sheet = ss.insertSheet('行銷授權紀錄');
+    sheet.appendRow(['email','submissionId','action','recordedAt','evidenceRef','operator']);
+  }
+  sheet.appendRow([String(record.Email).trim().toLowerCase(),record.submissionId,action,new Date().toISOString(),evidenceRef,operator].map(assessmentCell));
+}
+
+function assessmentMarketingConsent(data) {
+  if (!data || data.marketingConsent !== true || data.contractVersion !== 'free-assessment.v1' ||
+      PropertiesService.getScriptProperties().getProperty('CONSULT_APPROVED_POLICY_VERSION') !== 'agreement-reference.v1') return false;
+  const email = String(data.email || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return false;
+  const records = assessmentRecords();
+  const matches = records.filter(item => item.values.submissionId === data.submissionId);
+  if (matches.length !== 1) return false;
+  const record = matches[0].values;
+  if (String(record.Email || '').trim().toLowerCase() !== email || record.marketingConsent !== true ||
+      record.marketingConsentState !== 'granted' || record.marketingUnsubscribedAt ||
+      record.contractVersion !== 'free-assessment.v1' || !assessmentConsentTime(record.consentTimestamp) ||
+      record.consentTimestamp !== record.receivedAt || record.privacyNoticeVersion !== 'agreement-reference.v1' ||
+      record.consentTextVersion !== 'free-assessment-consent.v1' || record.consentSource !== 'free_assessment') return false;
+  const withdrawn = records.filter(item => String(item.values.Email || '').trim().toLowerCase() === email &&
+    (item.values.marketingUnsubscribedAt || item.values.marketingConsentState === 'withdrawn'));
+  const latest = assessmentMarketingEvents().filter(event => event.email === email).pop();
+  if (latest && latest.action === 'withdraw') return false;
+  if (!withdrawn.length && !latest) return true;
+  return !!latest && latest.action === 'grant' && latest.submissionId === data.submissionId &&
+    withdrawn.every(item => assessmentConsentTime(item.values.marketingUnsubscribedAt) &&
+      Date.parse(item.values.marketingUnsubscribedAt) < Date.parse(latest.recordedAt));
+}
+
+// Operator must first verify an inbound reply from this mailbox with fresh explicit consent (see #63 SOP).
+function recordVerifiedMarketingResubscription(submissionId, evidenceRef, operator) {
+  if (![evidenceRef,operator].every(value => typeof value === 'string' && /^[A-Za-z0-9_-]{3,100}$/.test(value))) throw new Error('Missing controlled evidence reference');
+  const matches = assessmentRecords().filter(item => item.values.submissionId === submissionId);
+  if (matches.length !== 1) throw new Error('Unknown submission');
+  const record = matches[0].values;
+  // Validate the new evidence without bypassing the normal gate or editing old rows.
+  if (record.marketingConsent !== true || record.marketingConsentState !== 'granted' || record.marketingUnsubscribedAt ||
+      record.contractVersion !== 'free-assessment.v1' || record.consentSource !== 'free_assessment' ||
+      record.privacyNoticeVersion !== 'agreement-reference.v1' || record.consentTextVersion !== 'free-assessment-consent.v1' ||
+      !assessmentConsentTime(record.consentTimestamp) || record.consentTimestamp !== record.receivedAt ||
+      PropertiesService.getScriptProperties().getProperty('CONSULT_APPROVED_POLICY_VERSION') !== 'agreement-reference.v1') throw new Error('Invalid new consent');
+  const events = assessmentMarketingEvents(); // Fail closed on damaged history before appending.
+  const email = String(record.Email || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || events.some(event => event.evidenceRef === evidenceRef)) throw new Error('Invalid or reused evidence');
+  const withdrawals = assessmentRecords().filter(item => String(item.values.Email || '').trim().toLowerCase() === email &&
+    (item.values.marketingUnsubscribedAt || item.values.marketingConsentState === 'withdrawn'));
+  if (withdrawals.some(item => !assessmentConsentTime(item.values.marketingUnsubscribedAt) ||
+      Date.parse(item.values.marketingUnsubscribedAt) >= Date.parse(record.receivedAt)) ||
+      events.some(event => event.email === email && event.action === 'withdraw' && Date.parse(event.recordedAt) >= Date.parse(record.receivedAt))) throw new Error('New consent must follow withdrawal');
+  assessmentAppendMarketingEvent(record,'grant',evidenceRef,operator);
+}
+
+// Return only the minimum fields; re-read the gate for every candidate at export time.
+function exportAssessmentMarketingList() {
+  const result = [], seen = new Set();
+  for (const item of assessmentRecords()) {
+    const record = item.values, email = String(record.Email || '').trim().toLowerCase();
+    if (seen.has(email) || !assessmentConsent({...record,email:email},'marketing')) continue;
+    seen.add(email);
+    result.push({email:email,submissionId:record.submissionId});
+  }
+  return result;
 }
 
 function assessmentOriginal(input) {
