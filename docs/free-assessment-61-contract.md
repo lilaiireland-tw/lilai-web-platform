@@ -2,7 +2,7 @@
 
 盤點日期：2026-11-24。前端基準：`develop` 的 `d421d47fcf97d63b5b786c185fc4cda2dc58e9fb`。
 本文件為 #62–#69 的共同開發規格，**尚有來源驗證阻擋，不能視為 #61 全部驗收完成或正式發布核准**。
-本 PR 僅新增文件，未修改 runtime、政策、路由、SEO、CI/CD 或 Google 資源。
+原 PR #70 僅新增文件；#62 同步最新營運決策並清理指定舊網址。下文現況盤點仍以原基準為準，#62 實作狀態見第 12 節。
 
 ## 1. 證據與可信度
 
@@ -14,7 +14,7 @@
 | GAS 原始專案 | workspace 未找到 `.gs`、manifest 或 clasp 專案。已請 Alex 補交原始碼／路徑。下文所有 GAS 函式、行號及行為來自 Issue 補充，**非直接原始碼審查，也非 live deployment 證據** |
 | GAS 快照描述 | Issue 記載 3,830 行、2026-11-24、`ruleVersion=index2-sync-2026-09-14-r2-two-routes`、V57 PDF/E2E；不能據此認定正式部署一致 |
 | [公開政策](https://lilaiireland.com/agreement/) | 即時唯讀 GET 回 HTTP 403；web fetch 亦未取得內容。無法核對最新文字、版本、生效日、手機可讀性；不能判定缺漏或宣稱完全合規 |
-| 公開 `/consult/` 與 `/free-departure-assessment/` | 即時唯讀 GET 均 403；搜尋服務僅取得約兩個月前的 `/consult/` 快取，不能作為現行生產表單證據 |
+| 公開 `/consult/` 與舊網址 | 原盤點唯讀 GET 均 403，不能作為現行生產表單證據；營運已確認舊 `/free-departure-assessment/` 停用，不再要求核對／維護舊表單頁面才能完成盤點 |
 
 不將正式 Google 資源 ID、部署識別碼、憑證或個資複製進本文件。端點以既有 `ConsultationPage.tsx` 的 `GAS_ENDPOINT` 定位；實際 Project/Deployment/Sheet/Template/Folder/Calendar 與 owner 對照表應放在限制存取的營運交接紀錄，repo 只記錄已驗證狀態及版本摘要。
 
@@ -46,7 +46,7 @@ flowchart TD
 
 `cloudflare/production-routing-policy.ts::productionRouteOwner()` 在程式政策中將 `/consult`、`/consult/` 給 platform；`/free-departure-assessment/`、`/agreement/` 落至 WordPress。`src/app/[...slug]/page.tsx` 有 WP fallback，但不等於舊入口在正式站存在或其中 JS 可運作。`docs/url-inventory.md` 的舊入口記錄是歷史證據；不得據此新增 redirect 或改 ownership。
 
-正式發布前由 Alex／部署維護者在受信任瀏覽器唯讀確認：兩個入口的 HTTP/redirect 最終位置、實際 renderer、表單版本／端點、舊嵌入表單是否仍收件。403 尚未證實是站方或中介環境限制；本票不繞過或調整防護。
+唯一正式入口為 `/consult`，`/consult/` 保留現有 308 導向同頁。正式發布前由 Alex／部署維護者核對現行入口的 renderer、表單版本／端點及直接 GAS 的安全切換；舊網址不再是待遷移／維護入口。外部 WP 若仍可收件或列於 sitemap，交營運人工處理，不聲稱已刪除。403 尚未證實是站方或中介環境限制，不繞過或調整防護。
 
 ## 3. GAS／Google 資料流（Issue 快照摘要，待原始碼核實）
 
@@ -127,9 +127,9 @@ GAS 檔名、實際專案位置、manifest scopes/timezone、deployment version�
 2. `lifeChange/webinar` 現必填；新規格均選填。GAS `calcMotivationClarity`（1404+）對 lifeChange >20 字既有加一分，影響 Fit Check／readiness；空白可安全處理，但結果可因原規則不同，不能宣稱填空不改所有分數。不重新分配權重。
 3. `STAGE_INFO.followUp` 無條件建議 nurturing／邀請／24–48 小時聯繫，`getAssessmentContent`、`getTimeAnchor` 與 `StageCta` 對 25+8 無條件承諾聯繫；成功回饋另承諾今日聯繫。必須依有效 contact 條件呈現，不能只改 checkbox。
 4. `benefits`、earlyBird、FAQ、Stage CTA 無條件承諾說明會通知；改為使用者自行選擇下一步及自願訂閱。GAS HTML／純文字／Slides 固定 CTA 同步核對。
-5. 前端仍有自主評估包／付費諮詢 CTA；#66 補充指出 GAS 已用免費索取重播與後續免費諮詢。需 Alex 確認目前商品／資源 CTA 有效性，不擅自恢復下架內容，也不虛構新連結／價格。
+5. 前端仍有自主評估包／付費諮詢 CTA，與最新定案不一致。#66 統一為自行回信或 LINE 免費索取《歐洲漫遊錄》說明會重播、團隊手動開放，觀看後免費一對一諮詢；所有人仍取得完整報告。僅 contactConsent 有效者可主動跟進協助；未同意者仍可自行索取。不新增影片自動寄送／權限自動化或付費 CTA，實際連結與模板仍須核對。
 6. GAS 0/5/14 日跟進與對外 1–2 工作天首次聯繫不一致；下一次 18:11 問候信亦不等於已完成真人首次聯繫。
-7. 個人 PDF 公開持鏈可讀與最小存取目標衝突；#66 需依 Alex 核准交付方式落實，不能直接撤既有分享導致無法取件。
+7. Alex 已定案保留單一個人 PDF 的 `ANYONE_WITH_LINK / VIEW` 及 Email 附件／下載連結，不新增下載驗證或修改既有分享權限。持鏈可讀有轉傳風險；不公開資料夾／Slides 模板／報告清單，PDF 避免非必要聯絡資料、證件及敏感自由填答原文，連結只寄該次收件者。仍須核對實際權限／內容，納入 12 個月保存及權利處理。
 8. #62／#64 早期本文提到 `success:true`，最新 GAS 補充要求沿用 `status/accepted/jobId`。**本契約採最新補充，沒有 success:true 必填條件**。
 
 ## 5. 新版提交契約 `free-assessment.v1`
@@ -202,7 +202,7 @@ Q1/Q2 可出現不同組合，不自動推填、不強迫一致。來源與 cons
 - 保存不可覆寫的事件／文案歷史，另有目前有效 marketing 狀態與本次 submission contact 狀態。最少可區分 granted／declined／unknown／withdrawn；`marketingUnsubscribedAt`、`contactWithdrawnAt` 用後端 UTC，撤回紀錄不刪除原始選擇。
 - 以已核實的同一收件者授權關係套用 Email suppression；每次 send/export/sync 都查最新狀態。submissionId、email 或 jobId 本身不等於可操作權限；匿名填表勾 true 不能任意解除既有退訂。恢復須有可追溯、身份可信的明確重新訂閱流程，#63 落實；新未勾選不恢復。
 - 退訂使用不含明文個資、不可猜測／簽章憑證；無登入要求、冪等、後端立即生效。一般 GET 不因郵件掃描器自動退訂，採明確確認／POST；按發送渠道需求支援 one-click。每封行銷 Email 必含可用退訂，尚無 sender 也先落實 suppression 與營運發送 gate，不造 EDM 平台。
-- `receivedAt`／`lastValidServiceInteractionAt` 記可信服務時間，與 consentTimestamp 分開。未成交免費評估保存 12 個月；以最後有效服務互動為建議基準，Alex 核實實際互動定義／執行規則；行銷寄送、排程、checkpoint／重試不延長期限。正式服務／法定義務／必要證據／最小 suppression 分類另立依據，不能一律永久保存。
+- `receivedAt` 記後端首次接收時間，與 consentTimestamp 分開；未成交免費評估從該筆首次填表接收當日（既有 Asia/Taipei 日期基準）起算 12 個曆月。重試不改原日期，後續互動、行銷寄送、排程及 checkpoint 均不延長期限，不新增最後有效互動追蹤欄位。舊資料沿用可信填表時間，無日期列人工核對、不臆造。正式服務／法定義務／必要證據／最小 suppression 分類另立依據，不能一律永久保存；#62 不執行正式批次刪除。
 - Sheet 新欄位以名稱 append，不改舊欄位順序、不移動公式、不覆蓋 `used_discount/discount_outcome/final_outcome`。false 用 `??` 而非 `||`；legacy unknown 在 Sheet 可空白，但有明確 legacy 版本／來源標記，adapter 讀回為 null；新版 dcard null 空白配 contractVersion，channels JSON `[]` 與 legacy 空白可區分。新增文字一律以純文字安全寫入，防公式注入。
 - 此處是邏輯欄位契約；未知現有物理 header／權限狀態儲存位置不臆造。#62／#63 在原始碼與 Sheet schema 比對後，用既有 Sheets／Properties 機制完成最小可恢復儲存，不另設資料庫。
 
@@ -262,7 +262,7 @@ type AssessmentError = {
 | --- | --- | --- |
 | 蒐集者、權利窗口／聯絡方式 | 核對正式法律主體與聯絡人；前端 TEAM_EMAIL 或舊頁 footer 不能證明法定身份 | Alex／適格法律顧問 |
 | 目的、資料類別、必要資料不提供的影響 | 免費報告必要服務與獨立 contact／Email marketing；姓名、暱稱、Email、計畫、自由文字、來源／授權紀錄 | Alex 核對文字，實作者對照欄位 |
-| 保存期間、地區、對象、方式 | 12 個月及例外、最後有效服務互動定義；Sheet／Queue／Properties／PDF／Calendar／Email／匯出備份的實際保存 | Alex 與 Google 資源 owner |
+| 保存期間、地區、對象、方式 | 首次填表接收當日起 12 個曆月及有依據的例外；Sheet／Queue／Properties／PDF／Calendar／Email／匯出備份的實際保存 | Alex 與 Google 資源 owner |
 | 第三方／跨境及存取者 | Google Sheets、Apps Script、Slides／Drive、MailApp／團隊信箱、Calendar；確認實際帳戶／合約／處理地區與外包權限 | Alex／帳戶管理者／法律顧問 |
 | 分類與自動處理 | 規則式階段、Lead Scoring／Fit Check／路線分析；目前未證實外部 LLM。若其他部署另有則補核 | GAS 維護者 |
 | PDF 分享與服務 Email | 個人持鏈可讀、附件／fallback、收件副本；若現有說明與核准交付方案不同，只列最小補充 | Alex 與 GAS 維護者 |
@@ -313,7 +313,7 @@ Browser QA 留至 #65–#67：375/768/1024/1440px、overflow、鍵盤與 focus-v
 
 ### 發布順序（計畫，非本票執行）
 
-1. #61 補齊原始碼、政策與資源清單證據，Alex 審核契約／剩餘必要決策；不得將未核實項標完成。
+1. #61 已由 PR #70 合併；補齊尚未取得的原始碼、政策與資源清單證據，不重問已定案決策，不得將未核實項標完成。
 2. #62 在隔離資源實作相容儲存、版本、持久 submission/job 對照、ACK；#63 完成所有用途 gate／退訂／舊排程抑制。兩者不能單獨正式啟用而仍讓舊自動化越權。
 3. #64 完成既有平台同網域代理、可信 GAS 入口、可靠 ACK；#65/#66 更新 React／結果／PDF／Email／模板。使用同一核准契約，保留五步／算法／Queue。
 4. #67 在隔離環境真正 E2E，核對公開政策／基本人工保存及權利 SOP、PDF 交付、舊入口相容、回復計畫與所有 release gate，Alex/Arsha 驗收。
@@ -347,23 +347,58 @@ Browser QA 留至 #65–#67：375/768/1024/1440px、overflow、鍵盤與 focus-v
 | --- | --- | --- |
 | GAS 原始碼及 live 對照 | Alex 提供 3,830 行 `.gs`／完整專案受限路徑；GAS owner 提供 manifest、project/deployment 版本、trigger owner、各資源對照與 schema（不貼公開 repo） | #61 無法完成實際函式／位置驗收；#62/#63 不能以摘要或 mock 開始正式整合 |
 | 政策最新公開文字／可用性 | Alex 提供當前 WP 文字／版本／生效日及唯讀可達來源，補桌面／手機核對；法律顧問核實身份、依據、跨境、權利時限 | 本次不能判定實際差異；核對後僅提必要文字補充交 Alex 更新 WP |
-| 真正表單入口／舊直接 GAS | 部署維護者／Alex 受信任瀏覽器唯讀確認兩入口、WP embed／deployment，列切換窗口 | #64/#67 防繞過與相容方案 |
+| 現行表單入口／舊直接 GAS | 部署維護者／Alex 確認 `/consult` 與 GAS deployment，列直接入口相容／安全切換窗口；舊網址停用不再列盤點 blocker | #64/#67 防繞過與相容方案；外部 WP 殘留交營運 |
 | 測試專案與 Google 資源 | GAS owner 建立／提供隔離測試資源及授權；實作者驗證非 production | 未提供，沒有真正 E2E 結果 |
 | CRM／EDM／人工匯出／保存實況 | Alex 列現有工具、存取者與操作人；GAS owner 核對其他腳本、時間／保存欄 | 未見不等於不存在；基本抑制與 12 個月 SOP 需可執行 |
 
-### 仍需 Alex 決定／確認實況的窄項目
+### 已定案的補充決策（不再待決策）
 
-1. **個人 PDF 交付方案**：建議附件優先、私密 Drive，新報告附件失敗走可控的重試／人工補件或經授權下載，明確告知待處理；需 Alex 核准可維持取件的最小方案。既有公開報告連結要如何通知／調整另行決定，不批次更權限。
-2. **1–2 工作天的可執行規則**：確認團隊工作時區、週末／假日表與起算截止時間，再讓首次任務到期日與承諾一致；不擅自指定台灣或愛爾蘭假日。18:11 問候排程本身已知且保留。
-3. **保存起算的實際操作定義及例外責任人**：12 個月已定案；需核對哪些真實互動算有效服務、現有資料如何辨識最後一次互動、證據／法定例外依據及人工執行人，不能把背景執行日當最後互動。
-4. **CTA 的現行商品／免費資源事實**：釐清前端舊付費 CTA 與 GAS 免費重播路徑差異，提供仍有效的既有資源與連結，#66 才能同步，不捏造營運內容。
+1. **PDF**：維持單一 PDF 持鏈可讀、Email 附件及該報告下載連結，遵守第 4 節的內容／分享邊界；不新增私密下載方案。
+2. **工作天**：週一至週五，沿用 GAS `Asia/Taipei`，首次聯繫僅向同意者承諾 1–2 工作天；不開發國定假日系統，既有 25+8 18:11 排程保留。
+3. **保存**：後端首次填表接收當日起 12 個曆月，不因互動／重試延長，不新增最後互動追蹤。例外依據、人工執行人與舊資料可信日期仍須核實。
+4. **CTA**：完整報告照常提供，自行回信／LINE 免費索取重播、團隊手動開放，觀看後免費諮詢。僅同意 contact 才主動協助；實際連結／模板核對不等於重新決定營運方案。
+5. **入口**：`/consult` 唯一正式入口，`/consult/` 維持 308。舊網址已停用；#62 清理導流／索引，不遷移舊頁、不新增 redirect。
 
 兩項 opt-in、Email 唯一行銷渠道、姓名／暱稱／Email 必填、lifeChange 選填、無政策確認 checkbox、歷史無證據禁止行銷、撤回／退訂、12 個月及政策唯一入口均已定案，不列回待決策。
 
-## 11. 本 PR 驗證範圍
+## 11. 原 PR #70 驗證範圍（歷史紀錄）
 
 - 工作區起始乾淨；fetch origin/develop 後將本地 develop fast-forward 至上述基準，再建立指定分支。
 - 已閱讀 #61–#69、實際前端／helper／options／analytics／測試與路由政策；已嘗試唯讀公開 GET，結果與限制如第 1 節。
 - 本次驗證只針對文件 diff／本機相對連結／衝突標記／敏感內容；不改 runtime，不以現有測試通過代表新契約實作完成。
 - 未執行 npm ci／TypeScript／build／UI browser regression：本 PR 只有 Markdown，沒有前端變更。既有 `npm run lint` 使用 Next 16 已移除的 `next lint`，不在本票修復。
 - 未操作正式 GAS／Sheets／Calendar／Drive／Email；未宣稱取得 live 原始碼或完成端到端驗收。待第 10 節補證後再完成 #61，PR 使用 `Part of #61`。
+
+## 12. Issue #62 本次交付狀態（2026-11-24）
+
+基準為已合併 PR #70 的 `develop`（`8e559c738556595ebe81be63b001781df2781ebd`）。本次完整讀取最新 #61/#62（均無留言），並搜尋 repository（含隱藏檔，排除 .git／node_modules）；未找到 `.gs`、`appsscript.json` 或 clasp 專案。Issue 的函式摘要不是實際原始碼，不能據此重建後端或宣稱完成 #62。
+
+### 已修改
+
+- `src/content/home.html`：三處評估 CTA 的原始 href 改 `/consult`，保留樣式、data attributes 及 HomeInteractions。
+- `src/data/urlMap.ts`：IMPORTANT_URLS／STATIC_SITEMAP_URLS 移除停用入口。
+- `src/app/sitemap.ts`：WP posts／pages 合併時過濾舊 slug，保留其他條目及 `/consult`。
+- `docs/url-inventory.md`：保留歷史，標註停用及現行入口；本文件同步最新 PDF／工作天／保存／重播決策。
+- `scripts/check-seo-url-consistency.ts`：沿用既有測試，驗證三處原始 CTA、靜態名單與含舊 slug 的 WP posts／pages 合併結果，以及其他 WP 條目保留。此 WP fixture 僅驗證 sitemap，不是 GAS mock 或後端驗收。
+
+### GAS 未完成項目與交接
+
+**實際修改的 GAS 函式：無。新增 Sheets 欄位：無。測試部署／腳本版本：未建立、未部署。** 第 5 節仍是目標契約，不是已實作的欄位、Payload 或 ACK 實例；本次沒有真實測試回應可交付，也沒有修改後 GAS 腳本可安裝。
+
+因缺少原始碼，尚未實作或驗證型別／版本／來源 allowlist、兩項獨立 opt-in 與歷史文案證據、來源調查儲存、submissionId/jobId 持久對照、併發／重試／部分寫入恢復及假成功修正。既有 Queue／Checkpoint／Retry／Fallback／PDF／算法未修改。待來源齊備後，依第 5 節以短鎖保護持久對照、修復原 row／job，不將 Cache 當持久去重；這是後續要求，尚非已具備行為。寄出後 checkpoint 失敗仍須核實／人工 reconciliation，不宣稱 exactly-once。
+
+Alex／GAS owner 後續提供：
+
+1. 2026-11-24 的 3,830 行 `.gs`／完整專案與 `appsscript.json` 的受限路徑，快照版本／hash 與 live deployment 差異。
+2. 「填表資料」「報告佇列」「準確度回饋」實際 header／公式結構（不含客戶資料），及隔離測試專案、資源、執行身份／trigger owner 對照。
+3. 已核准政策／同意文案的歷史快照與 immutable version key，經受限方式提供必要資源設定及權限。
+
+取得後才修改原腳本、交付版本差異與精確安裝步驟；先在隔離副本按名稱 append 欄位、不移動八欄 Queue／既有公式／人工欄，再以受控測試資料執行四組 opt-in、legacy、空值、同 ID 衝突、併發、跨 Cache 到期、部分寫入及重試。不得直接套用到正式資源；正式切換仍依 #63/#64/#67 的 release gate。本次 PR 使用 `Part of #62`，不關閉 Issue 或開始下一票。
+
+### 待人工驗證
+
+本次本機檢查結果：`npm.cmd ci`（632 packages）、`npx.cmd tsc --noEmit --incremental false`、`npx.cmd tsx scripts/check-shared-layout.ts`、`npx.cmd tsx scripts/check-design-system.ts`、`npm.cmd run check:seo-url-consistency`、`npm.cmd run build`（16/16 static pages）及 `git diff --check` 均通過。PowerShell 禁止 npm.ps1，改用等價 `.cmd`；Shared Layout 首次與 SEO 測試共用 Next dev 目錄發生鎖衝突，依序重跑通過。未執行已知無效的 `next lint`，未新增 CI gate；本機 HTTP 檢查不代表瀏覽器視覺 QA 或 GAS 整合驗收。
+
+- 瀏覽器桌面／手機（375/768/1024/1440px）：三處首頁 CTA、hydration 前後導向、鍵盤／focus-visible、overflow、console／hydration errors。
+- `/consult/` 的既有 308、canonical 與 query 保留由本機既有 SEO 測試涵蓋；正式環境未驗證。
+- 外部 WP 舊頁是否仍可收件、WP 供應的公開 sitemap 是否仍列舊網址，由營運人工檢查；本次未修改 WordPress／Cloudflare／redirect。
