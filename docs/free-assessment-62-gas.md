@@ -11,8 +11,10 @@
 | `GAS.original.gs.txt` | 原始逐 byte 備份，167,721 bytes、3,830 行 |
 | `GAS.modified.gs.txt` | 完整修改副本，含原正式設定；僅本機審核 |
 | `GAS.private.diff` | 原始與新版差異，含可能敏感上下文；僅本機 |
+| `GAS.sanitized.diff` | 相同邏輯差異，移除私人設定值；仍只留本機 |
+| `GAS.before-round3.gs.txt`、`GAS.round3.{private,sanitized}.diff` | 第二輪審核時副本與本輪修正差異，不覆寫原始備份 |
 | `function-impact-before.md` | 修改前建立的函式影響清單 |
-| `modify.py`、`options.json` | 本地可重現修改及選項快照，非新部署工具 |
+| `modify.py`、`round3.py`、`options.json`、`structure.mjs`、`finalize.py` | 本地可重現修改、檢查及交付清單，非新部署工具 |
 | `inventory.json`、`validation.txt` | 最終 hash／實際函式清單與測試紀錄 |
 
 原始 SHA-256：`b206bc35d5fb450128c0a89efd5aed20027a24c60759a066ff1d9ef2eba25d61`，與 #64/#66 唯讀盤點一致。檔內規則版本 `index2-sync-2026-09-14-r2-two-routes`，含 V57 測試。新版 hash 見本地 `inventory.json`，避免更新副本後文件殘留舊值。
@@ -35,12 +37,12 @@
 | `createCalendarEvent` | 一般／Hot 無條件跟進 → 每次建事件前 gate；首次日期為下一個台灣工作天 |
 | `create25plus8CalendarEvent` | 當日無條件跟進 → gate、下一個台灣工作天 |
 | `sendEmailToTeam` | 必要通知混入日期／聯繫指令 → 必要通知保留；未授權標僅評估，移除日期、主動開場、提問指令；不假稱已建立 Calendar |
-| `getContactSuggestion` | 有 LINE／IG 即推薦 → 最新 contact 無效則不提供主動聯繫指令 |
-| `getAssessmentContent` | Stage／25+8 無條件聯繫 → 所有人手動免費索取；最新有效 contact 才顯示 1–2 工作天承諾 |
+| `getContactSuggestion` | 有 LINE／IG 即推薦 → 無有效 contact 不提供指令；純文案可重用當次已取得的可信判斷 |
+| `getAssessmentContent` | Stage／25+8 無條件聯繫 → 預設中性手動索取；caller 可傳當次可信判斷；保留 `twentyfive_plus8` discriminator |
 | `getTimeAnchor` | 等團隊聯繫 → 自行索取／預約；時間分類不改 |
-| `getPdfNextSteps` | 等聯繫才給影片／優惠 → 手動索取、觀看後免費諮詢與確認申請；有效 contact 才承諾 |
-| `buildUserEmailHtml` | 固定已附 PDF、空值以資源頁替代 → 據實際 attachments 顯示附檔或下載說明 |
-| `sendEmailToUser` | 空／無效報告仍寄服務信 → 有效格式的原報告 URL 必填，失敗走原 Queue；附件失敗仍有原報告連結，純文字／HTML 如實說明；寄前刷新條件文案 |
+| `getPdfNextSteps` | 等聯繫才給影片／優惠 → 中性手動索取、觀看後免費諮詢與確認申請，不為此純文案讀表 |
+| `buildUserEmailHtml` | 固定已附 PDF、空值以資源頁替代 → 據附件狀態顯示說明；文字及連結 attribute escape，保留模板 HTML |
+| `sendEmailToUser` | 空／不存在報告仍寄服務信 → 取得並核實該次 PDF 後才允許寄信；僅附件轉換失敗可 link-only；其餘錯誤走原 Queue |
 
 另同步 `STAGE_INFO`／`FRONTEND_STAGE_INFO` 文案，移除舊自動重播／培育／優惠指令；`BOOKING_LINK` 使用腳本既有 LINE 手動入口，避免 PDF placeholder 連至付費報名。無變更資源 ID、評估權重及分類。
 
@@ -115,11 +117,11 @@ jobId 與 submissionId 透過既有 Queue 第 1 欄 jobId、第 5 欄 Data JSON 
 2026-11-24 本機執行（皆未正式寫入）：
 
 - `npm.cmd ci`：通過，632 packages；lockfile／依賴未改。
-- `$env:GAS_ORIGINAL_PATH='<本地備份路徑>'; $env:GAS_MODIFIED_PATH='<本地新版路徑>'; node --import tsx --test tests/consult-proxy/*.test.ts tests/consult-proxy/*.test.mjs`：16 passed、0 failed、0 skipped。未給兩條路徑時六項 GAS 測試明確 skip，不能宣稱已驗證快照。
+- 明確指定原始、新版及修正前路徑後，`node --import tsx --test tests/consult-proxy/*.test.ts tests/consult-proxy/*.test.mjs`：**27 passed、0 failed、0 skipped**（原 16 項＋新增 11 項）。路徑缺漏／檔案不存在直接失敗，不允許 skip。
 - `npx.cmd tsc --noEmit --incremental false`、`npx.cmd tsx scripts/check-shared-layout.ts`、`npx.cmd tsx scripts/check-design-system.ts`、`npm.cmd run check:consult`、`npx.cmd tsx scripts/check-consult-analytics.ts`：通過。
 - `npm.cmd run build`：套用既有 production-platform vars 的本機 build 通過，18/18 pages；沒有封裝／部署 Worker。`git diff --check`：通過。
 
-16 項包含四種 opt-in、legacy null、明確 false／拒字串、來源互斥／未答／no_recall／other 公式文字、選項含「、」的合法值、lifeChange 空白、四 Stage 與 25+8 計分比較、服務 Email 不 gate、所有共享 contact 副作用／撤回／舊 property、真實 doPost ACK／IN_FLIGHT／錯誤邊界、撤回更新保留證據、same-email suppression、排程失敗後撤回／附件成功與失敗、credential／feedback 簽章、client 派生值不可信及 Worker routing runtime fixture。保護函式逐字（僅正規化換行）比對原始快照，含評分、createPdfReport、Queue、Retry／Fallback／Checkpoint／18:11；**不是 Google 執行證據**。
+原 16 項涵蓋四種 opt-in、legacy、輸入驗證、Stage／25+8 計分、必要服務、撤回、舊 property、ACK、credential／proof 與既有 routing fixture。新增 11 項直接覆蓋真實 GAS legacy／v1 completed-cache／IN_FLIGHT、GAS ACK 經真實 Proxy 不重簽 cookie、feedback append 失敗、13 種 PDF／附件狀態、HTML escaping、四種 opt-in 與撤回後完整 Queue／Hot／25+8／feedback／延後問候、政策未核准必要服務、操作期間撤回、25+8 discriminator 與下游流程、修正前後呼叫計數。原／新版函式先斷言存在再比較；28 個保護函式、重要常數與 TTL 另由本地 structure 檢查。完整新版包含逐字一致的 helper；**不是 Google 執行證據**。
 
 待 #67：完整 manifest／部署一致性、真實 Sheet append／公式與撤回寫入、Queue 工作成功／重試、實際 Slides 全頁／PDF 正確收件者與內容、ANYONE_WITH_LINK／VIEW、附件成功及失敗真實有效連結、四種 opt-in 等量報告、真實 Google ACK／redirect、Calendar 日期、18:11／fallback／10 分鐘 retry／既有舊任務撤回後抑制。依同意組合跨 Hot／Warm／Nurture 驗證，不將 stub 當正式結果。
 
@@ -133,4 +135,89 @@ jobId 與 submissionId 透過既有 Queue 第 1 欄 jobId、第 5 欄 Data JSON 
 
 #67 完成上述隔離 Google／瀏覽器與正式切換／安全回復審核。實際政策、完整專案／manifest／部署、Sheet schema、Slides 及隔離資源缺件仍需 Alex 提供／核實。本地完整副本可審核，但不能聲稱已代表正式完整專案。
 
-保留原 Cache 60 秒、IN_FLIGHT 20 秒及原 lock 邊界；跨 Cache 重複、Sheet／Queue 部分寫入、寄信後 checkpoint 中斷仍可能重複。相同 submissionId 多列時 contact gate fail closed。首次 doPost 部分失敗後人工重送可能產生另一 receivedAt／列，未修復既有部分寫入。12 個月起算須採原首次可信填表日，不因重試列延長。Sheet 全表讀取是現有資源內最小查詢，量大時可能達 GAS quota；本次不加索引／資料庫。用途簽章不是郵箱身份驗證；Email 名單實際資格與退訂驗證留 #63。
+保留原 Cache 60 秒、IN_FLIGHT 20 秒及原 lock 邊界；跨 Cache 重複、Sheet／Queue 部分寫入、寄信後 checkpoint 中斷仍可能重複。相同 submissionId 多列時 contact gate fail closed。首次 doPost 部分失敗後人工重送可能產生另一 receivedAt／列，未修復既有部分寫入。12 個月起算須採原首次可信填表日，不因重試列延長。仍保留必要的全表讀取，量大時可能達 GAS quota；本次不加索引／資料庫。用途簽章不是郵箱身份驗證；Email 名單實際資格與退訂驗證留 #63。
+
+## 第二輪審核後修正（本輪）
+
+本輪繼續同一分支／PR #75，無新 Issue／PR、無 #63 實作。`doPost` 在 prepare 前保留原 caller submissionId；Cache key 不使用後端新 UUID。legacy 仍保存關聯 ID，相同 payload 在 keyed Cache window 內只新增一列學生與一筆 Queue、回相同 jobId；v1 caller ID 與既有 completed-cache／IN_FLIGHT 保持。
+
+`sendEmailToUser` 使用可信 Queue checkpoint 的 URL 取得 Drive 檔案，核對 ID、該次評估既有命名、PDF MIME、非垃圾桶、非空檔、既有 ANYONE_WITH_LINK／VIEW 及下載 URL。任一取得／核實錯誤向外拋，不呼叫 MailApp、不標記 userEmailSent；只有之後 getAs 失敗可用原正確報告連結寄 link-only。沒有呼叫分享修改 API、沒有改 createPdfReport 或用 RESOURCE_LINK 補缺。這些唯讀 metadata 檢查仍不是實際匿名下載證據；[Drive File 官方介面](https://developers.google.com/apps-script/reference/drive/file) 說明下載 URL 仍受讀取權限限制，真正下載／分享驗收留 #67。
+
+共用 `assessmentHtml` escape `& < > " '`；使用於服務信 nickname／name、stage 文字、下一步條目、PDF attribute，以及 greeting 的姓名／IG／LINE／個人化摘要。先 escape 文字，再插入模板 `<li>`／`<br>`；不 escape 完整模板、合法 CTA 結構或純文字信。
+
+`assessmentConsent` 對可信原始 false／null／legacy 在讀 Properties／Sheet 前 fail closed；#62 沒有可信重新授權入口。true 仍必須通過最新 Sheet 原證據、目前 state、政策與同 Email 全歷史撤回查核，不能單憑 boolean 放行。用一個 row loop 合併原 filter／some，不保存跨操作授權結果。延後 payload 保留後端原始 contractVersion／contactConsent，舊缺證據任務仍安全略過。
+
+prepare 尚未保存不查授權；PDF 純文案採中性指引，保留 25+8 `cta='twentyfive_plus8'`／空 stageCTALink／特殊預算與時間步驟，不變更 PDF 函式。服務 Email 查一次授權生成當次文案；必要內部信把已查判斷傳給 getContactSuggestion。alert／greeting／Calendar 移除相鄰入口重查，保留實際副作用前檢查；Hot checkpoint 之後、feedback append 之後、排程失敗 fallback 與到期 greeting 都會重查，測試期間撤回會停止下一個副作用。
+
+保留的查詢有必要性：saveToSheet 必須在原 Lock 內查歷史撤回，才能安全填跟進日期；它重用已開啟的 Sheet，少一次 openById，contact=false 不讀全表，contact=true 仍讀一次。每次非必要 Mail／Calendar／排程前都要讀最新狀態，不能由之前純文案或其他副作用的結果取代。沒有改 Lock 邊界或移出查核；沒有真實 Google 時間，因此**不能聲稱持鎖時間或 15 秒 Proxy ACK deadline 已達標**。讀取與寄送之間的既有非原子競態仍存在。
+
+### 修正前後本地邏輯呼叫數
+
+以下只計本 PR 新 helper 的 openById／getDataRange().getValues／Properties getProperty 或 getProperties，以及 credential 的一次 Properties 讀取；原 Queue／排程既有讀取不重算為新增。使用真正 doPost／prepare／save／enqueue／processAssessmentQueue 與 Email／Calendar／greeting runner，Google 服務全是記憶體 stub。PDF 在第一個 Drive 呼叫前截停，但前段 placeholders／getPdfNextSteps 真的執行；新增報告 metadata 核實另在 Email 測試執行。沒有測量 Google RPC 秒數。
+
+表內每格為「修正前 → 修正後」，一般 true／25+8 true 採非 Hot；Hot 另列。全表掃描指 row-object map 與授權 filter／some／for-of 的走訪次數；本量測無撤回且匹配列在尾端，因此走完全部列，非每個 cell 的 map。
+
+| 情境 | openById | getDataRange().getValues | Script Properties 讀取 | 全表掃描 |
+| --- | --- | --- | --- | --- |
+| 一般 contact=false | 7 → 0 | 7 → 0 | 8 → 1 | 14 → 0 |
+| 一般 contact=true | 9 → 3 | 9 → 4 | 10 → 5 | 25 → 8 |
+| 一般 Hot contact=true | 10 → 4 | 10 → 5 | 11 → 6 | 28 → 10 |
+| 25+8 contact=false | 11 → 0 | 11 → 0 | 12 → 1 | 22 → 0 |
+| 25+8 contact=true | 15 → 6 | 15 → 7 | 16 → 8 | 43 → 14 |
+| 25+8 Hot contact=true | 16 → 7 | 16 → 8 | 17 → 9 | 46 → 16 |
+| 延後 Greeting，另加 | 2 → 1 | 2 → 1 | 2 → 1 | 6 → 2 |
+
+提交／ACK 路徑：contact=false 的新增 open/read/property/scan 為 `1/1/2/2 → 0/0/1/0`；contact=true 為 `2/2/3/4 → 0/1/2/2`。剩餘一次 contact=true 全表讀取在 save 原 Lock 內，無法安全移除。marketing 不影響本條 contact 服務計數；無 EDM 發送。
+
+### 差異、完整性與重現
+
+原始檔 3,830 行、167,721 bytes（CRLF、EOF 無 newline）；修正前 4,015 行；最終 4,024 行、179,859 bytes（LF、有 EOF newline）。原備份逐 byte 不變。
+
+| 版本 | SHA-256 |
+| --- | --- |
+| 原始 | `b206bc35d5fb450128c0a89efd5aed20027a24c60759a066ff1d9ef2eba25d61` |
+| 本輪修正前 | `81a4cf67709707e377174df291dca6a78859848205b9e71a4a1254d48ca7922e` |
+| 最終新版 | `04aeef14fab2af70d521233a3c60b4c4b02d5243cc6cf47e39f8dddfb502a343` |
+
+合法 unified diff 明確加入 `\ No newline at end of file`，不再串接尾行。`git apply --numstat` 唯讀解析四份 private／sanitized diff 全部成功：原始→最終 **+304/−110**，本輪修正前→最終 **+66/−57**，淨增 9 行。inventory 另記無 autojunk 的 SequenceMatcher 邏輯比較 +301/−107，因 hunk 配對不同，不與實際 unified patch +304/−110 混用。所有差異檔仍留 ignored 本地目錄，不提交完整正式 GAS 或私人設定。
+
+本輪修改 18 個既有函式、新增 assessmentHtml，沒有刪除函式。下表是各函式獨立比較，不含全域 blank lines；原始→最終的 16 個原函式統計另見 inventory。
+
+| 本輪函式 | + / − |
+| --- | --- |
+| doPost | 2 / 1 |
+| handleAccuracyFeedback | 2 / 2 |
+| sendTeam25plus8Alert | 0 / 1 |
+| schedule25plus8Greeting | 2 / 0 |
+| send25plus8Greeting | 4 / 5 |
+| create25plus8CalendarEvent | 2 / 5 |
+| saveToSheet | 1 / 1 |
+| buildUserEmailHtml | 5 / 5 |
+| sendEmailToUser | 11 / 9 |
+| sendEmailToTeam | 1 / 1 |
+| createCalendarEvent | 5 / 5 |
+| getAssessmentContent | 5 / 3 |
+| prepareAssessmentData | 1 / 1 |
+| getContactSuggestion | 2 / 2 |
+| getPdfNextSteps | 1 / 1 |
+| assessmentRecords | 2 / 2 |
+| assessmentConsent | 14 / 11 |
+| assessmentNewContact | 2 / 2 |
+| assessmentHtml（新增） | 3 / 0 |
+
+PowerShell 重現（全部本地，不連 Google）：
+
+```powershell
+python backups/issue62-gas/modify.py
+$env:GAS_ORIGINAL_PATH = (Resolve-Path backups/issue62-gas/GAS.original.gs.txt).Path
+$env:GAS_MODIFIED_PATH = (Resolve-Path backups/issue62-gas/GAS.modified.gs.txt).Path
+$env:GAS_BEFORE_PATH = (Resolve-Path backups/issue62-gas/GAS.before-round3.gs.txt).Path
+$env:GAS_METRICS_PATH = Join-Path (Resolve-Path backups/issue62-gas).Path 'performance.json'
+node --import tsx --test tests/consult-proxy/*.test.ts tests/consult-proxy/*.test.mjs
+node backups/issue62-gas/structure.mjs
+python backups/issue62-gas/finalize.py
+git apply --numstat backups/issue62-gas/GAS.private.diff
+git apply --numstat backups/issue62-gas/GAS.sanitized.diff
+```
+
+本輪判斷：本地回歸、安全與重複查詢問題已修，建議合併作為待驗收修改；**不代表可正式發布**。真實 Google／完整效能、Calendar 時區、政策核准、Slides／manifest／部署一致性仍阻擋正式發布，留 #67／Alex 驗收。沒有自行合併、部署或開始 #63。既有 invalid next lint 未執行／未修；瀏覽器及上述正式服務未驗證。

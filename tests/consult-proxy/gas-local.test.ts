@@ -9,7 +9,8 @@ import { options, assessmentFormContract } from "../../src/components/consult/co
 // Explicit local paths only. Never load this snapshot into a Google runtime.
 const originalPath = process.env.GAS_ORIGINAL_PATH;
 const modifiedPath = process.env.GAS_MODIFIED_PATH;
-const localTest = originalPath && modifiedPath ? test : test.skip;
+assert.ok(originalPath && modifiedPath, 'Set explicit GAS_ORIGINAL_PATH and GAS_MODIFIED_PATH; missing snapshots must fail, never skip');
+const localTest = test;
 const id = "11111111-1111-4111-8111-111111111111";
 const jobId = "22222222-2222-4222-8222-222222222222";
 const secret = "controlled-test-credential-only-32-bytes";
@@ -46,7 +47,8 @@ function harness() {
     LockService:{getScriptLock:()=>lock}, SpreadsheetApp:{openById:()=>({getSheetByName:()=>sheet}),flush(){}},
     CalendarApp:{getDefaultCalendar:()=>({createAllDayEvent(){calls.calendar++;}})},
     MailApp:{sendEmail:(data:Record<string,any>)=>{calls.mail.push(data);}},
-    DriveApp:{getFileById(){throw new Error("isolated attachment failure");}},
+    DriveApp:{Access:{ANYONE_WITH_LINK:'link'},Permission:{VIEW:'view'},getFileById:(fileId:string)=>({getId:()=>fileId,isTrashed:()=>false,getMimeType:()=>"application/pdf",getSize:()=>100,getSharingAccess:()=> 'link',getSharingPermission:()=> 'view',
+      getName:()=>"【哩來愛爾蘭】出發評估報告 - QA.pdf",getDownloadUrl:()=>"https://example.test/download",getAs(){throw new Error("isolated attachment failure");}})},
     ScriptApp:{newTrigger:()=>({timeBased(){return this;},after(){return this;},create(){calls.trigger++;}}),getProjectTriggers:()=>[],deleteTrigger(){}},
     ContentService:{MimeType:{JSON:"json"}, createTextOutput:(text:string)=>({setMimeType:()=>JSON.parse(text)})},
   });
@@ -60,8 +62,19 @@ localTest("local snapshot integrity and protected algorithms/queue/retry/fallbac
   const before = declarations(original.toString("utf8"));
   const source = readFileSync(modifiedPath!, "utf8");
   const after = declarations(source);
+  assert.equal(after.size, [...source.matchAll(/^function /gm)].length, 'No duplicate top-level functions');
+  assert.ok(source.endsWith(readFileSync('scripts/gas/assessment-compat.js','utf8')), 'Full GAS contains exact reviewed helper source');
   for (const name of ["calcMotivationClarity","calcDimensionsGAS","calcRouteScores","getRouteRecommendationGAS","calcIrelandFitCheck","classifyStage","classifyLead","generateAIAnalysis",
-    "createPdfReport","enqueueAssessmentJob","getJobQueueSheet","processAssessmentQueue","saveJobCheckpoint","fallbackAssessmentQueue","recoverStaleAssessmentJobs","runAssessmentQueueWorker","ensureAssessmentQueueWorker","getNext1811TaipeiMs"]) assert.equal(after.get(name),before.get(name),name);
+    "createPdfReport","enqueueAssessmentJob","getJobQueueSheet","processAssessmentQueue","saveJobCheckpoint","fallbackAssessmentQueue","recoverStaleAssessmentJobs","runAssessmentQueueWorker","ensureAssessmentQueueWorker","getNext1811TaipeiMs"]) {
+    assert.ok(before.has(name), `original function missing: ${name}`);
+    assert.ok(after.has(name), `modified function missing: ${name}`);
+    assert.equal(after.get(name),before.get(name),name);
+  }
+  for(const [name, declaration] of before) if (/Queue|Checkpoint|Stale|Pending|TriggerByUid|^enqueueAssessmentJob$|^calc|^classify|^generateAIAnalysis$|^createPdfReport$|^getNext1811TaipeiMs$|^run25plus8Greeting$|^getFollowUpDays$|^getTaipeiTodayDate$|^getRouteRecommendationGAS$/.test(name)) {
+    assert.ok(before.has(name), `original function missing: ${name}`);
+    assert.ok(after.has(name), `modified function missing: ${name}`);
+    assert.equal(after.get(name), declaration, name);
+  }
   const h = harness();
   assert.deepEqual(JSON.parse(JSON.stringify(vm.runInContext("ASSESSMENT_OPTIONS",h.context))), options);
 });
@@ -158,6 +171,9 @@ localTest("real doPost ACK boundary and feedback errors; feedback cannot create 
   assert.equal(post(feedback).status,"ok"); assert.equal(h.calls.calendar,0);
   assert.equal(h.calls.append[0][3],payload.email); assert.equal(gas.assessmentConsent(original,"contact"),false);
   h.setRecords([{...evidence(original),contactConsent:true,contactConsentState:"granted"}]);
+  assert.equal(gas.assessmentConsent(original,"contact"),false, 'A Sheet boolean cannot re-grant explicitly declined original consent');
+  original.contactConsent=true;
+  h.setRecords([{...evidence(original),contactConsent:true,contactConsentState:"granted"}]);
   gas.CalendarApp={getDefaultCalendar(){throw new Error("isolated calendar failure");}};
   assert.throws(()=>post(feedback));
 });
@@ -192,7 +208,8 @@ localTest("revoked queued greeting and scheduling fallback skip without retry; a
   record.contactWithdrawnAt="";
   gas.ScriptApp.newTrigger=()=>({timeBased(){return this;},after(){return this;},create(){record.contactWithdrawnAt="2026-11-24T00:00:00Z"; throw new Error("isolated trigger failure");}});
   gas.schedule25plus8Greeting(data,jobId); assert.equal(h.calls.mail.length,0);
-  gas.DriveApp={getFileById:()=>({getAs:()=>({isolatedPdf:true})})};
+  const getFile=gas.DriveApp.getFileById;
+  gas.DriveApp={...gas.DriveApp,getFileById:(fileId:string)=>({...getFile(fileId),getAs:()=>({isolatedPdf:true})})};
   gas.sendEmailToUser(data,"https://drive.google.com/file/d/ISOLATED_REPORT_ID_1234567890/view");
   assert.equal(h.calls.mail.length,1); assert.equal(h.calls.mail[0].attachments.length,1);
   assert.match(h.calls.mail[0].body,/PDF 已隨信附上/); assert.match(h.calls.mail[0].htmlBody,/PDF 已隨信附上/);

@@ -3,6 +3,10 @@ function assessmentCell(value) {
   return typeof value === 'string' && /^[\s\uFEFF]*[=+@-]/.test(value) ? "'" + value : value;
 }
 
+function assessmentHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[char]));
+}
+
 function assessmentInput(input) {
   const v1 = input.contractVersion != null;
   if (v1 && input.contractVersion !== 'free-assessment.v1') throw new Error('Unsupported contract');
@@ -66,8 +70,8 @@ function assessmentInput(input) {
   return data;
 }
 
-function assessmentRecords() {
-  const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('填表資料');
+function assessmentRecords(sheet) {
+  sheet = sheet || SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('填表資料');
   if (!sheet || sheet.getLastRow() < 2) return [];
   const rows = sheet.getDataRange().getValues();
   const headers = rows.shift();
@@ -77,30 +81,33 @@ function assessmentRecords() {
 
 function assessmentConsent(data, purpose) {
   try {
-    if (PropertiesService.getScriptProperties().getProperty('CONSULT_APPROVED_POLICY_VERSION') !== 'agreement-reference.v1') return false;
-    if (!data || !data.submissionId) return false;
-    const records = assessmentRecords();
-    const matches = records.filter(record => record.values.submissionId === data.submissionId);
-    if (matches.length !== 1) return false;
-    const record = matches[0].values;
     const key = purpose === 'marketing' ? 'marketingConsent' : 'contactConsent';
     const withdrawn = purpose === 'marketing' ? 'marketingUnsubscribedAt' : 'contactWithdrawnAt';
-    const email = String(record.Email || '').trim().toLowerCase();
-    return !!email && email === String(data.email || '').trim().toLowerCase() &&
+    // #62 has no trusted re-grant path; invalid original consent cannot become a grant.
+    if (!data || !data.submissionId || data.contractVersion !== 'free-assessment.v1' || data[key] !== true) return false;
+    if (PropertiesService.getScriptProperties().getProperty('CONSULT_APPROVED_POLICY_VERSION') !== 'agreement-reference.v1') return false;
+    const email = String(data.email || '').trim().toLowerCase();
+    if (!email) return false;
+    let record, matches = 0;
+    for (const item of assessmentRecords()) {
+      const values = item.values;
+      if (String(values.Email || '').trim().toLowerCase() === email &&
+          (values[withdrawn] || values[key + 'State'] === 'withdrawn')) return false;
+      if (values.submissionId === data.submissionId) { record = values; matches++; }
+    }
+    return matches === 1 && String(record.Email || '').trim().toLowerCase() === email &&
       record[key] === true && record[key + 'State'] === 'granted' && !record[withdrawn] &&
       record.contractVersion === 'free-assessment.v1' && !!record.consentTimestamp &&
       record.privacyNoticeVersion === 'agreement-reference.v1' && record.consentTextVersion === 'free-assessment-consent.v1' &&
-      record.consentSource === 'free_assessment' &&
-      !records.some(item => String(item.values.Email || '').trim().toLowerCase() === email &&
-        (item.values[withdrawn] || item.values[key + 'State'] === 'withdrawn'));
+      record.consentSource === 'free_assessment';
   } catch (error) { return false; }
 }
 
-function assessmentNewContact(data) {
+function assessmentNewContact(data, sheet) {
   try {
     return data.contractVersion === 'free-assessment.v1' && data.contactConsent === true &&
       PropertiesService.getScriptProperties().getProperty('CONSULT_APPROVED_POLICY_VERSION') === 'agreement-reference.v1' &&
-      !assessmentRecords().some(record => String(record.values.Email || '').trim().toLowerCase() === data.email.toLowerCase() &&
+      !assessmentRecords(sheet).some(record => String(record.values.Email || '').trim().toLowerCase() === data.email.toLowerCase() &&
         (record.values.contactWithdrawnAt || record.values.contactConsentState === 'withdrawn'));
   } catch (error) { return false; }
 }
