@@ -1,3 +1,4 @@
+import { isConsultApiPath } from "../src/lib/consult/ack";
 // @ts-ignore OpenNext generates this module at build time.
 import handler from "../.open-next/worker.js";
 import { stagingResponse } from "./staging-response";
@@ -18,6 +19,7 @@ export default {
       const url = new URL(request.url);
       // Only these two APIs can reach the private, isolated signup backend.
       if (stagingSignupMethod(url.pathname)) return forwardStagingSignupRequest(request, env.SIGNUP_BACKEND);
+      if (isConsultApiPath(url.pathname)) return handler.fetch(request, env, ctx);
       if (!["GET", "HEAD"].includes(request.method)) {
         return new Response("Read-only staging", { status: 405, headers: { Allow: "GET, HEAD" } });
       }

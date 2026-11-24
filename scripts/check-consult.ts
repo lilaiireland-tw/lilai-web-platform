@@ -85,9 +85,8 @@ console.log("PASS 32 stage/plan/opt-in combinations; missing/non-boolean choices
 const client = readFileSync("src/components/consult/ConsultationPage.tsx", "utf8");
 const rootLayout = readFileSync("src/app/layout.tsx", "utf8");
 const headComponent = readFileSync("src/components/analytics/GoogleAdsHead.tsx", "utf8");
-assert(client.includes("AKfycbx8AxEZ_Dh1IFWqMvTLDGGvUyPyBKrgjzoSlW9wWgyTAAgYH3qUPtm6NBdZ5Mq6Mb0N/exec"));
-assert.equal(client.match(/mode: "no-cors"/g)?.length, 2);
-assert.equal(client.match(/"Content-Type": "text\/plain;charset=utf-8"/g)?.length, 2);
+assert(!client.includes("no-cors"));
+assert(!client.includes("script.google.com"));
 assert(rootLayout.indexOf("<head>") < rootLayout.indexOf("<body>"));
 assert.match(rootLayout, /<GoogleAdsHead \/>/);
 assert.match(rootLayout, /<CookieConsent productionDeployment={productionDeployment} \/>/);
