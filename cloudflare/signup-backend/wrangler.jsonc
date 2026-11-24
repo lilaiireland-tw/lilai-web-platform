@@ -1,0 +1,197 @@
+// Local-only default. Production is a future coordinated release, never the dev default.
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "lilai-signup-backend-local",
+  "main": "../../worker/signup/index.ts",
+  "compatibility_date": "2026-08-22",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "lilai-applications-local",
+      "database_id": "00000000-0000-0000-0000-000000000001",
+      "migrations_dir": "../../migrations/signup",
+      "remote": false
+    }
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "INTEGRATION_QUEUE",
+        "queue": "lilai-application-integrations-local"
+      }
+    ],
+    "consumers": []
+  },
+  "ratelimits": [
+    {
+      "name": "APPLICATION_RATE_LIMITER",
+      "namespace_id": "76082803",
+      "simple": {
+        "limit": 30,
+        "period": 60
+      }
+    }
+  ],
+  "triggers": {
+    "crons": []
+  },
+  "vars": {
+    "EMAIL_REPLY_TO": "lilaiireland@gmail.com",
+    "INTERNAL_NOTIFICATION_EMAIL": "lilaiireland@gmail.com",
+    "NOTION_VERSION": "2022-06-28"
+  },
+  "secrets": {
+    "required": []
+  },
+  "observability": {
+    "enabled": true,
+    "traces": {
+      "enabled": true
+    }
+  },
+  "env": {
+    "staging": {
+      "name": "site-creator-vinext-starter-staging",
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "lilai-applications-staging",
+          "database_id": "370f3f4a-a1dd-40d7-8e2d-097fe835747f",
+          "migrations_dir": "../../migrations/signup"
+        }
+      ],
+      "queues": {
+        "producers": [
+          {
+            "binding": "INTEGRATION_QUEUE",
+            "queue": "lilai-application-integrations-staging"
+          }
+        ],
+        "consumers": []
+      },
+      "triggers": {
+        "crons": []
+      },
+      "ratelimits": [
+        {
+          "name": "APPLICATION_RATE_LIMITER",
+          "namespace_id": "76082802",
+          "simple": {
+            "limit": 30,
+            "period": 60
+          }
+        }
+      ],
+      "secrets": {
+        "required": []
+      },
+      "vars": {
+        "EMAIL_REPLY_TO": "lilaiireland@gmail.com",
+        "INTERNAL_NOTIFICATION_EMAIL": "lilaiireland@gmail.com",
+        "NOTION_VERSION": "2022-06-28",
+        "NEXT_PUBLIC_NOINDEX": "true"
+      },
+      "routes": [],
+      "workers_dev": false,
+      "preview_urls": false
+    },
+    "production": {
+      "name": "site-creator-vinext-starter",
+      "compatibility_date": "2026-08-22",
+      "compatibility_flags": [
+        "nodejs_compat"
+      ],
+      "workers_dev": true,
+      "routes": [
+        {
+          "pattern": "lilaiireland.com/language-school-signup",
+          "zone_name": "lilaiireland.com"
+        },
+        {
+          "pattern": "lilaiireland.com/language-school-signup/*",
+          "zone_name": "lilaiireland.com"
+        }
+      ],
+      "ratelimits": [
+        {
+          "name": "APPLICATION_RATE_LIMITER",
+          "namespace_id": "76082801",
+          "simple": {
+            "limit": 30,
+            "period": 60
+          }
+        }
+      ],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "lilai-applications-production",
+          "database_id": "d7b4209c-fce2-4f0d-9b18-3f19c183b430",
+          "migrations_dir": "../../migrations/signup"
+        }
+      ],
+      "queues": {
+        "producers": [
+          {
+            "binding": "INTEGRATION_QUEUE",
+            "queue": "lilai-application-integrations"
+          }
+        ],
+        "consumers": [
+          {
+            "queue": "lilai-application-integrations",
+            "dead_letter_queue": "lilai-application-integrations-dlq",
+            "max_batch_size": 5,
+            "max_batch_timeout": 5,
+            "max_retries": 5,
+            "retry_delay": 60
+          }
+        ]
+      },
+      "triggers": {
+        "crons": [
+          "*/10 * * * *"
+        ]
+      },
+      "vars": {
+        "EMAIL_REPLY_TO": "lilaiireland@gmail.com",
+        "INTERNAL_NOTIFICATION_EMAIL": "lilaiireland@gmail.com",
+        "NOTION_VERSION": "2022-06-28"
+      },
+      "secrets": {
+        "required": [
+          "ADMIN_API_TOKEN",
+          "GMAIL_CLIENT_ID",
+          "GMAIL_CLIENT_SECRET",
+          "GMAIL_REFRESH_TOKEN",
+          "GMAIL_SENDER_EMAIL",
+          "NOTION_TOKEN",
+          "NOTION_DATABASE_ID",
+          "TURNSTILE_SECRET",
+          "TURNSTILE_SITE_KEY",
+          "TURNSTILE_HOSTNAMES"
+        ]
+      },
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "traces": {
+          "enabled": true,
+          "head_sampling_rate": 0.01
+        }
+      },
+      "services": [
+        {
+          "binding": "PLATFORM",
+          "service": "lilai-web-platform-production"
+        }
+      ]
+    }
+  }
+}

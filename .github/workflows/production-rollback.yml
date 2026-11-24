@@ -1,0 +1,81 @@
+name: Production Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Run containing the verified recovery pair (never arbitrary version IDs)
+        type: string
+        required: true
+      target:
+        description: before restores a failed release's predecessor; verified restores a successful release
+        type: choice
+        options: [before, verified]
+        default: before
+      compatibility_approved:
+        description: Confirmed D1/Queue compatibility and both target versions; no data or messages will be undone
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: cloudflare-production-release
+  cancel-in-progress: false
+
+jobs:
+  reject-non-main:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Production rollback requires main
+        run: exit 1
+  rollback:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+      ROLLBACK_TARGET: ${{ inputs.target }}
+      COMPATIBILITY_APPROVED: ${{ inputs.compatibility_approved }}
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Restore and verify the Worker pair
+        run: node scripts/production/release.mjs rollback
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: production-verified
+          path: .cloudflare/release/verified.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: production-results
+          path: .cloudflare/release/*.json
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 90
+      - name: Release Summary
+        if: always()
+        run: node scripts/production/release.mjs summary
+        env:
+          RELEASE_RESULT: ${{ job.status }}

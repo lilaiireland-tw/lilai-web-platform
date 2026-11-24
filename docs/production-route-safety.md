@@ -1,59 +1,18 @@
-# Production Router route safety — post-cutover
+# Production route safety
 
-The live Dashboard-managed Worker Route `lilaiireland.com/*` points to
-`lilai-web-platform-router`, which reaches
-`lilai-web-platform-production` through the `PLATFORM` Service Binding.
+正式 Router 的 Dashboard route `lilaiireland.com/*`、兩條 Signup routes 與
+`*.lilaiireland.com/*` 排除規則維持原狀。Router 設定必須省略 `route` 與 `routes`；
+Platform 保持私有、`routes: []`、workers.dev / previews 關閉。
 
-## Route ownership
+正式發布已改為成對更新 Platform 與 Signup Backend。以
+[Unified Production Release](unified-production-release.md) 為現行操作手冊；
+舊 Platform-only workflow 與 CLI 已移除。PR/push 只執行驗證，正式發布必須從
+main 手動觸發，通過 production Environment 與同一個發布鎖。
 
-- The **Router** config must omit BOTH `route` and `routes` keys.
-  Even `"routes": []` risks deleting the Dashboard-managed route on a
-  future Wrangler redeploy. Keep `workers_dev: false` and
-  `preview_urls: false`.
-- The **Platform** is private. Its separate config intentionally retains
-  `"routes": []` and does not attach an external Route; the Router's
-  Dashboard Route belongs only to the Router Worker.
-- Keep existing signup mappings
-  `lilaiireland.com/language-school-signup` and
-  `lilaiireland.com/language-school-signup/*` and wildcard
-  `*.lilaiireland.com/*` intact. Preserve the Single Redirect for signup
-  query URLs (UTM and gclid).
+發布使用 versions upload 與版本啟用，保留 Dashboard 管理的 Routes / exposure、
+既有 Queue Consumer 與 Cron。Router 不重新部署；若發現需要更改正式 Routes，
+立即停止並另行審核，不能讓此 CI/CD 自動修復。
 
-Source: https://developers.cloudflare.com/workers/wrangler/configuration/#source-of-truth
-
-## Routine Production update (Platform only)
-
-1. Merge reviewed work into `develop`, then merge a reviewed
-   `develop -> main` Release PR after CI passes.
-2. Read-only check **Cloudflare Dashboard > Workers Routes** and record current
-   Worker versions. Verify `lilaiireland.com/*` still belongs to
-   `lilai-web-platform-router`, with both signup mappings unchanged.
-3. On `main`, manually dispatch GitHub Actions
-   **Production Platform (manual only)** with `deploy_platform_only=true`.
-   Pass the existing `production` environment approval. This builds
-   OpenNext then runs
-   `npm run cf:deploy:production-platform -- --confirm-platform-only-deploy`.
-4. This deploy command validates the Worker identity/account and route policy
-   and deploys ONLY `cloudflare/production-platform.jsonc`. The Router Worker
-   and Dashboard Routes are NOT deployed or modified. Merging to `main`
-   never automatically deploys production.
-5. Recheck the Dashboard route table and perform only targeted read-only
-   production checks; Consent Mode v2 can be inspected in Tag Assistant
-   without sending synthetic conversions or duplicate GAS leads.
-
-Local terminal use requires the same explicit flag and production API token /
-matching account ID. Unlike the GitHub workflow, local terminal commands do not
-enforce which git branch is checked out: verify the release commit yourself.
-
-## Testing, limitations and rollback
-
-`npm run check:production-route-safety` and
-`npm run check:production-routing` run without Cloudflare requests and
-fail when unsafe route/config or dual-Worker deployment instructions reappear.
-Tests of repository files do NOT prove live Dashboard settings. Manual
-preflight/postflight route snapshots remain necessary.
-
-If Platform functionality regresses, roll back its Worker version through
-Cloudflare without touching Router Routes, signup routes, DNS or redirects.
-Changes to the Router or Service Binding require their own reviewed release
-plan and rollback; do not revive the old dual-Worker deploy command.
+`check:production-route-safety`、`check:production-routing` 與
+`check-production-release-strategy.ts` 是本地契約檢查；線上漂移由 Production
+Preflight 唯讀核對。Rollback 依相同手冊成對恢復 Worker Version，不變更資料或 Routes。

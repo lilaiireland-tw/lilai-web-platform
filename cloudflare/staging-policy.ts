@@ -1,6 +1,7 @@
 import { eventManifest } from "../src/content/events/event-manifest";
+import { isSignupStaticAssetPath } from "./staging-signup";
 
-const frontendExactPaths = new Set(["/", "/consult", "/ireland-25-plus-8", "/robots.txt", "/sitemap.xml"]);
+const frontendExactPaths = new Set(["/", "/consult", "/ireland-25-plus-8", "/language-school-signup", "/robots.txt", "/sitemap.xml"]);
 const eventPaths = new Set(eventManifest.map(event => `/events/${event.slug}`));
 const staticAssetPrefixes = ["/_next/", "/assets/", "/fonts/", "/events/"] as const;
 
@@ -10,7 +11,7 @@ export function isStandaloneFrontendPath(pathname: string) {
 }
 
 export function isStandaloneStaticAssetPath(pathname: string) {
-  return staticAssetPrefixes.some(prefix => pathname.startsWith(prefix));
+  return staticAssetPrefixes.some(prefix => pathname.startsWith(prefix)) || isSignupStaticAssetPath(pathname);
 }
 
 export function stagingUnavailableResponse(method: string) {

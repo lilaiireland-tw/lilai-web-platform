@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { assertDeploymentEnvironment } from "../src/lib/deployment";
+import { assertStagingSignupConfig, signupStagingConfigPath } from "./staging-signup-config";
 
 const action = process.argv[2];
 assert(["build", "dry-run", "bootstrap-access", "deploy"].includes(action),
@@ -13,6 +14,7 @@ assert.equal(process.env.EVENT_DEPLOYMENT_ENV, "preview", "Set EVENT_DEPLOYMENT_
 assert(process.env.EVENTS_INCLUDE_DRAFTS !== "true", "This staging pipeline excludes drafts");
 
 const config = JSON.parse(readFileSync("wrangler.jsonc", "utf8"));
+assertStagingSignupConfig();
 assert.equal(config.name, "lilai-web-platform-staging", "Unexpected staging Worker name");
 assert.equal(config.workers_dev, true, "Staging must use only its workers.dev URL");
 assert.equal(config.preview_urls, false, "Version preview URLs must stay disabled");
@@ -79,8 +81,22 @@ run("node_modules/@opennextjs/cloudflare/dist/cli/index.js", ["build", "--config
 // serve prerendered pages. This target only copies local files; no remote cache.
 run("node_modules/@opennextjs/cloudflare/dist/cli/index.js", ["populateCache", "local", "--config", configPath]);
 if (action === "deploy" || action === "bootstrap-access") {
+  if (action === "deploy") {
+    const secrets = spawnSync(process.execPath, ["node_modules/wrangler/bin/wrangler.js", "secret", "list", "--config", signupStagingConfigPath], {
+      encoding: "utf8", env: commandEnv,
+    });
+    if (secrets.error) throw secrets.error;
+    assert.equal(secrets.status, 0, "Create/configure the private signup Staging Worker before deployment");
+    const names = JSON.parse(secrets.stdout).map((secret: { name: string }) => secret.name);
+    assert(names.includes("TURNSTILE_SITE_KEY") && names.includes("TURNSTILE_SECRET"),
+      "Configure Staging-only Turnstile keys before applying Staging migrations");
+    // Fixed staging-only config; never infer a database/environment from CLI input.
+    run("node_modules/wrangler/bin/wrangler.js", ["d1", "migrations", "apply", "DB", "--config", signupStagingConfigPath, "--remote"]);
+    run("node_modules/wrangler/bin/wrangler.js", ["deploy", "--config", signupStagingConfigPath]);
+  }
   run("node_modules/@opennextjs/cloudflare/dist/cli/index.js", ["deploy", "--config", configPath]);
 } else if (action === "dry-run") {
+  run("node_modules/wrangler/bin/wrangler.js", ["deploy", "--config", signupStagingConfigPath, "--dry-run"]);
   run("node_modules/wrangler/bin/wrangler.js", ["deploy", "--config", configPath,
     "--dry-run"]);
 }

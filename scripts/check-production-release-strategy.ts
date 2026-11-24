@@ -1,30 +1,23 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const productionWorkflow = readFileSync(".github/workflows/production-private-deploy.yml", "utf8");
-const stagingWorkflow = readFileSync(".github/workflows/staging.yml", "utf8");
-
-assert.match(productionWorkflow, /pull_request:\s*\n\s+branches:\s*\[develop,\s*main\]/);
-assert.match(productionWorkflow, /push:\s*\n\s+branches:\s*\[develop,\s*main\]/);
-assert.match(productionWorkflow, /^  workflow_dispatch:\s*$/m);
-const deployJobStart = productionWorkflow.search(/^  deploy-platform:\s*$/m);
-assert.notEqual(deployJobStart, -1, "Missing production deploy job");
-const deployJob = productionWorkflow.slice(deployJobStart);
-assert.match(deployJob, /needs:\s*validate/);
-assert.match(deployJob, /if:\s*github\.event_name == 'workflow_dispatch'\s*&&\s*github\.ref == 'refs\/heads\/main'\s*&&\s*inputs\.deploy_platform_only == true/);
-assert.match(deployJob, /environment:\s*production/);
-assert.match(productionWorkflow, /deploy_platform_only:[\s\S]*?type:\s*boolean[\s\S]*?default:\s*false/);
-assert.equal((productionWorkflow.match(/npm run cf:deploy:production-platform/g) ?? []).length, 1);
-assert.match(deployJob, /npm run cf:deploy:production-platform/);
-
-assert.match(stagingWorkflow, /pull_request:\s*\n\s+branches:\s*\[develop\]/);
-assert.match(stagingWorkflow, /push:\s*\n\s+branches:\s*\[develop\]/);
-const stagingDeployJob = stagingWorkflow.slice(stagingWorkflow.search(/^  deploy:\s*$/m));
-assert.match(stagingDeployJob, /if:\s*github\.ref == 'refs\/heads\/develop'\s*&&\s*vars\.CLOUDFLARE_STAGING_ENABLED == 'true'/);
-assert.match(stagingDeployJob, /environment:\s*staging/);
-
-console.log("PASS production validation runs on PRs and pushes to develop and main");
-assert.doesNotMatch(deployJob, /cf:deploy:production-private|production-router\.jsonc|wrangler deploy --routes?/,
-  "Production workflow must never deploy Router or manage public Routes");
-console.log("PASS manual main-only production deploy targets Platform with explicit consent and environment gate");
-console.log("PASS staging validation and safeguarded develop deployment remain enabled");
+for (const file of ["production-deploy.yml", "production-rollback.yml"]) {
+  const workflow = readFileSync(`.github/workflows/${file}`, "utf8");
+  assert.match(workflow, /^  workflow_dispatch:/m);
+  assert.doesNotMatch(workflow, /^  (push|pull_request|workflow_call|schedule):/m);
+  assert.match(workflow, /if: github.ref == 'refs\/heads\/main'/);
+  assert.match(workflow, /environment: production/);
+  assert.match(workflow, /group: cloudflare-production-release/);
+  assert.match(workflow, /cancel-in-progress: false/);
+  assert.match(workflow, /ref: \$\{\{ github.sha \}\}/);
+  assert.match(workflow, /actions: read/);
+  assert.doesNotMatch(workflow, /staging|wrangler deploy|cf:deploy:production-platform|production-router.jsonc/);
+}
+const validation = readFileSync(".github/workflows/production-private-deploy.yml", "utf8");
+assert.match(validation, /pull_request:/);
+assert.match(validation, /push:/);
+assert.doesNotMatch(validation, /CLOUDFLARE_API_TOKEN|deploy-platform|environment: production/);
+const staging = readFileSync(".github/workflows/staging.yml", "utf8");
+assert.match(staging, /environment: staging/);
+assert.match(staging, /CLOUDFLARE_STAGING_ENABLED == 'true'/);
+console.log("PASS manual main-only paired releases and rollback share a production gate/lock; automatic CI remains validation-only");

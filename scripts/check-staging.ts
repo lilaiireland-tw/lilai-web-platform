@@ -11,6 +11,7 @@ import {
 import { getPageBySlug } from "../src/lib/wordpress";
 import { getProductBySlug } from "../src/lib/woocommerce";
 import nextConfig from "../next.config";
+import { assertStagingSignupConfig } from "./staging-signup-config";
 
 async function main() {
   for (const site of [undefined, "preview", "staging", "invalid", "production"]) {
@@ -84,10 +85,11 @@ async function main() {
   for (const key of ["WORDPRESS_ORIGIN", "WORDPRESS_API_BASE", "WOOCOMMERCE_STORE_API_BASE"]) {
     assert.equal(config.vars[key], undefined, `Unexpected standalone CMS binding: ${key}`);
   }
-  for (const key of ["env", "services", "r2_buckets", "d1_databases", "kv_namespaces", "queues"]) {
+  for (const key of ["env", "r2_buckets", "d1_databases", "kv_namespaces", "queues"]) {
     assert.equal(config[key], undefined, `Unexpected production/shared resource configuration: ${key}`);
   }
-  console.log("PASS isolated staging config with no zone routes or shared resource bindings");
+  assertStagingSignupConfig();
+  console.log("PASS isolated staging config with only the private signup service and staging D1; no Queue/Cron");
 
   const originalSiteForRewrites = process.env.SITE_DEPLOYMENT_ENV;
   process.env.SITE_DEPLOYMENT_ENV = "staging";
@@ -100,15 +102,20 @@ async function main() {
   console.log("PASS standalone staging build omits WordPress rewrites");
 
   for (const path of ["/", "/consult", "/consult/", "/events", "/events/", "/events/daydream-adventure-2027",
-    "/events/daydream-adventure-2027/", "/robots.txt", "/sitemap.xml"]) {
+    "/events/daydream-adventure-2027/", "/language-school-signup", "/language-school-signup/", "/robots.txt", "/sitemap.xml"]) {
     assert(isStandaloneFrontendPath(path), path);
   }
-  for (const path of ["/events/example", "/events-other", "/product/example", "/wp-json/", "/about/", "/api/revalidate"]) {
+  for (const path of ["/events/example", "/events-other", "/product/example", "/wp-json/", "/about/", "/api/revalidate",
+    "/language-school-signup-other", "/language-school-signup/wp-admin/", "/language-school-signup/api/admin/applications"]) {
     assert(!isStandaloneFrontendPath(path), path);
   }
   for (const path of ["/_next/static/example.js", "/assets/example.png", "/fonts/example.woff2",
-    "/events/example", "/events/daydream-adventure-2027/missing.png"]) {
+    "/events/example", "/events/daydream-adventure-2027/missing.png", "/language-school-signup/og.png",
+    "/language-school-signup/favicon.svg", "/language-school-signup/lilai-assets/schools/logo-atc-language-schools.png"]) {
     assert(isStandaloneStaticAssetPath(path), path);
+  }
+  for (const path of ["/language-school-signup/api/applications", "/language-school-signup/api/admin/applications", "/language-school-signup/wp-json/", "/language-school-signup-other/file.png"]) {
+    assert(!isStandaloneStaticAssetPath(path), path);
   }
   const unavailable = stagingUnavailableResponse("GET");
   assert.equal(unavailable.status, 503);

@@ -1,0 +1,68 @@
+{
+  "audited_at": "2026-11-23",
+  "account_id": "622900d9297cd7c09cad966aaae64617",
+  "zone_id": "2cabb0ba90198b8d4a88a58e5bc6c757",
+  "legacy_commit": "8b47338f89834805d2197f1cf3607c49f10b6c71",
+  "platform": "lilai-web-platform-production",
+  "backend": "site-creator-vinext-starter",
+  "router": "lilai-web-platform-router",
+  "versions": {
+    "lilai-web-platform-production": "81dfa3b4-c739-4f1c-ae87-9d11c547dc2c",
+    "site-creator-vinext-starter": "02a78b7f-f5fc-4e9c-b006-bd09b66172fc",
+    "lilai-web-platform-router": "88455f24-219b-4ecb-add5-17c5e029a92d"
+  },
+  "database_id": "d7b4209c-fce2-4f0d-9b18-3f19c183b430",
+  "database_name": "lilai-applications-production",
+  "queues": {
+    "lilai-application-integrations": "83621ba473bb43409984bd627e8c0453",
+    "lilai-application-integrations-dlq": "d15f435bf7c1472bad5446c836b74c88"
+  },
+  "routes": [
+    {
+      "pattern": "*.lilaiireland.com/*",
+      "script": null
+    },
+    {
+      "pattern": "lilaiireland.com/*",
+      "script": "lilai-web-platform-router"
+    },
+    {
+      "pattern": "lilaiireland.com/language-school-signup",
+      "script": "site-creator-vinext-starter"
+    },
+    {
+      "pattern": "lilaiireland.com/language-school-signup/*",
+      "script": "site-creator-vinext-starter"
+    }
+  ],
+  "exposure": {
+    "lilai-web-platform-production": {
+      "enabled": false,
+      "previews_enabled": false
+    },
+    "site-creator-vinext-starter": {
+      "enabled": true,
+      "previews_enabled": true
+    },
+    "lilai-web-platform-router": {
+      "enabled": false,
+      "previews_enabled": false
+    }
+  },
+  "migrations": [
+    {
+      "id": 1,
+      "name": "0001_create_application_tables.sql",
+      "applied_at": "2026-08-24 18:20:26"
+    },
+    {
+      "id": 2,
+      "name": "0002_add_application_reference_codes.sql",
+      "applied_at": "2026-08-27 07:36:50"
+    }
+  ],
+  "migration_hashes": {
+    "0001_create_application_tables.sql": "486397484adbc540fcdaba35737652f19e4c6c4245c49116c0633b597801bdac",
+    "0002_add_application_reference_codes.sql": "dae062ff8b0893e8e6a41bba3d8324fb8c7bfc1fe698e04a0f0c9c99053bfdab"
+  }
+}

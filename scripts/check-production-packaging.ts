@@ -8,10 +8,10 @@ mkdirSync(".cloudflare/production-router-package", { recursive: true });
 mkdirSync(".cloudflare/production-platform-package", { recursive: true });
 mkdirSync(".cloudflare/config", { recursive: true });
 
-function dryRun(config: string, outdir: string) {
+function dryRun(config: string, outdir: string, versionUpload = false) {
   const result = spawnSync(process.execPath, [
     wrangler,
-    "deploy",
+    ...(versionUpload ? ["versions", "upload"] : ["deploy"]),
     "--dry-run",
     "--config",
     config,
@@ -30,5 +30,12 @@ function dryRun(config: string, outdir: string) {
 }
 
 dryRun("cloudflare/production-router.jsonc", ".cloudflare/production-router-package");
-dryRun("cloudflare/production-platform.jsonc", ".cloudflare/production-platform-package");
+dryRun("cloudflare/production-platform.jsonc", ".cloudflare/production-platform-package", true);
+const signup = spawnSync(process.execPath, [wrangler, "versions", "upload", "--dry-run", "--config",
+  "cloudflare/signup-backend/wrangler.jsonc", "--env", "production", "--outdir", ".cloudflare/production-signup-package"], {
+  stdio: "inherit", env: { ...process.env, WRANGLER_SEND_METRICS: "false", XDG_CONFIG_HOME: resolve(".cloudflare/config") },
+});
+if (signup.error) throw signup.error;
+assert.equal(signup.status, 0, "Signup production version dry-run failed");
 console.log("PASS production Router and private Platform configs package with Wrangler dry-run; no deploy performed");
+console.log("PASS Signup production version packages without uploading");

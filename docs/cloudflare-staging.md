@@ -1,10 +1,10 @@
 # Cloudflare standalone staging deployment (Part of #3)
 
 This runbook prepares the first real Cloudflare staging deployment. It does not
-authorize or perform that deployment. The target is one Worker named
-`lilai-web-platform-staging`, reachable only at its default `workers.dev` URL
-and protected by Cloudflare Access. There is no CMS fixture Worker and no custom
-staging domain.
+authorize or perform that deployment. The frontend is `lilai-web-platform-staging`,
+reachable only at its default `workers.dev` URL and protected by Cloudflare Access.
+A private `site-creator-vinext-starter-staging` backend is bound by service name;
+there is no CMS fixture Worker, production binding or custom staging domain.
 
 The implementation keeps Next.js 16.2.10, OpenNext 1.20.1 and Wrangler 4.148.0.
 No production DNS record, zone route, WordPress/WooCommerce setting, production
@@ -30,11 +30,13 @@ The staging build retains:
 - `EVENTS_INCLUDE_DRAFTS=false`
 - public canonicals rooted at `https://lilaiireland.com`
 - `X-Robots-Tag: noindex, nofollow` on every Worker response
-- GET/HEAD-only handling; every other method returns `405`
+- GET/HEAD-only handling except the exact signup endpoints: GET
+  `/language-school-signup/api/turnstile-config` and POST
+  `/language-school-signup/api/applications`. Unsupported methods return `405`.
 - the build-time production-environment mismatch guard
 
 The homepage, shared layout, `robots.txt`, empty staging sitemap, `/events`,
-registered event pages and their static assets are served by the OpenNext Worker.
+registered event pages, `/language-school-signup/` and their static assets are served by the OpenNext Worker.
 Static files are served from the same Worker's Static Assets binding.
 
 Staging does not bind a WordPress or WooCommerce URL. Next.js WordPress rewrites
@@ -65,7 +67,8 @@ from reaching the production CMS through rewrites, data APIs or image optimizati
 - `workers_dev: true`
 - `preview_urls: false`
 - `routes: []`
-- no service, KV, R2, D1, Queue or Durable Object bindings
+- one `SIGNUP_BACKEND` service targeting only `site-creator-vinext-starter-staging`
+- no KV, R2, D1, Queue or Durable Object bindings on the Platform itself
 - no WordPress/WooCommerce URLs or secrets
 
 The deployment script rejects a different Worker name, account, hosting mode,
@@ -74,11 +77,72 @@ deploy path also performs a read-only deployment-list preflight and refuses to
 create a missing Worker. This is intentional: the Worker must already exist with
 its public URL disabled so Access can be attached before `workers.dev` is enabled.
 
-Use a dedicated account-owned API token with only the account-level Workers
-Scripts edit permission required by Wrangler. Do not grant DNS edit, zone Workers
-Routes edit, WordPress, WooCommerce, or signup Worker credentials. The Access
+Use a dedicated account-owned Staging API token with Workers Scripts edit and
+D1 edit for the explicit staging migration step. Do not grant DNS edit, zone Workers
+Routes edit, WordPress or WooCommerce permissions. The Access
 administrator may be a separate human/account role; do not add Access permissions
 to the CI deploy token.
+
+## Signup Staging integration
+
+The signup page is `/language-school-signup/`; the bare URL redirects there while
+preserving query parameters. Only `lilai-assets/`, `og.png`, `favicon.svg` and
+the existing shared asset namespaces are allowed. Every other signup descendant
+is denied before Static Assets or Next can handle it.
+
+The Platform intercepts the two exact signup API paths before Next's local-only
+bridge. POST requires Origin
+`https://lilai-web-platform-staging.lilaiireland.workers.dev`, JSON, a UUID
+Idempotency-Key and at most 32KB, including streamed bodies without Content-Length.
+It strips cookies/authentication headers and never retries POST. The private
+backend repeats these guards, verifies Turnstile hostname/action, applies the
+original rate limit/schema checks and writes only to `lilai-applications-staging`
+(`370f3f4a-a1dd-40d7-8e2d-097fe835747f`). It has no public URL/routes.
+
+The dedicated `cloudflare/signup-staging.jsonc` replaces the unused legacy
+`--env staging` configuration for this pipeline. The legacy file and all
+production configuration remain unchanged. Service Bindings are:
+
+- Platform `SIGNUP_BACKEND` -> `site-creator-vinext-starter-staging`
+- Backend `PLATFORM` -> `lilai-web-platform-staging` for page/assets only
+
+No real Queue producer/consumer, Cron, Gmail or Notion code is used by the new
+Staging entry. The original three job rows are retained as pending test data;
+a Mock Queue acknowledges enqueue calls without delivering work. Do not later
+attach consumers/Cron to this database without handling the pending test rows.
+
+Before the first deployment of this fix, configure an existing private backend
+Worker with a **Staging-only Turnstile widget**. Its frontend hostname must be
+`lilai-web-platform-staging.lilaiireland.workers.dev`, and the action is
+`application_submit`. Store its keys as `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET`
+on `site-creator-vinext-starter-staging` through the normal secret-management flow.
+Do not copy/retrieve production secrets. The deployment checks only secret names,
+not values, before any Staging migration. Missing keys remain fail-closed.
+Cloudflare dummy keys omit `action` and return `example.com`, so they cannot pass
+the unchanged strict checks; no production verification is weakened for testing.
+See [Turnstile testing](https://developers.cloudflare.com/turnstile/troubleshooting/testing/).
+
+After review, merge to `develop` or dispatch **Cloudflare staging** with `develop`
+selected. Keep the existing Access/branch/environment gates and give the Staging
+token D1 edit for the fixed database operation. `npm run cf:deploy` now builds
+Staging, checks the private backend/key names, applies only the Staging SQL
+migrations, deploys only the private Staging backend, then deploys Staging Platform.
+If existing Staging tables were provisioned outside Wrangler's migration tracking,
+reconcile their history before enabling this migration step; do not reset a D1.
+No Production operation is part of this sequence. No deployment was performed
+while preparing this fix.
+
+Fix validation from `develop` baseline `4118474`: clean offline npm ci;
+root/Workers/backend TypeScript; OpenNext staging build and both staging
+Wrangler dry-runs; 9 new staging contract/Service Binding/local-D1 tests and
+26 existing backend tests; 10 frontend contract tests and Chromium forms at
+375/768/1440px; actual OpenNext workerd HTTP checks for signup page/assets,
+canonical/slash/query, noindex and shared shell; existing production route-safety,
+router/routing and release-strategy checks. Providers were mocked and no remote
+D1 was accessed. The new staging tests also force a local D1 transaction failure,
+verify application/job rollback, then verify retry succeeds. Live Access,
+backend/key readiness, actual service bindings, Stage D1 migration history and
+real Turnstile validation still require deployment-time verification.
 
 ## Local verification
 
@@ -92,6 +156,11 @@ after the test; do not change dependencies to work around the local path issue.
 ```sh
 npm ci
 npm run cf:typegen
+npm run signup:typecheck
+npm run signup:test
+npm run check:signup-staging
+npx playwright install chromium
+npm run check:signup
 npx tsc --noEmit --incremental false
 npx tsc -p cloudflare/tsconfig.json
 npm run check:staging
@@ -169,7 +238,7 @@ After the manual Access review, configure the GitHub `staging` environment:
 - required reviewers and deployment branch restricted to `develop`
 - variable `CLOUDFLARE_ACCOUNT_ID=622900d9297cd7c09cad966aaae64617`
 - variable `CLOUDFLARE_ACCESS_CONFIRMED=true`, set only after the review above
-- secret `CLOUDFLARE_API_TOKEN` with Workers Scripts edit only
+- secret `CLOUDFLARE_API_TOKEN` with Workers Scripts edit and D1 edit for Staging
 - repository variable `CLOUDFLARE_STAGING_ENABLED=true`, set last
 
 Do not configure WordPress/WooCommerce origins. The `verify` job runs for PRs,
@@ -185,9 +254,9 @@ The approved live procedure is:
 2. Recheck Worker-level Access and the absence of routes/custom domains.
 3. Enable `CLOUDFLARE_STAGING_ENABLED`, then manually dispatch **Cloudflare
    staging** on `develop` (or use the next approved `develop` push).
-4. Confirm `verify` passes before `deploy` starts. The deploy changes only the
-   existing `lilai-web-platform-staging` script, assets, vars and its default
-   `workers.dev` setting.
+4. Confirm `verify` passes before `deploy` starts. It checks the private backend's
+   Turnstile secret names, applies only Staging migrations, deploys that private
+   backend and then the Platform script/assets/vars. It owns no production route.
 5. Record the exact URL issued by Cloudflare, deployment/version ID, Git SHA,
    workflow URL, operator and timestamp. The expected hostname form is
    `lilai-web-platform-staging.<account-subdomain>.workers.dev`; the emitted URL
@@ -225,9 +294,13 @@ The checker sends only GET/HEAD requests and validates:
 
 Also perform browser QA at 375px and 1440px for the shared shell, sticky header,
 overflow, keyboard/focus-visible behavior, event navigation/assets/CTAs, and
-console or hydration errors. Do not submit forms. Check Workers logs for outbound
+console or hydration errors. GET/HEAD smoke remains read-only. After deployment,
+use only synthetic `example.invalid` contact data for an authorized Staging form
+check, then inspect only Staging D1 for ST codes, deduplication and pending jobs.
+Check Workers logs for outbound
 requests; there must be no request to `lilaiireland.com`, `cms.lilaiireland.com`,
-WordPress, WooCommerce or the signup Worker.
+WordPress, WooCommerce or the production signup Worker. Only the private Staging
+signup service and Turnstile Siteverify are expected.
 
 ## Rollback
 
