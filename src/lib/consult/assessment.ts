@@ -43,10 +43,10 @@ const ROUTE_BUDGET_RULES = {
 };
 
 export const STAGE_INFO = {
-  watch: { name: "觀望型", emoji: "🌱", description: "你目前比較接近「觀望型」。這代表你對愛爾蘭或海外生活有興趣，但可能還在蒐集資訊、比較不同國家，或還沒有明確出發時間。這個階段不用急著報名，最重要的是先看懂自己的目標、預算和真正的卡點。", nextSteps: "先了解愛爾蘭語校、25+8 和短期遊學的差異\n整理預算方向與出發時間\n把你最在意的問題先寫下來，諮詢時更有效率", followUp: "加入 email nurturing 名單，持續寄送實用內容與活動通知", cta: "explore_pack" },
-  explore: { name: "探索型", emoji: "🔍", description: "你目前比較接近「探索型」。這代表你已經不只是隨便看看，而是開始認真思考愛爾蘭是否適合你。你可能正在比較方案、預算、英文程度或未來可能性。這個階段最適合先系統整理資訊，再決定下一步。", nextSteps: "比較短期語校與 25+8 的差異\n釐清預算、出發時間與工作期待\n把你最在意的問題先寫下來，諮詢時更有效率", followUp: "寄送資料包與下一場說明會邀請，並在活動前再次提醒", cta: "explore_pack" },
-  ready: { name: "準備型", emoji: "📋", description: "你目前比較接近「準備型」。這代表你已經進入比較實際的規劃階段，可能需要開始確認學校、課程長度、預算、住宿與出發時間。", nextSteps: "整理你的出發時間與預算上限\n參考愛爾蘭語校自主評估包，或直接預約一對一語校出發諮詢\n確認方案後盡快啟動申請流程，避免錯過開課日期", followUp: "寄送資料包與說明會邀請，重點追蹤，適時邀請一對一諮詢", cta: "ready_both" },
-  action: { name: "行動型", emoji: "🚀", description: "你目前比較接近「行動型」。這代表你可能已經接近決策階段，需要的不只是更多資訊，而是有人協助你確認學校、課程、報價、住宿、文件與時間安排。", nextSteps: "準備目前預算、出發時間與偏好課程\n預約一對一語校出發諮詢，讓哩來幫你比較語校、確認報價與流程\n諮詢費可折抵報名定金（諮詢後 7 日內報名享 NT$3,000 定金優惠），開課後定金全額退還", followUp: "請 24–48 小時內主動聯繫，邀請一對一諮詢", cta: "action_consult" },
+  watch: { name: "觀望型", emoji: "🌱", description: "你目前比較接近「觀望型」。這代表你對愛爾蘭或海外生活有興趣，但可能還在蒐集資訊、比較不同國家，或還沒有明確出發時間。這個階段不用急著報名，最重要的是先看懂自己的目標、預算和真正的卡點。", nextSteps: "先了解愛爾蘭語校、25+8 和短期遊學的差異\n整理預算方向與出發時間\n把你最在意的問題先寫下來，諮詢時更有效率", cta: "explore_pack" },
+  explore: { name: "探索型", emoji: "🔍", description: "你目前比較接近「探索型」。這代表你已經不只是隨便看看，而是開始認真思考愛爾蘭是否適合你。你可能正在比較方案、預算、英文程度或未來可能性。這個階段最適合先系統整理資訊，再決定下一步。", nextSteps: "比較短期語校與 25+8 的差異\n釐清預算、出發時間與工作期待\n把你最在意的問題先寫下來，諮詢時更有效率", cta: "explore_pack" },
+  ready: { name: "準備型", emoji: "📋", description: "你目前比較接近「準備型」。這代表你已經進入比較實際的規劃階段，可能需要開始確認學校、課程長度、預算、住宿與出發時間。", nextSteps: "整理你的出發時間與預算上限\n免費索取《歐洲漫遊錄》說明會重播，觀看後可預約免費一對一諮詢\n確認方案後盡快啟動申請流程，避免錯過開課日期", cta: "ready_both" },
+  action: { name: "行動型", emoji: "🚀", description: "你目前比較接近「行動型」。這代表你可能已經接近決策階段，需要的不只是更多資訊，而是有人協助你確認學校、課程、報價、住宿、文件與時間安排。", nextSteps: "準備目前預算、出發時間與偏好課程\n觀看重播後，可預約免費一對一諮詢，確認語校、報價與流程\n整理想確認的學校、住宿、文件與申請時程", cta: "action_consult" },
 } as const;
 
 export function classifyStage(data: AssessmentData): Stage {
@@ -100,30 +100,42 @@ export function getBlockerDiagnosis(barriers = "") {
   return "你選的這些卡點，反映的是你對這個決定的認真程度——卡住不是因為你不適合，而是因為你在意這個選擇。帶著這些問題來諮詢，正是我們可以一起整理的事。";
 }
 
-export function getAssessmentContent(data: AssessmentData, stage: Stage) {
+export const assessmentResourceCopy = "所有完成評估的使用者都可取得完整免費評估結果與既有免費資源。你可以回覆報告 Email 或透過 LINE 免費索取《歐洲漫遊錄》說明會重播，由哩來團隊手動開放觀看權限；不會自動寄送影片連結。觀看後可預約免費一對一諮詢。";
+
+export interface AssessmentPreferences {
+  contactConsent?: boolean;
+  marketingConsent?: boolean;
+}
+
+export function getAssessmentContent(data: AssessmentData, stage: Stage, preferences: AssessmentPreferences = {}) {
   const info = STAGE_INFO[stage];
-  if (data.plan !== "25+8 打工遊學") return info;
+  // shortcut: current form choices only; latest backend authorization checks belong to #64/#62/#63.
+  const followUp = [
+    preferences.contactConsent === true
+      ? "你已選擇本次個別聯繫。若授權仍有效且未撤回，我們會在 1–2 個工作天內聯繫你，協助確認需求與索取資源。工作天為週一至週五。"
+      : "你可以自行加入 LINE、索取免費資源，或在觀看重播後預約免費一對一諮詢。",
+    preferences.marketingConsent === true
+      ? "你已選擇 Email 行銷訂閱。若授權仍有效且未退訂，你會透過 Email 收到未來出發資訊與說明會邀請，可隨時取消訂閱。"
+      : "未訂閱未來 Email 行銷與說明會通知，也不影響本次完整評估結果與免費資源。",
+  ].join("\n");
+  if (data.plan !== "25+8 打工遊學") return { ...info, followUp };
   const preparing = stage === "ready" || stage === "action";
-  const nextSteps = preparing ? [
-    "整理你的總預算、預計出發時間與課程偏好。",
-    "Alex & Arsha 會在 1–2 個工作天內聯繫你，先透過文字確認需求。",
-    "了解需求後，我們會免費開放《歐洲漫遊錄》說明會影片與相關資源，協助你確認下一步。",
-  ] : [
-    "整理你對 25+8 最想了解的問題，以及目前的預算與時間想法。",
-    "Alex & Arsha 會在 1–2 個工作天內聯繫你，先透過文字了解你的狀況。",
-    "了解需求後，我們會免費開放《歐洲漫遊錄》說明會影片與相關資源，讓你依自己的步調評估。",
+  const nextSteps = [
+    preparing ? "整理你的總預算、預計出發時間與課程偏好。" : "整理你對 25+8 最想了解的問題，以及目前的預算與時間想法。",
+    "回覆報告 Email 或透過 LINE 免費索取《歐洲漫遊錄》說明會重播，由團隊手動開放觀看權限。",
+    "觀看後可預約免費一對一諮詢，依自己的步調確認下一步。",
   ];
-  return { ...info, nextSteps: nextSteps.join("\n"), cta: "twentyfive_plus8" };
+  return { ...info, followUp, nextSteps: nextSteps.join("\n"), cta: "twentyfive_plus8" };
 }
 
 export function getTimeAnchor(timeline = "", plan = "") {
   if (plan === "25+8 打工遊學") {
     return ({
-      "3 個月內": "出發時間較近，請先整理預算與預計開課日期，團隊聯繫時可一起確認準備時程。",
-      "3–6 個月內": "可以先整理預算與出發月份，團隊聯繫時再一起確認課程及準備時程。",
-      "6–12 個月內": "你還有時間比較方向，可先列出在意的條件，再透過影片與團隊聯繫逐步確認。",
+      "3 個月內": "出發時間較近，請先整理預算與預計開課日期，可在自行預約諮詢時確認準備時程。",
+      "3–6 個月內": "可以先整理預算與出發月份，可在自行預約諮詢時確認課程及準備時程。",
+      "6–12 個月內": "你還有時間比較方向，可先列出在意的條件，再透過重播與自行預約諮詢逐步確認。",
       "一年以上": "時間較充裕，可以先了解 25+8 的安排，再逐步整理預算與出發方向。",
-      "還不確定": "可以先從自己的目標與預算開始，團隊聯繫時再一起整理適合的出發時間。",
+      "還不確定": "可以先從自己的目標與預算開始，可在自行預約諮詢時整理適合的出發時間。",
     } as Record<string, string>)[timeline] || "";
   }
   return ({

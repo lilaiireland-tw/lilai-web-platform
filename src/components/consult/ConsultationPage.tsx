@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createConsultAnalytics } from "@/lib/analytics/consult";
 import { CONSENT_CHANGE_EVENT } from "@/lib/analytics/consent";
 import {
+  assessmentResourceCopy,
   classifyLead,
   classifyStage,
   getAssessmentContent,
@@ -21,17 +22,14 @@ import {
   runConsultationSubmission,
   type ConsultationSubmissionGate,
 } from "@/lib/consult/submission";
-import { assessmentFormContract, benefits, contactPreferences, faqs, heroImages, optionLabels, options, privacyNotice } from "./consult-content";
+import { assessmentFormContract, benefits, contactPreferences, faqs, heroImages, optionLabels, options, privacyNotice, nextStepInvitation } from "./consult-content";
 import styles from "./consultation.module.css";
 
 const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbx8AxEZ_Dh1IFWqMvTLDGGvUyPyBKrgjzoSlW9wWgyTAAgYH3qUPtm6NBdZ5Mq6Mb0N/exec";
 const TEAM_EMAIL = "lilaiireland@gmail.com";
 const RESOURCE_LINK = "https://linktr.ee/lilaiireland";
 const WEBINAR_DISCOUNT = { original_price: "NT$500", discount_price: "NT$250" };
-const CTA_LINKS = {
-  selfPack: "https://portaly.cc/lilaiirelandecommerce/product/Ii9OfwrRh1x4YdhwO09D",
-  consult: "https://lilaiireland.com/language-school-signup",
-};
+const LINE_LINK = "https://line.me/R/ti/p/@138pukoz";
 
 type ChoiceName = keyof typeof options;
 type FormValues = {
@@ -105,60 +103,23 @@ function OptionGroup({
   );
 }
 
-function StageCta({ type }: { type: string }) {
-  if (type === "twentyfive_plus8") return (
-    <div className={cx(styles.resultCtaBox, styles.resultCtaBoxAction)}>
+function StageCta({ type, followUp }: { type: string; followUp: string }) {
+  return (
+    <div className={cx(styles.resultCtaBox, (type === "twentyfive_plus8" || type === "action_consult") && styles.resultCtaBoxAction)}>
       <p className={styles.resultCtaLabel}>✦ 你的下一步</p>
       <div className={styles.resultCtaItem}>
-        <div className={styles.resultCtaTitle}>我們會在 1–2 個工作天內聯繫你 👋</div>
-        <div className={styles.resultCtaDesc}>Alex &amp; Arsha 會先透過文字跟你聊一下你的狀況和需求，之後免費開放《歐洲漫遊錄》說明會影片和相關資源給你。</div>
-        <div className={cx(styles.resultCtaDesc, styles.contactHint)}>如果你有留 IG 或 Line，我們會直接從那邊找你聊，溝通更方便。</div>
+        <div className={styles.resultCtaTitle}>免費索取《歐洲漫遊錄》說明會重播</div>
+        <div className={styles.resultCtaDesc}>{assessmentResourceCopy}</div>
+        <a href={LINE_LINK} target="_blank" rel="noreferrer" className={styles.resultCtaBtn}>加入 LINE 免費索取重播</a>
+        <a href={`mailto:${TEAM_EMAIL}`} className={cx(styles.resultCtaBtn, styles.resultCtaBtnSecondary)}>透過 Email 索取重播</a>
       </div>
-    </div>
-  );
-  if (type === "action_consult") return (
-    <div className={cx(styles.resultCtaBox, styles.resultCtaBoxAction)}>
-      <p className={styles.resultCtaLabel}>✦ 你可能適合的下一步</p>
+      <div className={styles.resultCtaDivider}>觀看後的下一步</div>
       <div className={styles.resultCtaItem}>
-        <div className={styles.resultCtaTitle}>一對一語校出發諮詢</div>
-        <div className={styles.resultCtaDesc}>適合確定要報語校的你。諮詢費可折抵報名定金（諮詢後 7 日內報名享 NT$3,000 定金優惠），開課後定金全額退還。也就是說，成功報名語校的學生，實際上不需要額外支付諮詢費用。</div>
-        <div className={styles.resultCtaPrice}>NT$800 <span className={styles.resultCtaOriginal}>NT$1,000</span></div>
-        <a href={CTA_LINKS.consult} target="_blank" rel="noreferrer" className={styles.resultCtaBtn}>立即預約一對一諮詢</a>
+        <div className={styles.resultCtaTitle}>免費一對一諮詢</div>
+        <div className={styles.resultCtaDesc}>觀看重播後，可透過 LINE 或回覆報告 Email 預約，一起確認學校、預算與出發安排。</div>
+        <a href={LINE_LINK} target="_blank" rel="noreferrer" className={styles.resultCtaBtn}>透過 LINE 預約免費一對一諮詢</a>
       </div>
-    </div>
-  );
-  if (type === "ready_both") return (
-    <div className={styles.resultCtaBox}>
-      <p className={styles.resultCtaLabel}>✦ 你可能適合的下一步</p>
-      <div className={styles.resultCtaItem}>
-        <div className={styles.resultCtaTitle}>一對一語校出發諮詢</div>
-        <div className={styles.resultCtaDesc}>適合已經準備好談方案的你。針對你的預算、出發時間與目標，直接幫你比較語校、確認課程與報價。成功報名語校的學生，諮詢費可折抵定金，開課後退還，實際上不需要額外支付諮詢費用。</div>
-        <div className={styles.resultCtaPrice}>NT$800 <span className={styles.resultCtaOriginal}>NT$1,000</span></div>
-        <a href={CTA_LINKS.consult} target="_blank" rel="noreferrer" className={styles.resultCtaBtn}>預約一對一諮詢</a>
-      </div>
-      <div className={styles.resultCtaDivider}>或者先看看</div>
-      <div className={styles.resultCtaItem}>
-        <div className={styles.resultCtaTitle}>愛爾蘭自主評估包</div>
-        <div className={styles.resultCtaDesc}>如果你還想先自己研究，這份資料包可以讓你更有方向再來諮詢。</div>
-        <div className={styles.resultCtaPrice}>NT$400 <span className={styles.resultCtaOriginal}>NT$500</span></div>
-        <a href={CTA_LINKS.selfPack} target="_blank" rel="noreferrer" className={cx(styles.resultCtaBtn, styles.resultCtaBtnSecondary)}>了解自主評估包</a>
-      </div>
-    </div>
-  );
-  return (
-    <div className={styles.resultCtaBox}>
-      <p className={styles.resultCtaLabel}>✦ 你可能適合的下一步</p>
-      <div className={styles.resultCtaItem}>
-        <div className={styles.resultCtaTitle}>愛爾蘭自主評估包</div>
-        <div className={styles.resultCtaDesc}>適合想先自己研究清楚的你。包含說明會重播與完整整理資料，系統了解語校、25+8、預算與生活準備。</div>
-        <div className={styles.resultCtaPrice}>NT$400 <span className={styles.resultCtaOriginal}>NT$500</span></div>
-        <a href={CTA_LINKS.selfPack} target="_blank" rel="noreferrer" className={styles.resultCtaBtn}>了解自主評估包</a>
-      </div>
-      <div className={styles.resultCtaDivider}>或</div>
-      <div className={cx(styles.resultCtaItem, styles.resultCtaSoft)}>
-        <div className={styles.resultCtaTitle}>📬 優先收到說明會通知</div>
-        <div className={styles.resultCtaDesc}>完成出發計畫後，你已獲得下一場說明會的優先邀請資格。說明會基本上免費參加，開放報名時我們會第一時間通知你。</div>
-      </div>
+      {followUp.split("\n").map(message => <p key={message} className={styles.resultCtaDesc}>{message}</p>)}
     </div>
   );
 }
@@ -292,7 +253,7 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
     const data = assessmentData();
     const stage = classifyStage(data);
     const leadQuality = classifyLead(data);
-    const stageInfo = getAssessmentContent(data, stage);
+    const stageInfo = getAssessmentContent(data, stage, values);
     const stageName = `${stageInfo.emoji} ${stageInfo.name}`;
     submissionId.current ??= crypto.randomUUID();
     const payload = {
@@ -353,7 +314,6 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
       email: result.data.email, stageName: result.stageName, leadQuality: result.leadQuality,
       accuracyAnswer: answer, submittedAt: new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei" }),
     };
-    if (answer === "不太準") feedbackPayload.urgentFollowUp = true;
     runAccuracyFeedbackSubmission(() => fetch(GAS_ENDPOINT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(feedbackPayload) }))
       .catch(error => console.log("Feedback send error:", error));
   };
@@ -396,7 +356,7 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
         <p className={styles.sectionLabel}>完成表單後，你將獲得</p>
         <h2 className={styles.sectionTitle}>先看懂自己，再出發</h2>
         <div className={styles.benefitsGrid}>{benefits.map(([title, copy], index) => <article className={styles.benefitCard} key={title}><div className={styles.benefitNum}>{index + 1}</div><h3>{title}</h3><p>{copy}</p></article>)}</div>
-        <div className={styles.earlyBird}><div><h4>說明會優先邀請資格</h4><p>完成出發計畫後，你已獲得下一場說明會的<span className={styles.priceHighlight}>優先邀請資格</span>。說明會基本上免費參加，開放報名時我們會第一時間通知你。</p></div></div>
+        <div className={styles.earlyBird}><div><h4>依照自己的需求選擇下一步</h4><p>{nextStepInvitation}</p></div></div>
       </section>
 
       <section className={styles.formSection} id="form" ref={formRef}>
@@ -495,9 +455,9 @@ export function ConsultationPage({ googleAdsEnabled }: { googleAdsEnabled: boole
             <div className={styles.resultSummary}>{result.stageInfo.description}</div>
             <div className={styles.resultDiagnosis}>{getBlockerDiagnosis(result.data.barriers)}</div>
             <div className={styles.resultNextsteps}><strong>建議你的下一步</strong>{result.stageInfo.nextSteps.split("\n").filter(Boolean).map(item => <div key={item} className={styles.nextStepItem}>{item}</div>)}{getTimeAnchor(result.data.timeline, result.data.plan) && <div className={styles.timeAnchor}>⏰ {getTimeAnchor(result.data.timeline, result.data.plan)}</div>}</div>
-            <StageCta type={result.stageInfo.cta} />
-            <p className={styles.resultEmailHint}>完整報告與 PDF 正在寄到你的 Email，請稍後查收。</p>
-            {!accuracy ? <div className={styles.accuracyCheck}><p className={styles.accuracyQuestion}>這個評估結果準嗎？</p><div className={styles.accuracyOptions}>{["很準 😊", "還好 🤔", "不太準 😕"].map(label => <button key={label} type="button" className={cx(styles.accuracyBtn, label.startsWith("不太準") && styles.accuracyBtnMiss)} onClick={() => submitAccuracy(label.split(" ")[0])}>{label}</button>)}</div></div> : <div className={styles.accuracyDone}><p>{accuracy === "很準" ? "太好了！很高興這個評估對你有幫助 🍀" : accuracy === "還好" ? "謝謝你的回饋，我們會繼續優化評估邏輯！" : "謝謝你告訴我們。我們今天會主動聯繫你，幫你重新確認狀態。"}</p></div>}
+            <StageCta type={result.stageInfo.cta} followUp={result.stageInfo.followUp} />
+            <p className={styles.resultEmailHint}>完整報告與 PDF 由 Email 提供，與兩項選填授權無關。若未收到，可透過上方 LINE 或 Email 入口詢問。</p>
+            {!accuracy ? <div className={styles.accuracyCheck}><p className={styles.accuracyQuestion}>這個評估結果準嗎？</p><p>回饋僅用於改善評估，不代表額外的聯繫或行銷授權。</p><div className={styles.accuracyOptions}>{["很準 😊", "還好 🤔", "不太準 😕"].map(label => <button key={label} type="button" className={cx(styles.accuracyBtn, label.startsWith("不太準") && styles.accuracyBtnMiss)} onClick={() => submitAccuracy(label.split(" ")[0])}>{label}</button>)}</div></div> : <div className={styles.accuracyDone}><p>{accuracy === "很準" ? "太好了！很高興這個評估對你有幫助 🍀" : accuracy === "還好" ? "謝謝你的回饋，我們會繼續優化評估邏輯！" : "謝謝你告訴我們，我們會用來改善評估。若想重新討論，你可以自行透過上方 LINE 或 Email 入口預約免費諮詢。"}</p></div>}
             <p className={styles.signature}>哩來愛爾蘭 · 一起把夢，過成生活。</p>
           </div>}
         </div>

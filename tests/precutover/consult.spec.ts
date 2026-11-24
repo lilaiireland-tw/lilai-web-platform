@@ -35,7 +35,7 @@ async function waitForConsultHydration(page: Page) {
   });
 }
 
-async function completeFormToStepFive(page: Page, optionalAnswers = true) {
+async function completeFormToStepFive(page: Page, optionalAnswers = true, choices = { awareness: 0, timeline: 0, plan: 0, budget: 0 }) {
   await page.locator("#name").fill("Playwright 測試");
   await page.locator("#nickname").fill("QA");
   await page.locator("#email").fill("playwright@example.test");
@@ -43,9 +43,9 @@ async function completeFormToStepFive(page: Page, optionalAnswers = true) {
   await page.locator("#lineId").fill("synthetic-line-id");
   await choose(page, "location");
   await continueTo(page, 2);
-  await choose(page, "awareness");
-  await choose(page, "timeline");
-  await choose(page, "plan");
+  await choose(page, "awareness", choices.awareness);
+  await choose(page, "timeline", choices.timeline);
+  await choose(page, "plan", choices.plan);
   await continueTo(page, 3);
   await choose(page, "workIntention");
   await choose(page, "goals");
@@ -64,7 +64,7 @@ async function completeFormToStepFive(page: Page, optionalAnswers = true) {
   await page.locator('input[name="barriers"]').nth(3).click({ force: true });
   await expect(page.locator('input[name="barriers"]:checked')).toHaveCount(3);
   await choose(page, "cityPreference");
-  await choose(page, "budget");
+  await choose(page, "budget", choices.budget);
   await choose(page, "resources");
   await page.getByRole("button", { name: /返回/ }).click();
   await expect(page.locator("#lifeChange")).toHaveValue(optionalAnswers ? /合成長文字/ : "");
@@ -158,8 +158,7 @@ test("mocked successful submission renders result once with no Ads traffic", asy
   await expect(page.getByRole("heading", { name: "你的出發評估來了" })).toBeVisible();
   expect(intercepted).toHaveLength(1);
   expect(diagnostics.adsRequests.filter(url => ADS_HOST_FRAGMENTS.some(host => url.includes(host)))).toEqual([]);
-  const resultLinks = await page.locator('a[href^="https://"]').evaluateAll(links => links.map(link => (link as HTMLAnchorElement).href));
-  expect(resultLinks.some(url => url.includes("language-school-signup") || url.includes("portaly.cc"))).toBe(true);
+  await expect(page.getByRole("link", { name: "透過 LINE 預約免費一對一諮詢" })).toHaveAttribute("href", "https://line.me/R/ti/p/@138pukoz");
   await attachDiagnostics(testInfo, diagnostics);
   await attachWriteRequestDiagnostics(testInfo, unexpectedWrites);
   expectNoUnexpectedWrites(unexpectedWrites);
@@ -223,6 +222,63 @@ test("explicit unknown remains distinct from unanswered sources and permits inde
   expect(payloads[0]).toMatchObject({ discoveryChannels: ["unknown"], discoveryOther: "", dcardExposure: "yes", contactConsent: false, marketingConsent: false });
   expectNoUnexpectedWrites(unexpectedWrites);
 });
+
+const resultStages = [
+  { name: "觀望型", awareness: 0, timeline: 3 },
+  { name: "探索型", awareness: 1, timeline: 3 },
+  { name: "準備型", awareness: 3, timeline: 2 },
+  { name: "行動型", awareness: 4, timeline: 0 },
+];
+for (const [stageIndex, stage] of resultStages.entries()) {
+  for (const plan of [0, 2]) {
+    for (const [optIndex, [contactConsent, marketingConsent]] of [[false, false], [true, false], [false, true], [true, true]].entries()) {
+      const width = [375, 768, 1024, 1440][(stageIndex + optIndex) % 4];
+      test(`result CTA ${stage.name} plan=${plan} contact=${contactConsent} marketing=${marketingConsent} ${width}px`, async ({ page }, testInfo) => {
+        await page.setViewportSize({ width, height: 900 });
+        const diagnostics = installDiagnostics(page);
+        const { payloads, releaseResponse, unexpectedWrites } = await interceptGas(page, "success");
+        await page.goto("/consult");
+        await waitForConsultHydration(page);
+        await completeFormToStepFive(page, false, { ...stage, plan, budget: 5 });
+        if (contactConsent) await page.locator('input[name="contactConsent"]').check();
+        if (marketingConsent) await page.locator('input[name="marketingConsent"]').check();
+        releaseResponse();
+        await page.locator('button[type="submit"]').click();
+        await expect(page.getByRole("heading", { name: "你的出發評估來了" })).toBeVisible();
+        const result = page.locator('[aria-live="polite"]').filter({ has: page.getByRole("heading", { name: "你的出發評估來了" }) });
+        await expect(result).toContainText(`你目前是「${stage.name}」`);
+        await expect(result.getByText(/我們會在 1–2 個工作天內聯繫你/)).toHaveCount(contactConsent ? 1 : 0);
+        await expect(result.getByText(/你會透過 Email 收到未來/)).toHaveCount(marketingConsent ? 1 : 0);
+        await expect(result).toContainText("完整免費評估結果與既有免費資源");
+        await expect(result).toContainText("由哩來團隊手動開放觀看權限");
+        await expect(result).toContainText("不會自動寄送影片連結");
+        await expect(result).not.toContainText(/自主評估包|諮詢費|優先邀請資格|今天會主動/);
+        const replay = result.getByRole("link", { name: "加入 LINE 免費索取重播" });
+        await expect(replay).toHaveAttribute("href", "https://line.me/R/ti/p/@138pukoz");
+        await expect(result.getByRole("link", { name: "透過 Email 索取重播" })).toHaveAttribute("href", "mailto:lilaiireland@gmail.com");
+        await replay.focus();
+        await replay.press("Tab");
+        const emailLink = result.getByRole("link", { name: "透過 Email 索取重播" });
+        await expect(emailLink).toBeFocused();
+        expect(await emailLink.evaluate(link => getComputedStyle(link).outlineStyle)).toBe("solid");
+        await expect(result.getByRole("link", { name: "透過 LINE 預約免費一對一諮詢" })).toHaveAttribute("href", "https://line.me/R/ti/p/@138pukoz");
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+        expect(payloads[0].nextSteps).not.toMatch(/會在.*聯繫|自主評估包|諮詢費/);
+        expect(String(payloads[0].followUp).includes("我們會在 1–2 個工作天內聯繫你")).toBe(contactConsent);
+        if (!contactConsent && !marketingConsent) await result.screenshot({ path: testInfo.outputPath(`result-${width}-plan-${plan}.png`) });
+        await result.getByRole("button", { name: "不太準 😕" }).click();
+        await expect(result).toContainText("若想重新討論，你可以自行透過上方 LINE 或 Email 入口預約免費諮詢");
+        await expect.poll(() => payloads.length).toBe(2);
+        expect(payloads[1]).toMatchObject({ type: "accuracy_feedback", accuracyAnswer: "不太準" });
+        expect(payloads[1]).not.toHaveProperty("urgentFollowUp");
+        expect(payloads[1]).not.toHaveProperty("contactConsent");
+        expect(diagnostics.consoleErrors).toEqual([]);
+        expect(diagnostics.pageErrors).toEqual([]);
+        expectNoUnexpectedWrites(unexpectedWrites);
+      });
+    }
+  }
+}
 
 for (const width of [375, 1440]) {
   for (const [contactConsent, marketingConsent] of [[false, false], [true, false], [false, true], [true, true]]) {
