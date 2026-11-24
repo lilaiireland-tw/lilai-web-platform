@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
 import { once } from "node:events";
+import { readFileSync } from "node:fs";
 
 async function main() {
   process.env.SITE_DEPLOYMENT_ENV = "production";
@@ -10,7 +11,7 @@ async function main() {
   process.env.EVENTS_INCLUDE_DRAFTS = "false";
   createRequire(import.meta.url).extensions[".css"] = module => { module.exports = {}; };
 
-  const [{ eventRegistry }, { buildEventMetadata, buildEventsIndexMetadata }, { default: sitemap }, robotsModule, { STATIC_SITEMAP_URLS }] = await Promise.all([
+  const [{ eventRegistry }, { buildEventMetadata, buildEventsIndexMetadata }, { default: sitemap }, robotsModule, { STATIC_SITEMAP_URLS, IMPORTANT_URLS }] = await Promise.all([
     import("../src/lib/events/event-registry"),
     import("../src/lib/events/event-metadata"),
     import("../src/app/sitemap"),
@@ -34,6 +35,14 @@ async function main() {
   ]);
   assert(!buildEventSitemapUrls(fixtureRegistry.indexable()).some(url => url.includes(draft.slug)));
   assert(STATIC_SITEMAP_URLS.some(path => path === "/consult"), "Consult should use the slashless canonical in the existing sitemap");
+  const home = readFileSync("src/content/home.html", "utf8");
+  const assessmentLinks = home.match(/<a\b[^>]*data-cta-link="assessment"[^>]*>/g) ?? [];
+  assert.equal(assessmentLinks.length, 3);
+  assessmentLinks.forEach(link => assert.match(link, /href="\/consult"/));
+  assert(!home.includes("free-departure-assessment"));
+  for (const paths of [STATIC_SITEMAP_URLS, IMPORTANT_URLS]) {
+    assert(!paths.some(path => path.includes("free-departure-assessment")));
+  }
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => { throw new Error("WordPress sitemap sources are intentionally isolated in this regression check"); };
   const currentSitemap = await sitemap();
@@ -71,7 +80,9 @@ async function main() {
   // Model a CMS slug collision without contacting production WordPress.
   const wordpress = createServer((request, response) => {
     response.setHeader("Content-Type", "application/json");
-    response.end(JSON.stringify(request.url?.startsWith("/pages?") ? [{ slug: "ireland-25-plus-8" }, { slug: "language-school-signup" }] : []));
+    response.end(JSON.stringify(request.url?.startsWith("/pages?")
+      ? [{ slug: "ireland-25-plus-8" }, { slug: "language-school-signup" }, { slug: "free-departure-assessment" }, { slug: "consult" }, { slug: "retained-page" }]
+      : [{ slug: "free-departure-assessment" }, { slug: "retained-post" }]));
   });
   let app: ReturnType<typeof spawn> | undefined;
   let logs = "";
@@ -134,6 +145,10 @@ async function main() {
     const sitemapResponse = await get("/sitemap.xml");
     assert.equal(sitemapResponse.status, 200);
     const sitemapXml = await sitemapResponse.text();
+    assert(!sitemapXml.includes("free-departure-assessment"), "Retired assessment slug must be excluded from both WP posts and pages");
+    assert(sitemapXml.includes("<loc>https://lilaiireland.com/retained-page/</loc>"));
+    assert(sitemapXml.includes("<loc>https://lilaiireland.com/retained-post/</loc>"));
+    assert.equal((sitemapXml.match(/<loc>https:\/\/lilaiireland\.com\/consult<\/loc>/g) ?? []).length, 1);
     assert.equal((sitemapXml.match(/<loc>https:\/\/lilaiireland\.com\/ireland-25-plus-8<\/loc>/g) ?? []).length, 1);
     assert.equal((sitemapXml.match(/<loc>https:\/\/lilaiireland\.com\/language-school-signup\/<\/loc>/g) ?? []).length, 1);
     assert(!sitemapXml.includes("<loc>https://lilaiireland.com/ireland-25-plus-8/</loc>"), "CMS slug must not duplicate the Platform canonical");

@@ -2,6 +2,8 @@
 
 Generated: 2026-07-20
 
+Assessment entry update (2026-11-24, Issues #61/#62): `/free-departure-assessment/` is retired. The only current assessment entry is `/consult`; `/consult/` retains its existing 308 redirect to `/consult`. Homepage source links and Platform sitemap entries use the current entry. The historical audit below does not establish the current external WordPress state; operations must check any remaining WP form and WP-served sitemap manually. No WordPress page or routing was changed.
+
 Constraint: public URLs must be preserved exactly. This inventory is based only on public sitemap and public REST API data. No WordPress admin credentials were used.
 
 ## Sources Audited
@@ -33,7 +35,8 @@ Constraint: public URLs must be preserved exactly. This inventory is based only 
 |---|---|---|---|---|---|
 | `/` | Homepage | post sitemap, page sitemap | homepage/front page | Render in Next.js | Current custom homepage should replace WP frontend. Preserve `/`. |
 | `/about/` | Page | page sitemap, REST pages | `about` | Render in Next.js or WP API fallback | Existing title: `哩來品牌故事`. |
-| `/consult/` | Page / lead form | page sitemap, REST pages | `consult` | Render in Next.js or WP API fallback | Existing title: `哩來出發計畫｜免費語校評估`. Current new homepage CTA uses `/free-departure-assessment`; preserve `/consult/` as an old public URL. |
+| `/consult` | Page / lead form | Current Platform entry; historically `/consult/` in page sitemap / REST pages | `consult` | Render in Next.js | 唯一正式免費評估入口；`/consult/` 保留現有 308 至 `/consult`。 |
+| `/free-departure-assessment/` | Retired assessment entry | Historical homepage links | `free-departure-assessment` | Exclude from Platform links and sitemap | 營運已確認停用；外部 WP 頁面／sitemap 是否仍存在待人工檢查，未新增 redirect 或修改 WP。 |
 | `/ireland-study-consultation/` | Page | page sitemap, REST pages | `ireland-study-consultation` | Render in Next.js or WP API fallback | Existing title: `出發方案選擇`. |
 | `/ireland-study-planning/` | Page | page sitemap, REST pages | `ireland-study-planning` | Render in Next.js or WP API fallback | Existing title: `規劃出發流程`. |
 | `/recommended-ireland-language-schools/` | Page | page sitemap, REST pages | `recommended-ireland-language-schools` | Render in Next.js or WP API fallback | Title is empty in REST output. Needs metadata check. |
