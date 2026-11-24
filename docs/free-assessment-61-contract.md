@@ -4,6 +4,10 @@
 本文件為 #62–#69 的共同開發規格，**尚有來源驗證阻擋，不能視為 #61 全部驗收完成或正式發布核准**。
 原 PR #70 僅新增文件；#62 同步最新營運決策並清理指定舊網址。下文現況盤點仍以原基準為準，#62 實作狀態見第 12 節。
 
+**2026-11-24 最新 Tickets 優先**：PR #70/#71 已合併；開發順序改為 #65 前端問卷 → #66 前端結果文案與 GAS 文案差異清單 → #64 同網域 ACK 前端／代理 → #62 一次性最小 GAS 相容修改（含 #63 聯繫 gate 與 #66 必要 GAS 文案）→ #63 退訂／名單／授權驗證 → #67 整合驗收 → #68/#69 P1。不等待 GAS 原始碼即可做 #65/#66，不重做已完成的舊網址清理。所有新 UI 均須待 #67 驗收及 Alex 核准後才可發布正式環境。
+
+不得為此系列重構 GAS 防重、鎖、Queue、Checkpoint、Retry/Fallback，亦不新增資料庫。持久 submission/job 冪等、部分寫入修復及跨中斷 exactly-once 是已知技術債，不是本次實作或驗收門檻；已知 ACK 錯誤及授權繞過仍須在所屬票最小修正。下文既有架構與風險紀錄不代表授權擴大範圍。
+
 ## 1. 證據與可信度
 
 | 來源 | 本次核對結果 |
@@ -136,6 +140,8 @@ GAS 檔名、實際專案位置、manifest scopes/timezone、deployment version�
 
 本節定義目標契約，不表示目前已支援。沿用平面 assessment payload，避免重包一層破壞既有 GAS；#62／#64 共同實作 allowlist adapter。UI／API／GAS 共用同一份核准版本與選項定義，不在 tests、模板及 renderer 各自維護不同常數。
 
+#65 只新增前端欄位、版本及 client UUID，保留現有直送／衍生 Payload／本機結果／GA4 成功邊界；不實作以下同網域 API、可信後端重算、ACK、回饋身份或用途 gate。`consentTimestamp` 不由前端產生；既有 `submittedAt` 僅為舊顯示欄，不是授權時間。來源型別／空值與 boolean false 可先以 Mock 驗證，真實相容性及政策版本核實留待後續票與發布前驗收。
+
 ### 5.1 Browser → 同網域 API → GAS
 
 Browser 傳 JSON；同網域 API 真實路徑留至 #64 核對 ownership 後核准，不能把範例路徑當已存在。現行 routing policy 未將一般 `/api/*` 給 platform；只有 Next Route Handler 檔案不足以保證公開路徑可達。
@@ -152,8 +158,8 @@ Browser 傳 JSON；同網域 API 真實路徑留至 #64 核對 ownership 後核�
 | `lifeChange` | trim string，選填 `""`，最多 3000 字元 | 空白不杜撰；保留原有 >20 字評分，不讓新欄位參與 |
 | `webinar` | 同既有 `、` 分隔選項，選填 `""` | 興趣不等於寄信同意 |
 | `contactConsent`, `marketingConsent` | 兩個必帶 **boolean**，UI 各自初始 false；false 也要保存 | v1 缺值／null／`"false"`／0 均拒絕，不做 truthy coercion；legacy 缺值保存 null |
-| `privacyNoticeVersion` | 必帶非空版本 key，後端已核准 registry allowlist | 不是 client 任填日期；實際 key 待公開政策快照驗證後登錄 |
-| `consentTextVersion` | 必帶非空版本 key，後端已核准 registry allowlist | 對應第一步／第五步告知與兩項 checkbox 的實際文字快照 |
+| `privacyNoticeVersion` | #65 前端參照 key `agreement-reference.v1` | 僅表示本版 UI 連結既有 `/agreement/`，不是已核實的 WP revision；公開政策快照及後端 registry 待發布前核對 |
+| `consentTextVersion` | #65 文案快照 key `free-assessment-consent.v1` | 對應 `consult-content.ts` 的第一步／第五步告知與兩項 checkbox；後端核准 registry 由後續票同步 |
 | `consentSource` | 固定 `free_assessment` | 後端驗證／保存，不代表 cookie consent |
 | `discoveryChannels` | string[]，選填 `[]`，見下表 | 新版必帶空陣列；legacy 未蒐集為 null，不假裝作答 |
 | `discoveryOther` | trim string，選填 `""`，最多 200 字元 | 僅 channels 含 other 可有文字；不含 other 但帶文字視為 validation error；UI 取消時清空 |
@@ -206,7 +212,7 @@ Q1/Q2 可出現不同組合，不自動推填、不強迫一致。來源與 cons
 - Sheet 新欄位以名稱 append，不改舊欄位順序、不移動公式、不覆蓋 `used_discount/discount_outcome/final_outcome`。false 用 `??` 而非 `||`；legacy unknown 在 Sheet 可空白，但有明確 legacy 版本／來源標記，adapter 讀回為 null；新版 dcard null 空白配 contractVersion，channels JSON `[]` 與 legacy 空白可區分。新增文字一律以純文字安全寫入，防公式注入。
 - 此處是邏輯欄位契約；未知現有物理 header／權限狀態儲存位置不臆造。#62／#63 在原始碼與 Sheet schema 比對後，用既有 Sheets／Properties 機制完成最小可恢復儲存，不另設資料庫。
 
-### 5.4 ACK、冪等與失敗
+### 5.4 ACK 與失敗（#64/#62/#67；#65 不實作）
 
 一般提交成功 envelope 沿用 GAS（下列為型別示意，不是實際回應紀錄）：
 
@@ -237,11 +243,9 @@ type AssessmentError = {
 - `status` 保留 envelope 用途，另用 `jobStatus` 明確表示既有 Queue 狀態，避免同一 status 同時代表 ok／QUEUED。與 #62/#64 一次落實，不雙軌要求 success。
 - `receiptToken` 是 #64 後端簽發、綁定該 submission/job 與回饋用途的不可猜測或簽章憑證，非 GAS server credential。Browser 在後續回饋請求 body 提交，後端驗證；不因單憑可知的 ID／Email 就重新簽發。有效期／安全重取機制由 #64 配合實際 GAS 與既有平台能力定案並測試，不在本票實作。
 - Browser 僅在 HTTP 2xx、有效 JSON、版本／submissionId 匹配、`status=ok`、`accepted===true`、非空 jobId、有效 jobStatus 同時成立時完成 UI gate／success／conversion。ERROR 表示先前已可靠接收、背景工作失敗，畫面需說明處理異常，不能假稱寄送成功或另建提交；其他成功狀態也只表示已接收，不代表 PDF／Email 已完成。
-- ACK 必須在表單資料及可恢復 Queue 工作均持久化、ID 對照可讀後回傳。`IN_FLIGHT`、缺 jobId、HTML、200 error JSON 都不是成功；GAS 可能 HTTP 200，代理仍須讀 envelope。代理對 validation/version 回 400，未授權 401/403，ID 衝突 409，限流 429，上游無效回應／保存失敗 502/503，timeout 504；IN_FLIGHT 回可重試衝突狀態，不能標 accepted。
-- 同 ID、同正規化 payload 取得原 jobId／現況，不重建 row／Queue／重排副作用；同 ID、不同問卷／consent／版本／來源回衝突。比對正規化後持久化資料，排除 server timestamps、credential 等易變值；不得用 Email+plan+timeline+budget 合併不同 ID 的新評估。
-- timeout／未知收件狀態保留答案及原 ID，標待確認／可重試，不回報確定未送達。已確認接收後不容許同 ID 修改答案；修改內容需明確新提交，不能自動在未知狀態換 ID。
-- #62 沿用 lock/checkpoint 作持久化對照與部分寫入修復：Sheet 已寫但 Queue 失敗須補完原工作，不能重插。Cache 過期不是去重失效理由。短鎖保護接收／對照，不把 PDF／Email 包在長鎖內。
-- 外部寄信／Calendar 完成後 checkpoint 前中斷，既有機制不能保證 exactly-once；需可核實最小防重／人工 reconciliation，疑似已發送不得盲重寄。保留原 Queue 設定與 fallback，不重寫 worker。
+- ACK 必須反映實際收件結果；`IN_FLIGHT`、缺 jobId、HTML、200 error JSON 都不是成功，代理仍須讀 envelope。沿用既有 Queue 收件流程，精確回應由 #64/#62 核對，不重構其儲存或鎖。
+- #65 以 per-mount client UUID 標示提交，同頁未修改內容的失敗重試沿用 ID；不是授權憑證或持久冪等保證。timeout／未知收件狀態的 UI 由 #64 最小修正，不回報確定未送達。
+- 已知技術債：跨 Cache 到期／重新整理／併發的持久防重、不同 payload 同 ID、Sheet 已寫 Queue 失敗的部分寫入修復、寄信後 checkpoint 前中斷。保留既有 Cache／Lock／Queue／Checkpoint／Retry/Fallback，不為本系列新增持久對照、修復或 exactly-once 保證；不將其列為 #65 或整合驗收新增門檻。既有 ACK 錯誤或授權繞過仍須最小修正，不視為安全。
 - 錯誤只回 code／是否可重試，不反射 PII、堆疊、Google ID、credential；log 最小事件狀態，不記完整 body／自由文字／token。
 
 ### 5.5 準確度回饋與直接問候入口
@@ -269,7 +273,7 @@ type AssessmentError = {
 | 查詢、更正、撤回、刪除及期限 | 真正窗口、身份確認、適用法律／時限與可操作人工 SOP；退訂直接有效 | Alex／法律顧問 |
 | 版本、生效日期、可用性 | 取得當前公開 HTML／文字與日期、手機瀏覽證據、歷史版本 | Alex 提供可讀快照／WP revision |
 
-核實後在受控版本紀錄保存政策／第一步／第五步／checkbox 的當時全文、核准人、生效時間、內容 hash、版本 key；公開可提交的政策文字才進 repo，不附 WP 私密匯出。submission 僅參照 immutable key，未核准的 key 拒絕。已過期但確實展示過的版本須明確相容窗口，不在頁面開啟期間靜默換成新版本。變更第三方、用途或文案時新增版本，不覆寫歷史，不把版本更新當重新取得同意。
+核實後在受控版本紀錄保存政策／第一步／第五步／checkbox 的當時全文、核准人、生效時間、內容 hash、版本 key；公開可提交的政策文字才進 repo，不附 WP 私密匯出。#65 的 `agreement-reference.v1` 僅識別 UI 政策參照；不可據此聲稱已核對公開政策或後端已接受版本。後續票在發布前同步核實的政策 revision 與版本 allowlist。已過期但確實展示過的版本須明確相容窗口，不在頁面開啟期間靜默換成新版本。變更第三方、用途或文案時新增版本，不覆寫歷史，不把版本更新當重新取得同意。
 
 ## 7. 需要修改的前端檔案、測試與 GAS 位置
 
@@ -299,7 +303,7 @@ type AssessmentError = {
 1. 既有問卷欄／報告／人工欄保留，新增欄依名稱 append；Queue 八欄不搬移、不排序、不清除 active row。row-index checkpoint 不能因 migration／清理對錯行。
 2. legacy 無版本／ID／授權欄仍可由可信相容 adapter 生成完整服務報告；缺授權為 null，有效權限 fail closed。歷史 consent1/2 未保存的事實不能透過「當時應已勾」補造成 true。
 3. 既有 Queue／Properties 舊快照在執行時 lookup 最新權限，缺可追溯對照則抑制非必要聯繫／行銷，必要服務照常；skipped 不無限 retry。人工跟進日期不等於授權。
-4. 舊無 submissionId 跨請求防重保證有限，必須明示；不可對新 v1 退化到 60 秒 Cache 或同 Email 合併。匿名舊直送不具新版可信入口安全，不得永久留成任意寫入例外。
+4. 舊無 submissionId 跨請求防重保證有限，新 client UUID 亦不是持久冪等保證；本系列保留既有防重機制，不另建持久對照或修復流程。匿名舊直送的授權繞過與可信入口交 #64/#62/#67 最小修正及驗證。
 
 ### 隔離測試環境
 
@@ -307,15 +311,15 @@ type AssessmentError = {
 
 現有測試入口（名稱來自 Issue）：`testRun`、`testPdfOnlyV57`、`testFullAssessmentE2E`、`inspectLatestAssessmentE2E`、`testQueueRetryAndIdempotency`。摘要指這些會用正式 Sheet／Drive／default Calendar／trigger，僅檢查團隊信箱不安全；先隔離或可信 stub，再做測試資源 E2E。**本次完全未執行 GAS 測試、寫 Sheet、建 Calendar 或寄信。**
 
-#67 必測：四組 opt-in × stage／Hot-Warm-Nurture × 25+8；lifeChange/webinar 空白、兩來源未答／unknown／其他清空／跨題組合；Sheet 已寫 Queue 失敗、IN_FLIGHT、跨 60 秒重試／併發、不同 payload 同 ID、timeout、200 error／HTML；Email 已發 checkpoint 失敗 reconciliation；撤回後的 retry／fallback／direct greeting／舊 property／feedback／匯出；原 PDF 算法與 Slides 固定 CTA、HTML／純文字、附件失敗、分享取件；不將新資料傳 GA4。
+#67 必測：四組 opt-in × stage／Hot-Warm-Nurture × 25+8；lifeChange/webinar 空白、兩來源未答／unknown／其他清空／跨題組合；可靠 ACK 的 timeout、200 error／HTML；撤回後既有 retry／fallback／direct greeting／舊 property／feedback／匯出的授權 gate；原 PDF 算法與 Slides 固定 CTA、HTML／純文字、附件失敗、分享取件；不將新資料傳 GA4。持久去重及部分寫入修復風險列技術債，不擴大成本票系列驗收門檻。
 
 Browser QA 留至 #65–#67：375/768/1024/1440px、overflow、鍵盤與 focus-visible、checkbox／radio 與錯誤宣告、返回保留、連結可讀、console／hydration、同 ID 重試／success 去重。實際 staging URL／deployment version 尚未提供；mock 不能替代真實測試資源驗收。
 
 ### 發布順序（計畫，非本票執行）
 
 1. #61 已由 PR #70 合併；補齊尚未取得的原始碼、政策與資源清單證據，不重問已定案決策，不得將未核實項標完成。
-2. #62 在隔離資源實作相容儲存、版本、持久 submission/job 對照、ACK；#63 完成所有用途 gate／退訂／舊排程抑制。兩者不能單獨正式啟用而仍讓舊自動化越權。
-3. #64 完成既有平台同網域代理、可信 GAS 入口、可靠 ACK；#65/#66 更新 React／結果／PDF／Email／模板。使用同一核准契約，保留五步／算法／Queue。
+2. #65 先更新五步 React 問卷與平面 Payload，以攔截／Mock 測試，不呼叫正式 GAS；#66 接著修改前端結果文案並交付 GAS／PDF／Email 文案差異清單，不提前修改後端。
+3. #64 完成既有平台同網域代理與可靠 ACK 前端；#62 取得實際原始碼後一次完成最小相容儲存、版本、ACK 及必要聯繫 gate／文案；#63 再驗證退訂、名單及授權流程。保留現有 Queue／防重／重試，不新增持久冪等或部分寫入修復機制。
 4. #67 在隔離環境真正 E2E，核對公開政策／基本人工保存及權利 SOP、PDF 交付、舊入口相容、回復計畫與所有 release gate，Alex/Arsha 驗收。
 5. 另行獲 Alex 發布核准後，先備份 schema／部署版本及最小回復資訊；協調部署 GAS 儲存與 gate、代理後端憑證與前端，不單獨放出新 UI。短暫相容窗口必須可控：舊公開 GAS 僅在核准切換期間保必要服務、所有非必要用途 fail closed；窗口截止、舊 WP embed 更新／處理與 rollback 資源由 owner 實際確認，不能在任意可寫入口仍開放時宣稱安全切換完成。
 6. 關閉舊任意直接 type 寄送／寫入繞過後，確認正常新提交流程；監看最小錯誤／Queue 狀態。回復採已測試、仍保留授權 gate／suppression 的相容版本；不回到缺 gate 的舊 GAS，不刪新增欄／證據、不盲重放任務。前端必要時暫停收件並顯示真實狀態，不以 no-cors 假成功救援。
@@ -330,11 +334,11 @@ Browser QA 留至 #65–#67：375/768/1024/1440px、overflow、鍵盤與 focus-v
 
 | Ticket | 前提／交付責任 | 正式發布條件 |
 | --- | --- | --- |
-| #62 GAS/Sheets | #61 完成合併；原始專案、schema、測試資源；實作者落實 typed v1／legacy／冪等／ACK | 與 #63 gate 一起驗證，不單獨切換 |
-| #63 授權／退訂 | #62 合併；原始函式／所有 triggers／人工名單與 sender 清單 | 最新狀態查核、可用退訂、歷史 unknown 抑制及 skipped checkpoint |
-| #64 同網域 API | #63 合併；#62 envelope、既有 router ownership、server-only credentials／receipt 設計 | Browser 真 ACK；GAS 所有 type 不能繞過，舊入口切換可恢復 |
-| #65 五步 UI | #61–#64 合併；核准政策／版本／文案、穩定契約 | 四組 opt-in、空白來源與 lifeChange/webinar 真寫測試 Sheet |
-| #66 結果與模板 | #61–#65 合併；實際 Slides、Email、PDF 方案、有效 CTA 確認 | stage／用途一致、完整服務、無無條件聯繫／未授權行銷 |
+| #62 GAS/Sheets | #65/#66/#64 後，取得實際原始碼／schema／隔離資源；一次性最小相容修改含 gate 與必要文案 | 與 #63/#67 驗證，不重構防重／Queue，不單獨切換 |
+| #63 授權／退訂 | #62 後驗證原始函式／triggers／人工名單及 sender | 最新狀態查核、可用退訂、歷史 unknown 抑制，保留既有 checkpoint |
+| #64 同網域 API | #66 後依契約做前端／代理，不等待 #62/#63 完成 | 真 ACK 與 GAS 入口安全留待 #62/#67 整合確認 |
+| #65 五步 UI | PR #70/#71 已合併，即可開始，不依賴 GAS 原始碼或 #62–#64 | 僅前端／Mock：四組 opt-in、空白來源與 lifeChange/webinar、返回保留、桌面手機、Payload 型別及不影響評分 |
+| #66 結果與模板差異 | #65 後，先前端結果文案及必要 GAS 文案差異清單 | 實際 GAS／PDF／Email 修改留至 #62；整合仍須 #67 |
 | #67 整合 gate | #61–#66 合併；隔離且可追溯測試部署、Alex/Arsha 驗收 | 告知／依據／退訂／授權／ACK／PDF 取件／基本保存與權利 SOP／回復方案均就緒；另案部署核准 |
 | #68 來源／View | #67 完成；#62/#63/#65 契約與有效權限已落實 | P1 不擴大 release gate；既有 Sheet 優先，不新增 CRM 平台 |
 | #69 保存／權利自動化 | #67 完成；#61 核實實際保存／法律時限、#63 撤回機制 | P1 自動化可後做；基本人工義務不能延後；正式刪除另核准 |
@@ -385,7 +389,7 @@ Browser QA 留至 #65–#67：375/768/1024/1440px、overflow、鍵盤與 focus-v
 
 **實際修改的 GAS 函式：無。新增 Sheets 欄位：無。測試部署／腳本版本：未建立、未部署。** 第 5 節仍是目標契約，不是已實作的欄位、Payload 或 ACK 實例；本次沒有真實測試回應可交付，也沒有修改後 GAS 腳本可安裝。
 
-因缺少原始碼，尚未實作或驗證型別／版本／來源 allowlist、兩項獨立 opt-in 與歷史文案證據、來源調查儲存、submissionId/jobId 持久對照、併發／重試／部分寫入恢復及假成功修正。既有 Queue／Checkpoint／Retry／Fallback／PDF／算法未修改。待來源齊備後，依第 5 節以短鎖保護持久對照、修復原 row／job，不將 Cache 當持久去重；這是後續要求，尚非已具備行為。寄出後 checkpoint 失敗仍須核實／人工 reconciliation，不宣稱 exactly-once。
+因缺少原始碼，尚未實作或驗證型別／版本／來源 allowlist、兩項獨立 opt-in 與歷史文案證據、來源調查儲存及假成功修正。既有 Queue／Checkpoint／Retry／Fallback／PDF／算法未修改。最新 Tickets 已將後端工作排在 #65/#66/#64 之後；待來源齊備才做一次性最小相容修改，含聯繫 gate 與必要文案。持久對照、併發去重、部分寫入恢復及 exactly-once 相關改善改列已知技術債，不再是本系列要求。
 
 Alex／GAS owner 後續提供：
 
@@ -393,7 +397,7 @@ Alex／GAS owner 後續提供：
 2. 「填表資料」「報告佇列」「準確度回饋」實際 header／公式結構（不含客戶資料），及隔離測試專案、資源、執行身份／trigger owner 對照。
 3. 已核准政策／同意文案的歷史快照與 immutable version key，經受限方式提供必要資源設定及權限。
 
-取得後才修改原腳本、交付版本差異與精確安裝步驟；先在隔離副本按名稱 append 欄位、不移動八欄 Queue／既有公式／人工欄，再以受控測試資料執行四組 opt-in、legacy、空值、同 ID 衝突、併發、跨 Cache 到期、部分寫入及重試。不得直接套用到正式資源；正式切換仍依 #63/#64/#67 的 release gate。本次 PR 使用 `Part of #62`，不關閉 Issue 或開始下一票。
+取得後才修改原腳本、交付版本差異與精確安裝步驟；先在隔離副本按名稱 append 欄位、不移動八欄 Queue／既有公式／人工欄，再以受控測試資料驗證四組 opt-in、legacy、空值、來源及可靠 ACK／授權 gate。不得直接套用到正式資源；正式切換仍依 #63/#64/#67 的 release gate。原 PR 使用 `Part of #62`；#62 仍開放。
 
 ### 待人工驗證
 
