@@ -58,9 +58,9 @@ test("actual existing Router/Platform/staging Workers route exact APIs to Next h
     { name: router.name, modules: true, script: scripts[0], compatibilityDate: router.compatibility_date, compatibilityFlags: router.compatibility_flags,
       serviceBindings: { PLATFORM: platform.name }, outboundService: outbound },
     { name: platform.name, modules: true, script: scripts[1], compatibilityDate: platform.compatibility_date, compatibilityFlags: platform.compatibility_flags,
-      bindings: { ...platform.vars, CONSULT_GAS_ENDPOINT: endpoint }, serviceBindings: { ASSETS: () => new Response(null, { status: 404 }) }, outboundService: outbound },
+      bindings: { ...platform.vars, CONSULT_GAS_ENDPOINT: endpoint, CONSULT_GAS_CREDENTIAL: "controlled-test-credential-only-32-bytes" }, serviceBindings: { ASSETS: () => new Response(null, { status: 404 }) }, outboundService: outbound },
     { name: staging.name, modules: true, script: scripts[2], compatibilityDate: staging.compatibility_date, compatibilityFlags: staging.compatibility_flags,
-      bindings: { ...staging.vars, CONSULT_GAS_ENDPOINT: endpoint },
+      bindings: { ...staging.vars, CONSULT_GAS_ENDPOINT: endpoint, CONSULT_GAS_CREDENTIAL: "controlled-test-credential-only-32-bytes" },
       serviceBindings: { ASSETS: () => new Response(null, { status: 404 }), SIGNUP_BACKEND: () => new Response("signup fixture") }, outboundService: outbound },
   ];
   const mf = new Miniflare(convertV4MiniflareOptions({ workers }));
@@ -70,18 +70,18 @@ test("actual existing Router/Platform/staging Workers route exact APIs to Next h
       if (workerName === staging.name) await mf.setOptions(convertV4MiniflareOptions({ workers: [workers[2], workers[0], workers[1]] }));
       const worker = { fetch: (...args) => mf.dispatchFetch(...args) };
       const origin = workerName === router.name ? "https://lilaiireland.com" : "https://isolated-staging.test";
-      const post = (path, body) => worker.fetch(origin + path, { method: "POST", body: JSON.stringify(body), headers: {
-        Origin: origin, "Content-Type": "application/json", "X-Consult-Request": "1", Cookie: "private=strip", Authorization: "Bearer strip",
+      const post = (path, body, cookie = "private=strip") => worker.fetch(origin + path, { method: "POST", body: JSON.stringify(body), headers: {
+        Origin: origin, "Content-Type": "application/json", "X-Consult-Request": "1", Cookie: cookie, Authorization: "Bearer strip",
       } });
       nextAck = { status: "ok", accepted: true, jobId };
       const response = await post(paths[0], payload);
       assert.equal(response.status, 200, workerName + " " + await response.clone().text());
       assert.deepEqual(await response.json(), { ...nextAck, submissionId: id });
-      assert.deepEqual(posts.at(-1), payload);
+      assert.deepEqual(posts.at(-1), {...payload, _serverCredential:"controlled-test-credential-only-32-bytes"});
       nextAck = { status: "error" };
       assert.equal((await post(paths[0], payload)).status, 502);
       nextAck = { status: "ok" };
-      assert.equal((await post(paths[1], { type: "accuracy_feedback", submissionId: id, jobId, name: "Synthetic", nickname: "QA", email: "qa@example.test", accuracyAnswer: "還好" })).status, 200);
+      assert.equal((await post(paths[1], { type: "accuracy_feedback", submissionId: id, jobId, name: "Synthetic", nickname: "QA", email: "qa@example.test", accuracyAnswer: "還好" }, response.headers.get("set-cookie").split(";")[0])).status, 200);
       if (workerName === staging.name) {
         assert.equal((await post("/api/other", {})).status, 405);
         assert.equal((await post(`${paths[0]}/child`, {})).status, 405);

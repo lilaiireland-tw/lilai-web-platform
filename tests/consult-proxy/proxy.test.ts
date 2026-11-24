@@ -9,6 +9,8 @@ import { routeProductionRequest } from "../../cloudflare/production-router";
 import { runConsultationSubmission } from "../../src/lib/consult/submission";
 import { requestConsultation } from "../../src/lib/consult/request";
 
+process.env.CONSULT_GAS_CREDENTIAL = "controlled-test-credential-only-32-bytes";
+
 const id = "11111111-1111-4111-8111-111111111111";
 const jobId = "22222222-2222-4222-8222-222222222222";
 const endpoint = "https://script.google.com/macros/s/CONTROLLED_MOCK_ONLY/exec";
@@ -29,7 +31,7 @@ test("existing ACK; four opt-ins preserve the complete payload, false and unansw
     const response = await proxyConsultation(request(body), false, endpoint, async (url, init) => {
       assert.equal(String(url), endpoint);
       assert.equal(init?.redirect, "manual");
-      assert.deepEqual(JSON.parse(String(init?.body)), body);
+      assert.deepEqual(JSON.parse(String(init?.body)), {...body, _serverCredential:process.env.CONSULT_GAS_CREDENTIAL});
       assert.deepEqual(init?.headers, { "Content-Type": "text/plain;charset=utf-8" });
       return Response.json(ack);
     });
@@ -140,9 +142,13 @@ test("browser ACK parser rejects raw HTML/invalid JSON, failed status, network a
 });
 
 test("feedback follows actual status:ok ACK, keeps original IDs and rejects urgent client authorization", async () => {
-  assert.equal((await proxyConsultation(request(feedback), true, endpoint, respond({ status: "ok" }))).status, 200);
+  const submitted = await proxyConsultation(request(), false, endpoint, respond(ack));
+  const Cookie = submitted.headers.get("set-cookie")!.split(";")[0];
+  const authorized = () => request(feedback, {Cookie});
+  assert.equal((await proxyConsultation(request(feedback), true, endpoint, respond({status:"ok"}))).status, 403);
+  assert.equal((await proxyConsultation(authorized(), true, endpoint, respond({ status: "ok" }))).status, 200);
   for (const value of [{ status: "error" }, { status: "ok", accepted: false }, { status: "ok", accepted: "false" }, { status: "ok", submissionId: jobId }, {}]) {
-    assert.equal((await proxyConsultation(request(feedback), true, endpoint, respond(value))).status, 502);
+    assert.equal((await proxyConsultation(authorized(), true, endpoint, respond(value))).status, 502);
   }
   assert.equal((await proxyConsultation(request({ ...feedback, urgentFollowUp: true }), true, endpoint, respond({ status: "ok" }))).status, 400);
 });

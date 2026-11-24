@@ -87,8 +87,15 @@ function json(body: unknown, status = 200) {
   return Response.json(body, { status, headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } });
 }
 
+async function feedbackProof(secret: string, submissionId: string, jobId: string) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const bytes = new Uint8Array(await crypto.subtle.sign("HMAC", key, encoder.encode(`feedback.v1|${submissionId}|${jobId}`)));
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
 /** Fixed server-configured upstream; never forwards caller headers, credentials or URLs. */
-export async function proxyConsultation(request: Request, feedback: boolean, endpoint: string | undefined, upstream: typeof fetch = fetch) {
+export async function proxyConsultation(request: Request, feedback: boolean, endpoint: string | undefined, upstream: typeof fetch = fetch, credential = process.env.CONSULT_GAS_CREDENTIAL) {
   try {
     if (request.method !== "POST") return json({ error: "method_not_allowed" }, 405);
     const url = new URL(request.url);
@@ -104,6 +111,7 @@ export async function proxyConsultation(request: Request, feedback: boolean, end
         request.headers.get("x-consult-request") !== "1") throw new ProxyError(415, "json_required");
     if (Number(request.headers.get("content-length")) > BODY_LIMIT) throw new ProxyError(413, "body_too_large");
     const gasUrl = endpointUrl(endpoint);
+    if (!credential || credential.length < 32) throw new ProxyError(503, "not_configured");
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     try {
@@ -112,10 +120,21 @@ export async function proxyConsultation(request: Request, feedback: boolean, end
         try { data = JSON.parse(await limitedText(request, BODY_LIMIT, controller.signal)); }
         catch (error) { if (error instanceof ProxyError) throw error; throw new ProxyError(400, "invalid_json"); }
         validatePayload(data, feedback);
+        const forwarded = { ...data };
+        // Recompute these in GAS; browser results remain display-only.
+        for (const key of ["teamEmail", "resourceLink", "stage", "routeResult", "blockerDiagnosis", "stageName", "stageDescription",
+          "nextSteps", "followUp", "leadQuality", "discountPrice", "originalPrice", "submittedAt"]) delete forwarded[key];
+        if (feedback) {
+          const proof = await feedbackProof(credential, data.submissionId, String(data.jobId));
+          const cookie = request.headers.get("cookie")?.split(";").map(value => value.trim()).find(value => value.startsWith(`consult_feedback_${data.submissionId}=`))?.split("=")[1];
+          if (cookie !== proof) throw new ProxyError(403, "feedback_not_authorized");
+          forwarded._feedbackProof = proof;
+        }
+        forwarded._serverCredential = credential;
         controller.signal.throwIfAborted();
         let response = await upstream(gasUrl, {
           method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(data), redirect: "manual", signal: controller.signal, cache: "no-store",
+          body: JSON.stringify(forwarded), redirect: "manual", signal: controller.signal, cache: "no-store",
         });
         if ([302, 303].includes(response.status)) {
           const location = response.headers.get("location");
@@ -137,7 +156,13 @@ export async function proxyConsultation(request: Request, feedback: boolean, end
           return json({ status: "ok" });
         }
         if (!validConsultationAck(ack, data.submissionId)) throw new ProxyError(502, "invalid_ack");
-        return json({ status: "ok", accepted: true, jobId: ack.jobId, submissionId: data.submissionId });
+        const result = json({ status: "ok", accepted: true, jobId: ack.jobId, submissionId: data.submissionId });
+        // A known submissionId can hit the existing Cache: that ACK cannot issue a new capability.
+        if (!("deduplicated" in ack)) {
+          const proof = await feedbackProof(credential, data.submissionId, ack.jobId);
+          result.headers.append("Set-Cookie", `consult_feedback_${data.submissionId}=${proof}; HttpOnly; Secure; SameSite=Strict; Path=/api/consult; Max-Age=2592000`);
+        }
+        return result;
       };
       // Covers body streams and mocks as well as fetch, even if they ignore AbortSignal.
       return await Promise.race([operation(), new Promise<never>((_, reject) => {
